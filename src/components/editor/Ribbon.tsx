@@ -7,12 +7,14 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, FilePlus2, StickyNote, Upload,
+  Wand2, Languages, AlignVerticalSpaceAround, House, FilePlus2, StickyNote, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
 } from "lucide-react";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
 import { useAI } from "@/components/ai/aiStore";
-import { exportDocx, exportHtml, exportMarkdown, exportText, printDocument, importFromFile, ACCEPTED_IMPORTS } from "@/lib/io";
+import { printDocument, ACCEPTED_IMPORTS } from "@/lib/io";
+import { isDesktop, openFileFromDisk, revealInFolder } from "@/lib/files";
+import type { FileFormat } from "@/lib/db";
 import { newDocument, newNote, openDoc } from "@/lib/actions";
 import { normalizeUrl } from "@/lib/openExternal";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize, type ViewMode } from "@/store/settings";
@@ -26,12 +28,12 @@ type Tab = "home" | "insert" | "layout" | "review" | "view" | "ai" | "table";
 
 export interface RibbonProps {
   editor: Editor;
-  title: string;
+  files: FileActions;
   onFind: (replace?: boolean) => void;
   onWordCount: () => void;
 }
 
-export function Ribbon({ editor, title, onFind, onWordCount }: RibbonProps) {
+export function Ribbon({ editor, files, onFind, onWordCount }: RibbonProps) {
   const flags = useEditorFlags(editor);
   const [tab, setTab] = useState<Tab>("home");
   const { ribbonCollapsed, set } = useSettings();
@@ -50,7 +52,7 @@ export function Ribbon({ editor, title, onFind, onWordCount }: RibbonProps) {
   return (
     <div className="no-print shrink-0 border-b border-border bg-surface">
       <div className="flex h-9 items-end gap-0.5 px-2">
-        <FileMenu editor={editor} title={title} />
+        <FileMenu files={files} />
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -136,40 +138,65 @@ const I = (C: typeof Bold) => <C className="size-4" />;
 /*  Menú Archivo                                                       */
 /* ------------------------------------------------------------------ */
 
-function FileMenu({ editor, title }: { editor: Editor; title: string }) {
+export interface FileActions {
+  /** Ruta del archivo vinculado, si lo hay */
+  filePath: string | null;
+  save: () => void;
+  saveAs: () => void;
+  exportAs: (format: FileFormat) => void;
+}
+
+function FileMenu({ files }: { files: FileActions }) {
   const navigate = useApp((s) => s.navigate);
   const toast = useApp((s) => s.toast);
   const fileRef = useRef<HTMLInputElement>(null);
-  const run = async (fn: () => unknown, ok?: string) => {
+  const desktop = isDesktop();
+
+  const openFile = async () => {
+    if (!desktop) return fileRef.current?.click();
     try {
-      await fn();
-      if (ok) toast(ok, "success");
+      const doc = await openFileFromDisk();
+      if (doc) openDoc(doc);
     } catch (e) {
-      toast(e instanceof Error ? e.message : "Ha ocurrido un error", "error");
+      toast(e instanceof Error ? e.message : "No se pudo abrir el archivo", "error");
     }
   };
+
   return (
     <>
       <Menu>
         <MenuTrigger asChild>
           <button className="mb-0.5 h-7 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:brightness-110">Archivo</button>
         </MenuTrigger>
-        <MenuContent className="w-[250px]">
+        <MenuContent className="w-[270px]">
           <MenuItem icon={<House />} onSelect={() => navigate({ name: "home" })}>Inicio</MenuItem>
           <MenuSeparator />
           <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>Nuevo documento</MenuItem>
           <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>Nueva nota</MenuItem>
-          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Abrir…</MenuItem>
-          <MenuItem icon={<Upload />} onSelect={() => fileRef.current?.click()}>Importar archivo…</MenuItem>
+          <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>Abrir archivo…</MenuItem>
+          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Documentos recientes</MenuItem>
           <MenuSeparator />
-          <SubMenu label="Exportar como" icon={<FileDown />}>
-            <MenuItem icon={<FileText />} onSelect={() => run(() => exportDocx(editor.getJSON(), title), "Documento de Word exportado")}>Word (.docx)</MenuItem>
+          <MenuItem icon={<Save />} shortcut="Ctrl+S" onSelect={files.save}>
+            {files.filePath ? "Guardar" : desktop ? "Guardar…" : "Descargar (.docx)"}
+          </MenuItem>
+          {desktop && (
+            <MenuItem icon={<SaveAll />} shortcut="F12" onSelect={files.saveAs}>Guardar como…</MenuItem>
+          )}
+          <SubMenu label="Exportar una copia" icon={<FileDown />}>
+            <MenuItem icon={<FileText />} onSelect={() => files.exportAs("docx")}>Word (.docx)</MenuItem>
             <MenuItem icon={<FileType2 />} onSelect={() => printDocument()}>PDF (mediante Imprimir)</MenuItem>
-            <MenuItem icon={<FileCode2 />} onSelect={() => run(() => exportMarkdown(editor.getHTML(), title), "Markdown exportado")}>Markdown (.md)</MenuItem>
-            <MenuItem icon={<Monitor />} onSelect={() => run(() => exportHtml(editor.getHTML(), title), "Página web exportada")}>Página web (.html)</MenuItem>
-            <MenuItem icon={<Type />} onSelect={() => run(() => exportText(editor.getText({ blockSeparator: "\n\n" }), title), "Texto exportado")}>Texto sin formato (.txt)</MenuItem>
+            <MenuItem icon={<FileJson />} onSelect={() => files.exportAs("lumen")}>Lumen, sin pérdidas (.lumen)</MenuItem>
+            <MenuItem icon={<FileCode2 />} onSelect={() => files.exportAs("md")}>Markdown (.md)</MenuItem>
+            <MenuItem icon={<Monitor />} onSelect={() => files.exportAs("html")}>Página web (.html)</MenuItem>
+            <MenuItem icon={<Type />} onSelect={() => files.exportAs("txt")}>Texto sin formato (.txt)</MenuItem>
           </SubMenu>
           <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={() => printDocument()}>Imprimir…</MenuItem>
+          {files.filePath && desktop && (
+            <>
+              <MenuSeparator />
+              <MenuItem icon={<FolderSearch />} onSelect={() => void revealInFolder(files.filePath!)}>Mostrar en la carpeta</MenuItem>
+            </>
+          )}
         </MenuContent>
       </Menu>
       <input
@@ -181,7 +208,13 @@ function FileMenu({ editor, title }: { editor: Editor; title: string }) {
           const f = e.target.files?.[0];
           e.target.value = "";
           if (!f) return;
-          await run(async () => openDoc(await importFromFile(f)), `«${f.name}» importado`);
+          try {
+            const { importFromFile } = await import("@/lib/io");
+            openDoc(await importFromFile(f));
+            toast(`«${f.name}» abierto`, "success");
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error");
+          }
         }}
       />
     </>

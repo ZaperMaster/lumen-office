@@ -20,7 +20,14 @@ export interface DocRecord {
   deletedAt: number | null;
   color: string | null;
   tags: string[];
+  /** Archivo del disco al que está vinculado (Guardar lo sobrescribe) */
+  filePath?: string | null;
+  fileFormat?: FileFormat | null;
+  /** Momento del último guardado en ese archivo */
+  savedAt?: number | null;
 }
+
+export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt";
 
 class LumenDB extends Dexie {
   docs!: EntityTable<DocRecord, "id">;
@@ -41,7 +48,7 @@ export function newId(): string {
 
 export async function createDoc(
   kind: DocKind,
-  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags">> = {},
+  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat">> = {},
 ): Promise<DocRecord> {
   const now = Date.now();
   const doc: DocRecord = {
@@ -59,6 +66,9 @@ export async function createDoc(
     deletedAt: null,
     color: init.color ?? null,
     tags: init.tags ?? [],
+    filePath: init.filePath ?? null,
+    fileFormat: init.fileFormat ?? null,
+    savedAt: init.filePath ? now : null,
   };
   doc.text = plainText(doc.content);
   doc.words = countWords(doc.text);

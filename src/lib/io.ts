@@ -2,7 +2,6 @@ import { generateJSON, type JSONContent } from "@tiptap/core";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import TurndownService from "turndown";
-import { saveAs } from "file-saver";
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
   ImageRun, LevelFormat, Packer, PageBreak, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
@@ -82,12 +81,17 @@ export function htmlToMarkdown(html: string): string {
 /*  Importar                                                           */
 /* ------------------------------------------------------------------ */
 
-export const ACCEPTED_IMPORTS = ".docx,.md,.markdown,.html,.htm,.txt";
+export const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt";
 
-export async function importFromFile(file: File): Promise<DocRecord> {
+export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, "filePath" | "fileFormat">> = {}): Promise<DocRecord> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   const title = file.name.replace(/\.[^.]+$/, "");
   let html: string;
+  if (ext === "lumen") {
+    const data = JSON.parse(await file.text()) as { app?: string; title?: string; content?: JSONContent };
+    if (data.app !== "lumen" || !data.content) throw new Error("El archivo .lumen está dañado.");
+    return createDoc("document", { title: data.title || title, content: data.content, ...extra });
+  }
   if (ext === "docx") {
     const mammoth = await import("mammoth");
     const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
@@ -104,9 +108,9 @@ export async function importFromFile(file: File): Promise<DocRecord> {
       .map((p) => `<p>${escapeHtml(p).replace(/\r?\n/g, "<br>")}</p>`)
       .join("");
   } else {
-    throw new Error("Formato no compatible. Usa .docx, .md, .html o .txt");
+    throw new Error("Formato no compatible. Usa .docx, .lumen, .md, .html o .txt");
   }
-  return createDoc("document", { title, content: htmlToJSON(html) });
+  return createDoc("document", { title, content: htmlToJSON(html), ...extra });
 }
 
 function escapeHtml(s: string) {
@@ -121,18 +125,18 @@ export function safeFileName(title: string) {
   return (title.trim() || "Documento").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 120);
 }
 
-export function exportMarkdown(html: string, title: string) {
-  const md = (title ? `# ${title}\n\n` : "") + htmlToMarkdown(html);
-  saveAs(new Blob([md], { type: "text/markdown;charset=utf-8" }), `${safeFileName(title)}.md`);
+export function buildMarkdown(html: string, title: string): string {
+  return (title ? `# ${title}\n\n` : "") + htmlToMarkdown(html);
 }
 
-export function exportText(text: string, title: string) {
-  saveAs(new Blob([text], { type: "text/plain;charset=utf-8" }), `${safeFileName(title)}.txt`);
+/** Formato propio de Lumen: el documento completo, sin pérdidas, en JSON. */
+export function buildLumen(content: JSONContent, title: string): string {
+  return JSON.stringify({ app: "lumen", format: 1, title, content }, null, 1);
 }
 
-export function exportHtml(html: string, title: string) {
+export function buildHtmlPage(html: string, title: string): string {
   const { fontFamily, fontSize, lineHeight } = useSettings.getState();
-  const page = `<!doctype html>
+  return `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(title || "Documento")}</title>
 <style>
@@ -142,10 +146,11 @@ pre{background:#1e1f26;color:#eee;padding:12px 16px;border-radius:8px;overflow:a
 table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:6px 10px;text-align:left}th{background:#f3f3f3}
 img{max-width:100%}ul[data-type=taskList]{list-style:none;padding-left:0}ul[data-type=taskList] li{display:flex;gap:.5em}
 .page-break{break-after:page;height:0}
+img[data-align=left]{float:left;margin:.3em 1.4em .6em 0}img[data-align=right]{float:right;margin:.3em 0 .6em 1.4em}
+img[data-align=center]{display:block;margin:.6em auto}h1,h2,hr{clear:both}
 </style></head><body>
 ${html}
 </body></html>`;
-  saveAs(new Blob([page], { type: "text/html;charset=utf-8" }), `${safeFileName(title)}.html`);
 }
 
 export function printDocument() {
@@ -429,7 +434,3 @@ export async function buildDocx(content: JSONContent, title: string): Promise<Bl
   return Packer.toBlob(doc);
 }
 
-export async function exportDocx(content: JSONContent, title: string) {
-  const blob = await buildDocx(content, title);
-  saveAs(blob, `${safeFileName(title)}.docx`);
-}

@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { EditorContent, type Editor } from "@tiptap/react";
-import { ArrowLeft, FileDown, Minimize2, Moon, Settings, Sparkles, Star, Sun } from "lucide-react";
+import { ArrowLeft, FileText, Minimize2, Moon, Save, Settings, Sparkles, Star, Sun } from "lucide-react";
 import { db, updateDoc, type DocRecord } from "@/lib/db";
 import { debounce } from "@/lib/format";
-import { exportDocx } from "@/lib/io";
+import { exportDocument, fileName, isDesktop, openFileFromDisk, revealInFolder, saveDocument, saveDocumentAs, type DocSource } from "@/lib/files";
+import { openDoc } from "@/lib/actions";
 import { getTheme } from "@/lib/themes";
 import { MARGINS, MM_TO_PX, PAGE_SIZES, useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
-import { Ribbon } from "@/components/editor/Ribbon";
+import { Ribbon, type FileActions } from "@/components/editor/Ribbon";
 import { FindBar } from "@/components/editor/FindBar";
 import { StatusBar, SaveIndicator } from "@/components/editor/StatusBar";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
@@ -19,7 +20,7 @@ import { stepSize, parsePt } from "@/components/editor/controls";
 import { AIResultCard } from "@/components/ai/AIResultCard";
 import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useAI } from "@/components/ai/aiStore";
-import { Button, IconButton, cn } from "@/components/ui";
+import { Button, IconButton, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 
 export default function DocumentApp({ id }: { id: string }) {
@@ -69,6 +70,33 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
   const focus = s.viewMode === "focus";
 
   const saveTitle = useMemo(() => debounce((t: string) => updateDoc(doc.id, { title: t }), 400), [doc.id]);
+
+  // Valores actuales para las acciones de archivo (sin recrearlas en cada tecla)
+  const docRef = useRef(doc);
+  docRef.current = doc;
+  const titleRef = useRef(title);
+  titleRef.current = title;
+  const files: FileActions = useMemo(() => {
+    const source = (): DocSource => ({
+      json: editor.getJSON(),
+      html: editor.getHTML(),
+      text: editor.getText({ blockSeparator: "\n\n" }),
+      title: titleRef.current,
+    });
+    return {
+      filePath: doc.filePath ?? null,
+      save: () => {
+        saveNow();
+        void saveDocument(docRef.current, source());
+      },
+      saveAs: () => {
+        saveNow();
+        void saveDocumentAs(docRef.current, source());
+      },
+      exportAs: (format) => void exportDocument(format, source()),
+    };
+  }, [doc.filePath, editor, saveNow]);
+  const unsavedFile = !!doc.filePath && (doc.savedAt ?? 0) < doc.updatedAt;
   useEffect(() => () => saveTitle.cancel(), [saveTitle]);
   useEffect(() => () => discardAI(), [discardAI]);
 
@@ -104,7 +132,13 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       const k = e.key.toLowerCase();
       if (mod && k === "f") { e.preventDefault(); setFind({ replace: false }); }
       else if (mod && k === "h") { e.preventDefault(); setFind({ replace: true }); }
-      else if (mod && k === "s") { e.preventDefault(); saveNow(); toast("Documento guardado", "success"); }
+      else if (mod && k === "s" && !e.shiftKey) { e.preventDefault(); files.save(); }
+      else if (e.key === "F12") { e.preventDefault(); files.saveAs(); }
+      else if (mod && k === "o") {
+        e.preventDefault();
+        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : "No se pudo abrir", "error"));
+        else navigate({ name: "home", section: "open" });
+      }
       else if (mod && k === "p") { e.preventDefault(); window.print(); }
       else if (mod && e.key === "]") {
         e.preventDefault();
@@ -123,7 +157,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editor, focus, find, s, saveNow, setPanelOpen, toast]);
+  }, [editor, focus, find, s, files, navigate, setPanelOpen, toast]);
 
   const editorStyle = {
     fontFamily: s.fontFamily,
@@ -166,28 +200,30 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
         <IconButton label="Configuración" onClick={() => openSettings()}>
           <Settings className="size-4" />
         </IconButton>
-        <Button
-          size="sm"
-          variant="outline"
-          icon={<FileDown className="size-3.5" />}
-          onClick={async () => {
-            try {
-              await exportDocx(editor.getJSON(), title);
-              toast("Documento de Word exportado", "success");
-            } catch {
-              toast("No se pudo exportar", "error");
-            }
-          }}
-        >
-          Exportar .docx
-        </Button>
+        {doc.filePath && (
+          <Tooltip label={unsavedFile ? `Cambios sin guardar en ${doc.filePath}` : `Guardado en ${doc.filePath} · clic para ver la carpeta`}>
+            <button
+              onClick={() => void revealInFolder(doc.filePath!).catch(() => {})}
+              className="flex max-w-[220px] items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-text"
+            >
+              <FileText className="size-3.5 shrink-0" />
+              <span className="truncate">{fileName(doc.filePath)}</span>
+              {unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Cambios sin guardar en el archivo" />}
+            </button>
+          </Tooltip>
+        )}
+        <Tooltip label={doc.filePath ? "Guardar en el archivo (Ctrl+S)" : "Guardar en un archivo (Ctrl+S)"}>
+          <Button size="sm" variant="outline" icon={<Save className="size-3.5" />} onClick={files.save}>
+            {isDesktop() ? "Guardar" : "Descargar"}
+          </Button>
+        </Tooltip>
         <Button size="sm" variant={panelOpen ? "secondary" : "primary"} icon={<Sparkles className="size-3.5" />} onClick={() => setPanelOpen(!panelOpen)}>
           IA
         </Button>
       </header>
 
       {!focus && (
-        <Ribbon editor={editor} title={title} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
+        <Ribbon editor={editor} files={files} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
       )}
 
       <div className="flex min-h-0 flex-1">

@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { createDoc, db, displayTitle, duplicateDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
 import { debounce, relativeTime } from "@/lib/format";
-import { exportDocx, exportMarkdown } from "@/lib/io";
+import { exportDocument, type DocSource } from "@/lib/files";
+import type { FileFormat } from "@/lib/db";
 import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
 import { useDocEditor } from "@/components/editor/useDocEditor";
@@ -294,6 +295,10 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
 function NoteActions({ note, editor, title, onRemove }: { note: DocRecord; editor: Editor; title: string; onRemove: () => void }) {
   const navigate = useApp((st) => st.navigate);
   const { panelOpen, setPanelOpen } = useAI();
+  const exportAs = (format: FileFormat) => {
+    const src: DocSource = { json: editor.getJSON(), html: editor.getHTML(), text: editor.getText({ blockSeparator: "\n\n" }), title };
+    void exportDocument(format, src);
+  };
   return (
     <div className="flex shrink-0 items-center gap-0.5 px-2">
       <Popover>
@@ -343,8 +348,9 @@ function NoteActions({ note, editor, title, onRemove }: { note: DocRecord; edito
             Abrir como documento
           </MenuItem>
           <MenuItem icon={<Copy />} onSelect={async () => { const d = await duplicateDoc(note.id); if (d) navigate({ name: "notes", id: d.id }); }}>Duplicar</MenuItem>
-          <MenuItem icon={<FileDown />} onSelect={() => exportMarkdown(editor.getHTML(), title)}>Exportar a Markdown</MenuItem>
-          <MenuItem icon={<FileDown />} onSelect={() => exportDocx(editor.getJSON(), title)}>Exportar a Word</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("docx")}>Exportar a Word (.docx)</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("md")}>Exportar a Markdown (.md)</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("txt")}>Exportar a texto (.txt)</MenuItem>
           <MenuSeparator />
           <MenuItem icon={<Trash2 />} danger onSelect={onRemove}>Mover a la papelera</MenuItem>
         </MenuContent>

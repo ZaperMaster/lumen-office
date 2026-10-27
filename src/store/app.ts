@@ -6,7 +6,12 @@ export type Route =
   | { name: "notes"; id?: string }
   | { name: "assistant" };
 
-export type Toast = { id: number; message: string; tone?: "info" | "success" | "error" };
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+export type Toast = { id: number; message: string; detail?: string; tone?: "info" | "success" | "error"; action?: ToastAction };
 
 interface AppState {
   route: Route;
@@ -16,7 +21,7 @@ interface AppState {
   navigate: (r: Route) => void;
   openSettings: (tab?: string) => void;
   closeSettings: () => void;
-  toast: (message: string, tone?: Toast["tone"]) => void;
+  toast: (message: string, tone?: Toast["tone"], extra?: { detail?: string; action?: ToastAction }) => void;
   dismissToast: (id: number) => void;
 }
 
@@ -30,10 +35,12 @@ export const useApp = create<AppState>((set) => ({
   navigate: (route) => set({ route }),
   openSettings: (tab = "appearance") => set({ settingsOpen: true, settingsTab: tab }),
   closeSettings: () => set({ settingsOpen: false }),
-  toast: (message, tone = "info") => {
+  toast: (message, tone = "info", extra = {}) => {
     const id = ++toastId;
-    set((s) => ({ toasts: [...s.toasts, { id, message, tone }] }));
-    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 3200);
+    set((s) => ({ toasts: [...s.toasts, { id, message, tone, ...extra }] }));
+    // Los avisos con detalle o botón duran más para dar tiempo a leerlos
+    const ms = extra.action || extra.detail ? 7000 : 3200;
+    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), ms);
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));

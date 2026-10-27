@@ -7,6 +7,12 @@
   ],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "dialog:allow-save",
+    "dialog:allow-open",
+    "dialog:allow-ask",
+    "fs:allow-write-file",
+    "fs:allow-read-file",
+    "fs:allow-exists"
   ]
 }

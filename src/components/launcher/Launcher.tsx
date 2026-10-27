@@ -8,7 +8,7 @@ import { db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, up
 import { TEMPLATES, type Template } from "@/lib/templates";
 import { createFromTemplate, newDocument, newNote, openDoc } from "@/lib/actions";
 // El módulo de importación (editor + docx) se carga solo al importar
-const ACCEPTED_IMPORTS = ".docx,.md,.markdown,.html,.htm,.txt";
+const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt";
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -474,8 +474,22 @@ function OpenSection() {
           <h1 className="mb-1 text-[26px] font-bold tracking-tight">Abrir</h1>
           <p className="text-muted">Todos tus documentos y notas guardados en este equipo.</p>
         </div>
-        <Button variant="primary" icon={<Upload className="size-4" />} onClick={() => fileRef.current?.click()}>
-          Importar archivo
+        <Button
+          variant="primary"
+          icon={<Upload className="size-4" />}
+          onClick={async () => {
+            // En la app de escritorio, el diálogo de Windows recuerda la ruta para que «Guardar» la reemplace
+            const files = await import("@/lib/files");
+            if (!files.isDesktop()) return fileRef.current?.click();
+            try {
+              const doc = await files.openFileFromDisk();
+              if (doc) openDoc(doc);
+            } catch (e) {
+              toast(e instanceof Error ? e.message : "No se pudo abrir el archivo", "error");
+            }
+          }}
+        >
+          Abrir archivo…
         </Button>
         <input ref={fileRef} type="file" accept={ACCEPTED_IMPORTS} hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
@@ -485,7 +499,7 @@ function OpenSection() {
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"
       >
         <Upload className="mb-2 size-6" />
-        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
+        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
       </div>
       <RecentList title="Todos los archivos" />
     </>
