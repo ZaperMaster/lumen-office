@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  Tokens de diseño                                                   */
+/*  Cada tema redefine estas variables (ver src/lib/themes.ts).        */
+/* ------------------------------------------------------------------ */
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f0f1f4;
+  --surface-3: #e6e8ec;
+  --border: #e1e3e8;
+  --text: #1c1e24;
+  --text-muted: #646a76;
+  --accent: #6d4aff;
+  --accent-fg: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 14%, transparent);
+  --paper: #ffffff;
+  --paper-text: #1c1e24;
+  --desk: #e9ebef;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.06);
+  --ui-font: "Inter Variable", "Segoe UI", system-ui, sans-serif;
+  --radius: 10px;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-paper: var(--paper);
+  --color-paper-text: var(--paper-text);
+  --color-desk: var(--desk);
+  --font-ui: var(--ui-font);
+  --shadow-soft: var(--shadow);
+  --radius-ui: var(--radius);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ui-font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--text) 22%, transparent) transparent;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Animaciones                                                        */
+/* ------------------------------------------------------------------ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.animate-fade-in { animation: fade-in 0.22s ease both; }
+.animate-pop-in { animation: pop-in 0.16s ease both; }
+
+/* ------------------------------------------------------------------ */
+/*  Contenido del editor (ProseMirror)                                 */
+/* ------------------------------------------------------------------ */
+.lumen-editor {
+  outline: none;
+  color: var(--paper-text);
+  caret-color: var(--accent);
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.lumen-editor > * + * { margin-top: 0.6em; }
+.lumen-editor p { margin: 0; }
+.lumen-editor p + p { margin-top: var(--para-spacing, 0.6em); }
+
+.lumen-editor h1 { font-size: 2em; font-weight: 700; line-height: 1.2; margin-top: 1em; letter-spacing: -0.01em; }
+.lumen-editor h2 { font-size: 1.5em; font-weight: 650; line-height: 1.25; margin-top: 0.9em; }
+.lumen-editor h3 { font-size: 1.25em; font-weight: 600; line-height: 1.3; margin-top: 0.8em; }
+.lumen-editor h4 { font-size: 1.1em; font-weight: 600; margin-top: 0.7em; }
+.lumen-editor > :first-child { margin-top: 0; }
+.lumen-editor .doc-title { font-size: 2.6em; font-weight: 750; letter-spacing: -0.02em; }
+
+.lumen-editor ul,
+.lumen-editor ol { padding-left: 1.6em; }
+.lumen-editor ul { list-style: disc; }
+.lumen-editor ul ul { list-style: circle; }
+.lumen-editor ul ul ul { list-style: square; }
+.lumen-editor ol { list-style: decimal; }
+.lumen-editor ol ol { list-style: lower-alpha; }
+.lumen-editor ol ol ol { list-style: lower-roman; }
+.lumen-editor li > p { margin: 0.15em 0; }
+
+.lumen-editor ul[data-type="taskList"] { list-style: none; padding-left: 0.2em; }
+.lumen-editor ul[data-type="taskList"] li { display: flex; gap: 0.55em; align-items: flex-start; }
+.lumen-editor ul[data-type="taskList"] li > label { margin-top: 0.25em; user-select: none; }
+.lumen-editor ul[data-type="taskList"] li > label input { accent-color: var(--accent); width: 1em; height: 1em; cursor: pointer; }
+.lumen-editor ul[data-type="taskList"] li > div { flex: 1; }
+.lumen-editor ul[data-type="taskList"] li[data-checked="true"] > div { text-decoration: line-through; opacity: 0.55; }
+
+.lumen-editor blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.2em 0 0.2em 1em;
+  color: color-mix(in oklab, var(--paper-text) 75%, transparent);
+  font-style: italic;
+}
+
+.lumen-editor code {
+  font-family: "JetBrains Mono Variable", Consolas, monospace;
+  font-size: 0.88em;
+  background: color-mix(in oklab, var(--paper-text) 8%, transparent);
+  padding: 0.12em 0.35em;
+  border-radius: 5px;
+}
+.lumen-editor pre {
+  font-family: "JetBrains Mono Variable", Consolas, monospace;
+  background: #1e1f26;
+  color: #e7e7ef;
+  padding: 0.9em 1.1em;
+  border-radius: 10px;
+  font-size: 0.88em;
+  overflow-x: auto;
+  white-space: pre;
+}
+.lumen-editor pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+.lumen-editor a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.lumen-editor mark { border-radius: 2px; padding: 0 1px; }
+/* Los resaltados son tonos pastel: en temas oscuros el texto encima debe ser oscuro.
+   (Tiptap pone color: inherit en línea, por eso hace falta !important) */
+:root[data-dark="true"] .lumen-editor mark { color: #1c1e24 !important; }
+.lumen-editor hr { border: none; border-top: 1px solid color-mix(in oklab, var(--paper-text) 18%, transparent); margin: 1.4em 0; }
+.lumen-editor hr.ProseMirror-selectednode { border-top-color: var(--accent); }
+
+.lumen-editor img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0.6em auto; }
+.lumen-editor img.ProseMirror-selectednode { outline: 3px solid var(--accent); }
+
+/* Tablas */
+.lumen-editor .tableWrapper { overflow-x: auto; margin: 1em 0; }
+.lumen-editor table { border-collapse: collapse; table-layout: fixed; width: 100%; overflow: hidden; }
+.lumen-editor td,
+.lumen-editor th {
+  border: 1px solid color-mix(in oklab, var(--paper-text) 22%, transparent);
+  padding: 0.4em 0.6em;
+  vertical-align: top;
+  position: relative;
+  min-width: 2em;
+}
+.lumen-editor th { background: color-mix(in oklab, var(--paper-text) 6%, transparent); font-weight: 600; text-align: left; }
+.lumen-editor td > p,
+.lumen-editor th > p { margin: 0; }
+.lumen-editor .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  pointer-events: none;
+}
+.lumen-editor .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.lumen-editor.resize-cursor { cursor: col-resize; }
+
+/* Salto de página */
+.lumen-editor .page-break {
+  position: relative;
+  height: 28px;
+  margin: 1.2em calc(-1 * var(--page-pad-x, 0px));
+  background: var(--desk);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.lumen-editor .page-break::after {
+  content: "Salto de página";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 500 11px var(--ui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.lumen-editor .page-break.ProseMirror-selectednode { outline: 2px solid var(--accent); }
+
+/* Placeholder */
+.lumen-editor p.is-editor-empty:first-child::before,
+.lumen-editor .is-empty[data-placeholder]:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: color-mix(in oklab, var(--paper-text) 35%, transparent);
+}
+
+/* Resultados de búsqueda */
+.lumen-editor .search-match { background: color-mix(in oklab, #ffd400 45%, transparent); border-radius: 2px; }
+.lumen-editor .search-match-current { background: #ff9d00; color: #000; }
+
+/* Texto generado por IA (mientras se escribe) */
+.ai-streaming > :last-child::after {
+  content: "▍";
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+/* Gapcursor */
+.lumen-editor .ProseMirror-gapcursor::after { border-top-color: var(--paper-text); }
+
+/* ------------------------------------------------------------------ */
+/*  Hoja (vista de página) e impresión                                 */
+/* ------------------------------------------------------------------ */
+.paper {
+  background: var(--paper);
+  color: var(--paper-text);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--paper-text) 6%, transparent), 0 10px 40px rgb(0 0 0 / 0.08);
+}
+
+@media print {
+  @page { margin: 0; }
+  html, body, #root { height: auto; overflow: visible; background: #fff !important; }
+  .no-print { display: none !important; }
+  .print-area { overflow: visible !important; padding: 0 !important; background: #fff !important; height: auto !important; }
+  .paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    width: auto !important;
+    min-height: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    transform: none !important;
+  }
+  .lumen-editor { color: #000; }
+  .lumen-editor .page-break { height: 0; margin: 0; border: none; background: none; break-after: page; }
+  .lumen-editor .page-break::after { display: none; }
+  .lumen-editor pre { white-space: pre-wrap; }
+}
