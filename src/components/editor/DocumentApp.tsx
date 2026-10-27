@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { EditorContent, type Editor } from "@tiptap/react";
-import { ArrowLeft, FileText, Minimize2, Moon, Save, Settings, Sparkles, Star, Sun } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Minimize2, Moon, Save, Settings, Sparkles, Star, Sun } from "lucide-react";
 import { db, updateDoc, type DocRecord } from "@/lib/db";
 import { debounce } from "@/lib/format";
-import { exportDocument, fileName, isDesktop, openFileFromDisk, revealInFolder, saveDocument, saveDocumentAs, type DocSource } from "@/lib/files";
+import {
+  exportDocument, fileName, isDesktop, openFileFromDisk, registerOpenDoc, revealInFolder, saveDocument, saveDocumentAs, writeLinkedFile,
+  type DocSource,
+} from "@/lib/files";
+import { useConfirm } from "@/store/confirm";
 import { openDoc } from "@/lib/actions";
 import { getTheme } from "@/lib/themes";
 import { MARGINS, MM_TO_PX, PAGE_SIZES, useSettings } from "@/store/settings";
@@ -76,27 +80,126 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
   docRef.current = doc;
   const titleRef = useRef(title);
   titleRef.current = title;
-  const files: FileActions = useMemo(() => {
-    const source = (): DocSource => ({
+  const source = useCallback(
+    (): DocSource => ({
       json: editor.getJSON(),
       html: editor.getHTML(),
       text: editor.getText({ blockSeparator: "\n\n" }),
       title: titleRef.current,
-    });
+    }),
+    [editor],
+  );
+  const files: FileActions = useMemo(() => {
     return {
       filePath: doc.filePath ?? null,
+      // Tras guardar a mano, los cambios hasta ese momento cuentan como guardados en el archivo
       save: () => {
         saveNow();
-        void saveDocument(docRef.current, source());
+        const upTo = edits.current;
+        void saveDocument(docRef.current, source()).then((p) => {
+          if (p) writtenEdits.current = Math.max(writtenEdits.current, upTo);
+        });
       },
       saveAs: () => {
         saveNow();
-        void saveDocumentAs(docRef.current, source());
+        const upTo = edits.current;
+        void saveDocumentAs(docRef.current, source()).then((p) => {
+          if (p) writtenEdits.current = Math.max(writtenEdits.current, upTo);
+        });
       },
       exportAs: (format) => void exportDocument(format, source()),
     };
-  }, [doc.filePath, editor, saveNow]);
+  }, [doc.filePath, source, saveNow]);
   const unsavedFile = !!doc.filePath && (doc.savedAt ?? 0) < doc.updatedAt;
+
+  /* ---------------- Autoguardado en el archivo del disco ---------------- */
+  const autoSave = useSettings((st) => st.fileAutoSave);
+  const [diskState, setDiskState] = useState<"idle" | "saving" | "error">("idle");
+  const failed = useRef(false);
+
+  // Contador de cambios: cada edición lo sube; al escribir en el archivo se recuerda
+  // hasta qué cambio quedó guardado. No depende de que la base interna se haya refrescado.
+  const edits = useRef((doc.savedAt ?? 0) < doc.updatedAt ? 1 : 0);
+  const writtenEdits = useRef(0);
+  useEffect(() => {
+    const bump = () => void (edits.current += 1);
+    editor.on("update", bump);
+    return () => void editor.off("update", bump);
+  }, [editor]);
+  useEffect(() => {
+    if (title !== doc.title) edits.current += 1;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
+
+  /** ¿Hay cambios que aún no están en el archivo del disco? */
+  const isDirty = useCallback(() => !!docRef.current.filePath && edits.current > writtenEdits.current, []);
+
+  /** Escribe ya en el archivo vinculado, sin avisos salvo si falla. */
+  const writeNow = useCallback(async (): Promise<boolean> => {
+    const d = docRef.current;
+    if (!d.filePath || !isDesktop()) return true;
+    await saveNow();
+    setDiskState("saving");
+    const upTo = edits.current;
+    try {
+      await writeLinkedFile(d, source());
+      writtenEdits.current = Math.max(writtenEdits.current, upTo);
+      setDiskState("idle");
+      if (failed.current) {
+        failed.current = false;
+        toast(`Guardado de nuevo en «${fileName(d.filePath)}»`, "success");
+      }
+      return true;
+    } catch (e) {
+      setDiskState("error");
+      // Solo se avisa una vez hasta que vuelva a funcionar
+      if (!failed.current) {
+        failed.current = true;
+        toast(`No se pudo guardar automáticamente en «${fileName(d.filePath)}»`, "error", {
+          detail: e instanceof Error ? e.message : String(e),
+        });
+      }
+      return false;
+    }
+  }, [saveNow, source, toast]);
+
+  // Unos segundos después del último cambio, se escribe en el archivo
+  useEffect(() => {
+    if (!autoSave || !isDesktop() || !doc.filePath || !unsavedFile) return;
+    const t = setTimeout(() => void writeNow(), 2000);
+    return () => clearTimeout(t);
+  }, [autoSave, doc.filePath, doc.updatedAt, unsavedFile, writeNow]);
+
+  // Se registra para que el cierre de la ventana sepa si hay cambios sin guardar
+  useEffect(
+    () => registerOpenDoc({
+        id: doc.id,
+        title: () => titleRef.current,
+        path: () => docRef.current.filePath ?? null,
+        dirty: isDirty,
+        save: writeNow,
+        flush: saveNow,
+      }),
+    [doc.id, isDirty, writeNow, saveNow],
+  );
+
+  // Al salir del documento: con autoguardado se guarda al momento; si no, se pregunta
+  const setLeaveGuard = useApp((st) => st.setLeaveGuard);
+  useEffect(() => {
+    const guard = async () => {
+      const d = docRef.current;
+      if (!isDesktop() || !d.filePath || !isDirty()) return true;
+      if (useSettings.getState().fileAutoSave && (await writeNow())) return true;
+      const choice = await useConfirm.getState().askUnsaved([fileName(d.filePath)]);
+      if (choice === "cancel") return false;
+      if (choice === "save") return writeNow();
+      return true;
+    };
+    setLeaveGuard(guard);
+    return () => {
+      if (useApp.getState().leaveGuard === guard) setLeaveGuard(null);
+    };
+  }, [isDirty, setLeaveGuard, writeNow]);
   useEffect(() => () => saveTitle.cancel(), [saveTitle]);
   useEffect(() => () => discardAI(), [discardAI]);
 
@@ -171,10 +274,12 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
     <div className="flex h-full flex-col bg-bg">
       {/* Barra de título */}
       <header
+        data-tauri-drag-region
         className={cn(
           "no-print flex h-11 shrink-0 items-center gap-2 border-b border-border bg-surface px-2 transition-opacity",
           focus && "opacity-0 hover:opacity-100",
         )}
+        style={{ paddingRight: "calc(var(--wc) + 8px)" }}
       >
         <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
           <ArrowLeft className="size-4" />
@@ -201,14 +306,30 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
           <Settings className="size-4" />
         </IconButton>
         {doc.filePath && (
-          <Tooltip label={unsavedFile ? `Cambios sin guardar en ${doc.filePath}` : `Guardado en ${doc.filePath} · clic para ver la carpeta`}>
+          <Tooltip
+            label={
+              diskState === "error"
+                ? `No se pudo guardar en ${doc.filePath}`
+                : unsavedFile
+                  ? autoSave
+                    ? `Guardando en ${doc.filePath}…`
+                    : `Cambios sin guardar en ${doc.filePath} (Ctrl+S)`
+                  : `Guardado en ${doc.filePath} · clic para ver la carpeta`
+            }
+          >
             <button
               onClick={() => void revealInFolder(doc.filePath!).catch(() => {})}
               className="flex max-w-[220px] items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-muted hover:bg-surface-2 hover:text-text"
             >
               <FileText className="size-3.5 shrink-0" />
               <span className="truncate">{fileName(doc.filePath)}</span>
-              {unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Cambios sin guardar en el archivo" />}
+              {diskState === "saving" ? (
+                <Loader2 className="size-3 shrink-0 animate-spin" aria-label="Guardando en el archivo" />
+              ) : diskState === "error" ? (
+                <span className="size-1.5 shrink-0 rounded-full bg-red-500" aria-label="Error al guardar en el archivo" />
+              ) : (
+                unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Cambios sin guardar en el archivo" />
+              )}
             </button>
           </Tooltip>
         )}

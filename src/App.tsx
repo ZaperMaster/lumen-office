@@ -5,6 +5,13 @@ import { applyTheme } from "@/lib/themes";
 import { TooltipProvider } from "@/components/ui";
 import { Toasts } from "@/components/Toasts";
 import { Launcher } from "@/components/launcher/Launcher";
+import { UnsavedDialog } from "@/components/UnsavedDialog";
+import { WindowControls, WINDOW_CONTROLS_WIDTH } from "@/components/WindowControls";
+import { installCloseGuard } from "@/lib/closeGuard";
+import { isDesktop } from "@/lib/files";
+
+// Espacio que las barras superiores dejan a los botones de la ventana (solo en la app de escritorio)
+document.documentElement.style.setProperty("--wc", isDesktop() ? `${WINDOW_CONTROLS_WIDTH}px` : "0px");
 
 const DocumentApp = lazy(() => import("@/components/editor/DocumentApp"));
 const NotesApp = lazy(() => import("@/components/notes/NotesApp"));
@@ -17,6 +24,12 @@ function ThemeSync() {
   useEffect(() => {
     applyTheme({ themeId, accent, paperMode, uiFont, radius });
   }, [themeId, accent, paperMode, uiFont, radius]);
+  return null;
+}
+
+/** Confirma antes de cerrar la ventana si hay cambios sin guardar en archivos. */
+function CloseGuard() {
+  useEffect(() => installCloseGuard(), []);
   return null;
 }
 
@@ -47,6 +60,9 @@ export default function App() {
         </Suspense>
       )}
       <Toasts />
+      <UnsavedDialog />
+      <CloseGuard />
+      <WindowControls />
     </TooltipProvider>
   );
 }

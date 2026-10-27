@@ -26,7 +26,9 @@ export function Launcher() {
   return (
     <div className="flex h-full bg-bg">
       <Rail section={section} onChange={(s) => navigate({ name: "home", section: s })} />
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="relative min-w-0 flex-1 overflow-y-auto">
+        {/* Franja superior para mover la ventana (la app no usa la barra de título de Windows) */}
+        <div data-tauri-drag-region className="no-print sticky top-0 z-10 -mb-9 h-9" />
         <div key={section} className="mx-auto max-w-[1180px] animate-fade-in px-10 py-9">
           {section === "home" && <HomeSection />}
           {section === "new" && <NewSection />}
@@ -54,7 +56,7 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
   ];
   return (
     <aside className="flex w-[220px] shrink-0 flex-col border-r border-border bg-surface px-3 py-5">
-      <div className="mb-7 flex items-center gap-2.5 px-2">
+      <div data-tauri-drag-region className="mb-7 flex items-center gap-2.5 px-2">
         <Logo className="size-8" />
         <div>
           <div className="text-[15px] font-bold leading-tight">Lumen</div>

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { createDoc, db, displayTitle, duplicateDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
 import { debounce, relativeTime } from "@/lib/format";
-import { exportDocument, type DocSource } from "@/lib/files";
+import { exportDocument, registerOpenDoc, type DocSource } from "@/lib/files";
 import type { FileFormat } from "@/lib/db";
 import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -83,7 +83,7 @@ export default function NotesApp() {
   return (
     <div className="flex h-full bg-bg">
       <aside className="flex shrink-0 flex-col border-r border-border bg-surface" style={{ width }}>
-        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-2">
+        <div data-tauri-drag-region className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-2">
           <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
             <ArrowLeft className="size-4" />
           </IconButton>
@@ -185,7 +185,12 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 function NoteEditor({ note }: { note: DocRecord }) {
   const [initial] = useState(note.content);
-  const { editor, saveState } = useDocEditor(note.id, initial, "Escribe tu nota…");
+  const { editor, saveState, saveNow } = useDocEditor(note.id, initial, "Escribe tu nota…");
+  // Las notas no tienen archivo, pero al cerrar la ventana hay que terminar de guardarlas
+  useEffect(
+    () => registerOpenDoc({ id: note.id, title: () => note.title, path: () => null, dirty: () => false, save: async () => true, flush: saveNow }),
+    [note.id, note.title, saveNow],
+  );
   if (!editor) return null;
   return <NoteShell note={note} editor={editor} saveState={saveState} />;
 }
@@ -218,7 +223,7 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
   return (
     <div className="flex h-full">
       <div className="relative flex min-w-0 flex-1 flex-col" style={{ background: tint }}>
-        <div className="no-print flex h-11 shrink-0 items-center border-b border-border bg-surface/80 backdrop-blur">
+        <div data-tauri-drag-region className="no-print flex h-11 shrink-0 items-center border-b border-border bg-surface/80 backdrop-blur" style={{ paddingRight: "calc(var(--wc) + 8px)" }}>
           <NoteToolbar editor={editor} />
           <NoteActions note={note} editor={editor} title={title} onRemove={remove} />
         </div>

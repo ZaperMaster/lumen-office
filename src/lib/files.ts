@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import { saveAs } from "file-saver";
-import { updateDoc, type DocRecord, type FileFormat } from "@/lib/db";
+import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import { buildDocx, buildHtmlPage, buildLumen, buildMarkdown, importFromFile, safeFileName } from "@/lib/io";
 import { useApp } from "@/store/app";
 
@@ -108,6 +108,19 @@ function errorToast(e: unknown) {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Escribe el documento en su archivo vinculado y lo marca como guardado.
+ * La hora se toma al empezar: lo que se escriba mientras tanto queda como pendiente.
+ * Lanza el error si falla (lo usa también el autoguardado, que no muestra avisos).
+ */
+export async function writeLinkedFile(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource): Promise<void> {
+  if (!doc.filePath || !doc.fileFormat) throw new Error("El documento no está vinculado a un archivo.");
+  const startedAt = Date.now();
+  await writeFile(doc.filePath, await buildBytes(doc.fileFormat, src));
+  // Sin pasar por updateDoc: guardar en disco no es modificar el documento
+  await db.docs.update(doc.id, { savedAt: startedAt });
+}
+
+/**
  * Guardar (Ctrl+S). Si el documento ya está vinculado a un archivo lo reemplaza;
  * si no, abre «Guardar como». Devuelve la ruta o null si se canceló.
  */
@@ -115,14 +128,47 @@ export async function saveDocument(doc: Pick<DocRecord, "id" | "filePath" | "fil
   if (!isDesktop()) return downloadCopy(doc.fileFormat ?? "docx", src);
   if (!doc.filePath || !doc.fileFormat) return saveDocumentAs(doc, src);
   try {
-    await writeFile(doc.filePath, await buildBytes(doc.fileFormat, src));
-    await updateDoc(doc.id, { savedAt: Date.now() + 1 });
+    await writeLinkedFile(doc, src);
     savedToast(`Guardado en «${fileName(doc.filePath)}»`, doc.filePath);
     return doc.filePath;
   } catch (e) {
     errorToast(e);
     return null;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Documentos abiertos con cambios pendientes en su archivo           */
+/* ------------------------------------------------------------------ */
+
+export interface OpenDocEntry {
+  id: string;
+  title: () => string;
+  path: () => string | null;
+  /** ¿Hay cambios que aún no están en el archivo del disco? */
+  dirty: () => boolean;
+  /** Guarda en el archivo; true si se guardó */
+  save: () => Promise<boolean>;
+  /** Termina de escribir en la base interna lo que aún esté pendiente */
+  flush: () => Promise<void> | void;
+}
+
+const openDocs = new Map<string, OpenDocEntry>();
+
+export function registerOpenDoc(entry: OpenDocEntry): () => void {
+  openDocs.set(entry.id, entry);
+  return () => {
+    if (openDocs.get(entry.id) === entry) openDocs.delete(entry.id);
+  };
+}
+
+/** Escribe en la base interna lo pendiente de todos los documentos y notas abiertos. */
+export async function flushOpenDocs(): Promise<void> {
+  await Promise.all([...openDocs.values()].map((d) => d.flush()));
+}
+
+export function dirtyOpenDocs(): OpenDocEntry[] {
+  return [...openDocs.values()].filter((d) => d.path() && d.dirty());
 }
 
 /** Guardar como (Ctrl+Mayús+S): elige ubicación y formato, y vincula el documento a ese archivo. */
@@ -133,8 +179,9 @@ export async function saveDocumentAs(doc: Pick<DocRecord, "id" | "filePath" | "f
   if (!path) return null;
   const format = formatFromPath(path) ?? preferred;
   try {
+    const startedAt = Date.now();
     await writeFile(path, await buildBytes(format, src));
-    await updateDoc(doc.id, { filePath: path, fileFormat: format, savedAt: Date.now() + 1 });
+    await db.docs.update(doc.id, { filePath: path, fileFormat: format, savedAt: startedAt });
     savedToast(`Guardado en «${fileName(path)}»`, path);
     return path;
   } catch (e) {

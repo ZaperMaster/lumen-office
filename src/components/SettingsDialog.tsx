@@ -620,6 +620,16 @@ function General() {
       <Field label="Tu nombre" desc="Se usa en el saludo y como autor al exportar.">
         <Input value={s.userName} onChange={(e) => s.set("userName", e.target.value)} placeholder="Nombre" className="w-56" />
       </Field>
+      <Field
+        label="Guardar automáticamente en el archivo"
+        desc={
+          s.fileAutoSave
+            ? "Los documentos abiertos desde un archivo o guardados en uno se actualizan solos en el disco unos segundos después de cada cambio."
+            : "Tendrás que pulsar Guardar (Ctrl+S). Si sales o cierras con cambios sin guardar, se te preguntará."
+        }
+      >
+        <Switch checked={s.fileAutoSave} onChange={(v) => s.set("fileAutoSave", v)} label="Guardar automáticamente en el archivo" />
+      </Field>
       <Field label="Copia de seguridad" desc="Descarga todos tus documentos y notas en un archivo.">
         <Button variant="outline" icon={<Download className="size-4" />} onClick={backup}>Exportar</Button>
       </Field>

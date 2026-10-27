@@ -23,7 +23,7 @@ export default function AssistantApp() {
 
   return (
     <div className="flex h-full flex-col bg-surface">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
+      <header data-tauri-drag-region className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3" style={{ paddingRight: "calc(var(--wc) + 8px)" }}>
         <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
           <ArrowLeft className="size-4" />
         </IconButton>

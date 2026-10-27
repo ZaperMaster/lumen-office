@@ -23,15 +23,16 @@ export function readingTime(words: number): string {
   return `${min} min de lectura`;
 }
 
-export function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number) {
+export function debounce<A extends unknown[], R>(fn: (...a: A) => R, ms: number) {
   let t: ReturnType<typeof setTimeout> | undefined;
   const d = (...a: A) => {
     clearTimeout(t);
     t = setTimeout(() => fn(...a), ms);
   };
-  d.flush = (...a: A) => {
+  /** Ejecuta ya lo pendiente y devuelve su resultado (p. ej. la promesa del guardado) */
+  d.flush = (...a: A): R => {
     clearTimeout(t);
-    fn(...a);
+    return fn(...a);
   };
   d.cancel = () => clearTimeout(t);
   return d;

@@ -53,6 +53,8 @@ export interface Settings {
   ribbonCollapsed: boolean;
   notesSidebarWidth: number;
   userName: string;
+  /** Guardar solo en el disco los documentos vinculados a un archivo */
+  fileAutoSave: boolean;
 }
 
 interface SettingsActions {
@@ -97,6 +99,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ribbonCollapsed: false,
   notesSidebarWidth: 300,
   userName: "",
+  fileAutoSave: true,
 };
 
 export const useSettings = create<Settings & SettingsActions>()(

@@ -18,6 +18,9 @@ interface AppState {
   settingsOpen: boolean;
   settingsTab: string;
   toasts: Toast[];
+  /** Se consulta antes de salir de la pantalla actual (p. ej. cambios sin guardar en el archivo) */
+  leaveGuard: (() => Promise<boolean>) | null;
+  setLeaveGuard: (g: (() => Promise<boolean>) | null) => void;
   navigate: (r: Route) => void;
   openSettings: (tab?: string) => void;
   closeSettings: () => void;
@@ -27,12 +30,20 @@ interface AppState {
 
 let toastId = 0;
 
-export const useApp = create<AppState>((set) => ({
+export const useApp = create<AppState>((set, get) => ({
   route: { name: "home" },
   settingsOpen: false,
   settingsTab: "appearance",
   toasts: [],
-  navigate: (route) => set({ route }),
+  leaveGuard: null,
+  setLeaveGuard: (leaveGuard) => set({ leaveGuard }),
+  navigate: (route) => {
+    const guard = get().leaveGuard;
+    if (!guard) return set({ route });
+    void guard().then((ok) => {
+      if (ok) set({ route });
+    });
+  },
   openSettings: (tab = "appearance") => set({ settingsOpen: true, settingsTab: tab }),
   closeSettings: () => set({ settingsOpen: false }),
   toast: (message, tone = "info", extra = {}) => {
