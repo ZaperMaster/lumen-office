@@ -4,7 +4,8 @@ import DOMPurify from "dompurify";
 import TurndownService from "turndown";
 import { saveAs } from "file-saver";
 import {
-  AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, ImageRun, LevelFormat, Packer, PageBreak,
+  AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
+  ImageRun, LevelFormat, Packer, PageBreak, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
   PageOrientation, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
   type IParagraphOptions, type ParagraphChild,
 } from "docx";
@@ -185,16 +186,39 @@ const ALIGN: Record<string, (typeof AlignmentType)[keyof typeof AlignmentType]> 
 
 const HEADINGS = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4];
 
-async function imageRun(src: string): Promise<ImageRun | null> {
+/** Margen (en EMU) entre una imagen flotante y el texto que la rodea: ~0,3 cm. */
+const WRAP_GAP = 114300;
+
+async function imageRun(src: string, width: number | null, align: string): Promise<ImageRun | null> {
   try {
     const res = await fetch(src);
     const blob = await res.blob();
     const data = new Uint8Array(await blob.arrayBuffer());
     const bmp = await createImageBitmap(blob);
+    // Mismo ancho que en el editor (px); si no tiene, el natural hasta el ancho de página
     const maxW = 600;
-    const scale = Math.min(1, maxW / bmp.width);
+    const w = Math.min(maxW, width ?? bmp.width);
+    const scale = w / bmp.width;
     const type = blob.type.includes("png") ? "png" : blob.type.includes("gif") ? "gif" : blob.type.includes("bmp") ? "bmp" : "jpg";
-    return new ImageRun({ type, data, transformation: { width: bmp.width * scale, height: bmp.height * scale } });
+    const transformation = { width: bmp.width * scale, height: bmp.height * scale };
+    if (align === "left" || align === "right") {
+      // Imagen flotante con el texto alrededor, como en el editor
+      return new ImageRun({
+        type,
+        data,
+        transformation,
+        floating: {
+          horizontalPosition: {
+            relative: HorizontalPositionRelativeFrom.MARGIN,
+            align: align === "left" ? HorizontalPositionAlign.LEFT : HorizontalPositionAlign.RIGHT,
+          },
+          verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: 0 },
+          wrap: { type: TextWrappingType.SQUARE, side: TextWrappingSide.BOTH_SIDES },
+          margins: align === "left" ? { right: WRAP_GAP, bottom: WRAP_GAP } : { left: WRAP_GAP, bottom: WRAP_GAP },
+        },
+      });
+    }
+    return new ImageRun({ type, data, transformation });
   } catch {
     return null;
   }
@@ -278,8 +302,11 @@ async function blockToDocx(node: JSONContent, ctx: Ctx, extra: Partial<IParagrap
     case "pageBreak":
       return [new Paragraph({ children: [new PageBreak()] })];
     case "image": {
-      const run = attrs.src ? await imageRun(attrs.src) : null;
-      return run ? [new Paragraph({ children: [run], alignment: AlignmentType.CENTER })] : [];
+      const run = attrs.src ? await imageRun(attrs.src, attrs.width ?? null, attrs.align ?? "center") : null;
+      if (!run) return [];
+      // Las flotantes van en un párrafo vacío: el texto siguiente la rodea
+      const floating = attrs.align === "left" || attrs.align === "right";
+      return [new Paragraph({ children: [run], alignment: floating ? undefined : AlignmentType.CENTER, spacing: floating ? { after: 0 } : undefined })];
     }
     case "bulletList":
     case "orderedList":

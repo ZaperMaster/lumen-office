@@ -14,6 +14,7 @@ import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
 import { useAI } from "@/components/ai/aiStore";
 import { exportDocx, exportHtml, exportMarkdown, exportText, printDocument, importFromFile, ACCEPTED_IMPORTS } from "@/lib/io";
 import { newDocument, newNote, openDoc } from "@/lib/actions";
+import { normalizeUrl } from "@/lib/openExternal";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize, type ViewMode } from "@/store/settings";
 import { useApp } from "@/store/app";
 import {
@@ -461,7 +462,7 @@ export function LinkButton({ editor, big }: { editor: Editor; big?: boolean }) {
   const [url, setUrl] = useState("");
   const [open, setOpen] = useState(false);
   const apply = () => {
-    const href = url.trim();
+    const href = normalizeUrl(url);
     if (!href) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
     } else if (editor.state.selection.empty && !editor.isActive("link")) {

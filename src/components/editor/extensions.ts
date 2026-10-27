@@ -6,7 +6,7 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
 import { TableKit } from "@tiptap/extension-table";
-import Image from "@tiptap/extension-image";
+import { ImageBlock } from "@/components/editor/image/ImageBlock";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
@@ -333,7 +333,7 @@ export function buildExtensions(opts: { placeholder: string; smartTyping: boolea
     TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
     Highlight.configure({ multicolor: true }),
     TableKit.configure({ table: { resizable: true, cellMinWidth: 60 } }),
-    Image.configure({ allowBase64: true, inline: false }),
+    ImageBlock,
     TaskList,
     TaskItem.configure({ nested: true }),
     Subscript,

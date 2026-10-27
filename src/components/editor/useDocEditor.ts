@@ -3,6 +3,7 @@ import { useEditor, type JSONContent } from "@tiptap/react";
 import { buildExtensions } from "@/components/editor/extensions";
 import { countWords, plainText, updateDoc } from "@/lib/db";
 import { debounce } from "@/lib/format";
+import { openExternal } from "@/lib/openExternal";
 import { useSettings } from "@/store/settings";
 import type { SaveState } from "@/components/editor/StatusBar";
 
@@ -34,6 +35,15 @@ export function useDocEditor(docId: string, initial: JSONContent, placeholder: s
       content: latest.current,
       editorProps: {
         attributes: { class: "lumen-editor", spellcheck: String(spellcheck) },
+        // Ctrl + clic (Cmd en Mac) abre el vínculo, como en Word
+        handleClick: (_view, _pos, event) => {
+          if (!(event.ctrlKey || event.metaKey)) return false;
+          const a = (event.target as HTMLElement).closest("a[href]");
+          if (!a) return false;
+          event.preventDefault();
+          void openExternal(a.getAttribute("href")!).catch(() => {});
+          return true;
+        },
         handleDrop: (view, event) => {
           // Soltar imágenes desde el explorador de archivos
           const files = [...(event.dataTransfer?.files ?? [])].filter((f) => f.type.startsWith("image/"));

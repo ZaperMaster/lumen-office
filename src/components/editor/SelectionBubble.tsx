@@ -23,6 +23,7 @@ export function SelectionBubble({ editor }: { editor: Editor }) {
   return (
     <BubbleMenu
       editor={editor}
+      pluginKey="selectionBubble"
       options={{ placement: "top", offset: 8 }}
       shouldShow={({ editor: e, state }) => {
         const { empty } = state.selection;

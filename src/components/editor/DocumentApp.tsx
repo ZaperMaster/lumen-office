@@ -12,6 +12,7 @@ import { Ribbon } from "@/components/editor/Ribbon";
 import { FindBar } from "@/components/editor/FindBar";
 import { StatusBar, SaveIndicator } from "@/components/editor/StatusBar";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
+import { LinkBubble } from "@/components/editor/LinkBubble";
 import { WordCountDialog } from "@/components/editor/WordCountDialog";
 import { useDocEditor } from "@/components/editor/useDocEditor";
 import { stepSize, parsePt } from "@/components/editor/controls";
@@ -249,6 +250,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       </div>
 
       <SelectionBubble editor={editor} />
+      <LinkBubble editor={editor} />
       {!focus && <StatusBar editor={editor} pages={pages} saveState={saveState} onWordCount={() => setWordCount(true)} />}
       <WordCountDialog editor={editor} open={wordCount} onOpenChange={setWordCount} pages={pages} />
     </div>

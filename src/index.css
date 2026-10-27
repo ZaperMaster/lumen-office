@@ -173,6 +173,20 @@ button:disabled {
 .lumen-editor img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0.6em auto; }
 .lumen-editor img.ProseMirror-selectednode { outline: 3px solid var(--accent); }
 
+/* Imágenes con ajuste al texto (nodo .image-node) */
+.lumen-editor .image-node { margin: 0.6em 0; line-height: 0; }
+.lumen-editor .image-node img { margin: 0; }
+.lumen-editor .image-node[data-align="center"] { text-align: center; clear: both; }
+.lumen-editor .image-node[data-align="left"] { float: left; margin: 0.3em 1.4em 0.6em 0; max-width: 70%; }
+.lumen-editor .image-node[data-align="right"] { float: right; margin: 0.3em 0 0.6em 1.4em; max-width: 70%; }
+.lumen-editor .image-node img[data-drag-handle] { cursor: grab; }
+.lumen-editor .image-node img[data-drag-handle]:active { cursor: grabbing; }
+.lumen-editor .image-selected img { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Los títulos y saltos empiezan debajo de las imágenes flotantes */
+.lumen-editor h1, .lumen-editor h2, .lumen-editor .page-break, .lumen-editor hr { clear: both; }
+/* El documento contiene sus imágenes flotantes */
+.lumen-editor::after { content: ""; display: block; clear: both; }
+
 /* Tablas */
 .lumen-editor .tableWrapper { overflow-x: auto; margin: 1em 0; }
 .lumen-editor table { border-collapse: collapse; table-layout: fixed; width: 100%; overflow: hidden; }
