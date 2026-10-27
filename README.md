@@ -61,8 +61,16 @@ La IA funciona **en tu propio equipo**, sin cuentas, sin claves y sin enviar tex
 - **Ollama (opcional):** si tienes [Ollama](https://ollama.com) instalado, la app puede usar sus modelos
   (por ejemplo `ollama pull qwen2.5:7b`).
 
+- **Tu propia API (opcional):** cualquier servicio compatible con OpenAI (OpenAI, OpenRouter, Groq, DeepSeek,
+  Mistral, LM Studio…) o Anthropic. En este modo el texto se envía a ese servicio y no se usa memoria local.
+
 Se configura en **Configuración → Inteligencia artificial**, donde también se pueden borrar los modelos descargados.
 Los modelos pequeños (3B) cometen algún error suelto; para mejor calidad usa Qwen 2.5 7B si tu gráfica tiene 6 GB o más.
+
+### Memoria
+
+Con la IA local en uso, el modelo ocupa unos 2,5–3 GB (en la gráfica). Se libera solo tras 5 minutos sin usarlo
+(configurable) o al pulsar **«IA en memoria · Liberar»**. Sin el modelo cargado, la app ocupa unos 350 MB.
 
 ## Datos
 

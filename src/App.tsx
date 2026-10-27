@@ -5,11 +5,12 @@ import { applyTheme } from "@/lib/themes";
 import { TooltipProvider } from "@/components/ui";
 import { Toasts } from "@/components/Toasts";
 import { Launcher } from "@/components/launcher/Launcher";
-import { SettingsDialog } from "@/components/SettingsDialog";
 
 const DocumentApp = lazy(() => import("@/components/editor/DocumentApp"));
 const NotesApp = lazy(() => import("@/components/notes/NotesApp"));
 const AssistantApp = lazy(() => import("@/components/ai/AssistantApp"));
+// Configuración solo se descarga al abrirla (aligera el arranque)
+const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
 
 function ThemeSync() {
   const { themeId, accent, paperMode, uiFont, radius } = useSettings();
@@ -29,6 +30,7 @@ function Loading() {
 
 export default function App() {
   const route = useApp((s) => s.route);
+  const settingsOpen = useApp((s) => s.settingsOpen);
 
   return (
     <TooltipProvider>
@@ -39,7 +41,11 @@ export default function App() {
         {route.name === "notes" && <NotesApp />}
         {route.name === "assistant" && <AssistantApp />}
       </Suspense>
-      <SettingsDialog />
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsDialog />
+        </Suspense>
+      )}
       <Toasts />
     </TooltipProvider>
   );

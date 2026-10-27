@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { ArrowUp, Copy, FilePlus2, Plus, Sparkles, Square, Trash2, X, CornerDownLeft } from "lucide-react";
-import { streamText, currentModelName, MAX_CONTEXT_CHARS, type ChatMsg } from "@/lib/ai";
+import { streamText, currentModelName, contextLimit, type ChatMsg } from "@/lib/ai";
 import { LocalAIBanner } from "@/components/ai/LocalAIStatus";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/io";
 import { insertMarkdown } from "@/components/ai/aiStore";
@@ -91,7 +91,8 @@ export function ChatPanel({
     if (editor && useDoc) {
       let md = htmlToMarkdown(editor.getHTML());
       // Los modelos locales tienen un contexto limitado: se recorta el documento si es muy largo
-      if (md.length > MAX_CONTEXT_CHARS) md = md.slice(0, MAX_CONTEXT_CHARS) + "\n\n[…documento recortado…]";
+      const limit = contextLimit();
+      if (md.length > limit) md = md.slice(0, limit) + "\n\n[…documento recortado…]";
       system = `El usuario está trabajando en el documento «${docTitle || "Sin título"}». Su contenido actual en Markdown es:\n<documento>\n${md}\n</documento>\nUsa este documento como contexto cuando sea relevante.`;
     }
 

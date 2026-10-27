@@ -1,19 +1,36 @@
 import { useSettings } from "@/store/settings";
-import { LOCAL_MODELS, loadEngine, type ChatMsg } from "@/lib/localModels";
+import { LOCAL_MODELS, loadEngine, loadRemote, type ChatMsg } from "@/lib/localModels";
 
 /*
- * IA 100 % local: el modelo se ejecuta en este equipo, con el motor integrado
- * (WebGPU) o con Ollama. Ningún texto sale del ordenador.
+ * Tres motores de IA:
+ *  - webllm: modelo local en la tarjeta gráfica (nada sale del equipo)
+ *  - ollama: modelo local servido por Ollama (nada sale del equipo)
+ *  - api:    API propia del usuario (OpenAI-compatible o Anthropic); el texto se envía a ese servicio
  */
 
 export type { ChatMsg };
 
-/** Límite de texto del documento que se pasa como contexto (los modelos locales tienen ventanas pequeñas). */
+/** Límite de texto del documento que se pasa como contexto a los modelos locales (ventanas pequeñas). */
 export const MAX_CONTEXT_CHARS = 14000;
+/** Con una API remota el contexto puede ser mucho mayor. */
+export const MAX_CONTEXT_CHARS_API = 200000;
+
+export function contextLimit(): number {
+  return useSettings.getState().aiEngine === "api" ? MAX_CONTEXT_CHARS_API : MAX_CONTEXT_CHARS;
+}
+
+/** ¿El motor actual mantiene los textos en el equipo? */
+export function isLocalEngine(): boolean {
+  return useSettings.getState().aiEngine !== "api";
+}
 
 export function currentModelName(): string {
   const s = useSettings.getState();
   if (s.aiEngine === "ollama") return s.ollamaModel ? `Ollama · ${s.ollamaModel}` : "Ollama";
+  if (s.aiEngine === "api") {
+    if (s.apiProvider === "anthropic") return `API · ${s.anthropicModel}`;
+    return s.openaiModel ? `API · ${s.openaiModel}` : "API (sin modelo)";
+  }
   return LOCAL_MODELS.find((m) => m.id === s.localModel)?.name ?? s.localModel;
 }
 
@@ -38,17 +55,35 @@ export interface StreamOptions {
   onText?: (delta: string, full: string) => void;
 }
 
-/** Genera la respuesta en streaming con el motor local configurado y devuelve el texto completo. */
+/** Genera la respuesta en streaming con el motor configurado y devuelve el texto completo. */
 export async function streamText({ messages, system, signal, temperature, onText }: StreamOptions): Promise<string> {
   const s = useSettings.getState();
   const sys = systemPrompt(system);
-  const { streamOllama, streamWebLLM } = await loadEngine();
   // El texto se limpia también durante el streaming para que la vista previa ya salga bien
   const onClean = onText ? (delta: string, full: string) => onText(delta, cleanOutput(full)) : undefined;
-  const text =
-    s.aiEngine === "ollama"
-      ? await streamOllama({ baseUrl: s.ollamaUrl, model: s.ollamaModel, system: sys, messages, signal, temperature, onText: onClean })
-      : await streamWebLLM({ modelId: s.localModel, system: sys, messages, signal, temperature, onText: onClean });
+  const common = { system: sys, messages, signal, temperature, onText: onClean };
+  let text: string;
+  if (s.aiEngine === "webllm") {
+    // Solo aquí se carga el motor local (unos 6 MB de código)
+    const { streamWebLLM } = await loadEngine();
+    text = await streamWebLLM({ modelId: s.localModel, ...common });
+  } else {
+    const remote = await loadRemote();
+    if (s.aiEngine === "ollama") {
+      text = await remote.streamOllama({ baseUrl: s.ollamaUrl, model: s.ollamaModel, keepAliveMinutes: s.aiUnloadMinutes, ...common });
+    } else if (s.apiProvider === "anthropic") {
+      // Los modelos actuales de Anthropic no admiten temperatura: se controla con el esfuerzo
+      text = await remote.streamAnthropic({
+        apiKey: s.anthropicKey,
+        model: s.anthropicModel,
+        effort: temperature !== undefined && temperature <= 0.5 ? "low" : "medium",
+        ...common,
+        temperature: undefined,
+      });
+    } else {
+      text = await remote.streamOpenAI({ baseUrl: s.openaiBaseUrl, apiKey: s.openaiKey, model: s.openaiModel, ...common });
+    }
+  }
   return cleanOutput(text);
 }
 

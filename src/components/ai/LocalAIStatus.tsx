@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Cpu, Download, HardDrive, Loader2, Server } from "lucide-react";
-import { LOCAL_MODELS, loadEngine, useLocalAI, webgpuAvailable } from "@/lib/localModels";
+import { Cpu, Download, Loader2, MemoryStick, Globe } from "lucide-react";
+import { LOCAL_MODELS, loadEngine, refreshCached, useLocalAI, webgpuAvailable } from "@/lib/localModels";
 import { useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
-import { Button, cn } from "@/components/ui";
+import { Button, Tooltip, cn } from "@/components/ui";
 
 /** Barra de progreso de descarga/carga del modelo. */
 export function ModelProgress({ className }: { className?: string }) {
@@ -25,47 +25,92 @@ export function ModelProgress({ className }: { className?: string }) {
   );
 }
 
-/** Aviso compacto para los paneles de IA cuando el modelo aún no está listo. */
+/** Indicador compacto: aparece solo cuando el modelo local ocupa memoria, con botón para liberarla. */
+export function ModelMemoryIndicator({ className }: { className?: string }) {
+  const loadedModel = useLocalAI((s) => s.loadedModel);
+  const minutes = useSettings((s) => s.aiUnloadMinutes);
+  if (!loadedModel) return null;
+  const name = LOCAL_MODELS.find((m) => m.id === loadedModel)?.name ?? "IA";
+  return (
+    <Tooltip
+      label={minutes > 0 ? `${name} está en memoria. Se liberará solo tras ${minutes} min sin usarla.` : `${name} está en memoria.`}
+      side="top"
+    >
+      <button
+        onClick={() => loadEngine().then((m) => m.unloadModel())}
+        className={cn("flex items-center gap-1 rounded px-1.5 py-0.5 text-[11.5px] text-amber-600 hover:bg-amber-500/10", className)}
+      >
+        <MemoryStick className="size-3.5" />
+        IA en memoria · Liberar
+      </button>
+    </Tooltip>
+  );
+}
+
+/** Aviso para los paneles de IA cuando el motor elegido aún no está listo. */
 export function LocalAIBanner() {
-  const { aiEngine, localModel, ollamaModel } = useSettings();
+  const s = useSettings();
   const { status, loadedModel, cached, error } = useLocalAI();
-  const openSettings = useApp((s) => s.openSettings);
-  const model = LOCAL_MODELS.find((m) => m.id === localModel);
+  const openSettings = useApp((st) => st.openSettings);
+  const model = LOCAL_MODELS.find((m) => m.id === s.localModel);
 
   useEffect(() => {
-    if (aiEngine === "webllm" && webgpuAvailable()) loadEngine().then((m) => m.refreshCached()).catch(() => {});
-  }, [aiEngine]);
+    if (s.aiEngine === "webllm") void refreshCached();
+  }, [s.aiEngine]);
 
-  if (aiEngine === "ollama") {
-    if (ollamaModel) return null;
+  const configure = (
+    <button onClick={() => openSettings("ai")} className="ml-1 font-semibold text-accent underline">
+      Configurar
+    </button>
+  );
+
+  if (s.aiEngine === "api") {
+    const missing = s.apiProvider === "anthropic" ? !s.anthropicKey : !s.openaiModel || (!s.openaiKey && !/localhost|127\.0\.0\.1/.test(s.openaiBaseUrl));
+    if (missing) {
+      return (
+        <div className="rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
+          Falta la clave o el modelo de tu API.
+          {configure}
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1.5 text-[11.5px] text-muted">
+        <Globe className="size-3.5" />
+        Usando tu API: los textos que envíes se mandan a ese servicio.
+      </div>
+    );
+  }
+  if (s.aiEngine === "ollama") {
+    if (s.ollamaModel) return null;
     return (
       <div className="rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
         Elige qué modelo de Ollama usar.
-        <button onClick={() => openSettings("ai")} className="ml-1 font-semibold text-accent underline">Configurar</button>
+        {configure}
       </div>
     );
   }
   if (!webgpuAvailable()) {
     return (
       <div className="rounded-[var(--radius)] border border-red-500/30 bg-red-500/10 p-3 text-[13px]">
-        Este equipo no admite el motor integrado (WebGPU). Puedes usar Ollama.
-        <button onClick={() => openSettings("ai")} className="ml-1 font-semibold text-accent underline">Configurar</button>
+        Este equipo no admite el motor integrado (WebGPU). Puedes usar Ollama o tu propia API.
+        {configure}
       </div>
     );
   }
   if (status === "loading") return <ModelProgress className="rounded-[var(--radius)] border border-border p-3" />;
-  if (loadedModel === localModel) return null;
+  if (loadedModel === s.localModel) return null;
 
-  const downloaded = cached[localModel];
+  const downloaded = cached[s.localModel];
   return (
     <div className="rounded-[var(--radius)] border border-border bg-surface-2/60 p-3 text-[13px]">
       <div className="mb-1 flex items-center gap-1.5 font-medium">
         <Cpu className="size-4 text-accent" />
-        IA local · {model?.name ?? localModel}
+        IA local · {model?.name ?? s.localModel}
       </div>
       <p className="mb-2.5 text-[12.5px] text-muted">
         {downloaded
-          ? "El modelo está en tu equipo. Se cargará en la tarjeta gráfica al usarlo."
+          ? "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se libera solo cuando dejas de usarlo."
           : `Funciona sin conexión y tus textos no salen del equipo. La primera vez se descarga el modelo (${model?.sizeGB.toLocaleString("es-ES")} GB).`}
       </p>
       {error && <p className="mb-2 text-[12.5px] text-red-500">{error}</p>}
@@ -73,14 +118,10 @@ export function LocalAIBanner() {
         size="sm"
         variant="primary"
         icon={downloaded ? <Cpu className="size-3.5" /> : <Download className="size-3.5" />}
-        onClick={() => loadEngine().then((m) => m.ensureModel(localModel)).catch(() => {})}
+        onClick={() => loadEngine().then((m) => m.ensureModel(s.localModel)).catch(() => {})}
       >
         {downloaded ? "Cargar ahora" : "Descargar modelo"}
       </Button>
     </div>
   );
-}
-
-export function EngineIcon({ engine }: { engine: "webllm" | "ollama" }) {
-  return engine === "ollama" ? <Server className="size-3.5" /> : <HardDrive className="size-3.5" />;
 }

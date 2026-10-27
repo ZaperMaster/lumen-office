@@ -7,13 +7,15 @@ import {
 import { db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
 import { TEMPLATES, type Template } from "@/lib/templates";
 import { createFromTemplate, newDocument, newNote, openDoc } from "@/lib/actions";
-import { importFromFile, ACCEPTED_IMPORTS } from "@/lib/io";
+// El módulo de importación (editor + docx) se carga solo al importar
+const ACCEPTED_IMPORTS = ".docx,.md,.markdown,.html,.htm,.txt";
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
 import { getTheme } from "@/lib/themes";
 import { Button, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Segmented, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
+import { ModelMemoryIndicator } from "@/components/ai/LocalAIStatus";
 
 type Section = NonNullable<Extract<Route, { name: "home" }>["section"]>;
 
@@ -76,6 +78,7 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
         ))}
       </nav>
       <div className="mt-auto flex flex-col gap-0.5">
+        <ModelMemoryIndicator className="mb-1 justify-center" />
         <button
           onClick={() => set("themeId", dark ? "light" : "dark")}
           className="flex h-9 items-center gap-3 rounded-[var(--radius)] px-3 text-[13.5px] font-medium text-muted hover:bg-surface-2 hover:text-text"
@@ -458,6 +461,7 @@ function OpenSection() {
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
+      const { importFromFile } = await import("@/lib/io");
       const doc = await importFromFile(file);
       toast(`«${file.name}» importado`, "success");
       openDoc(doc);

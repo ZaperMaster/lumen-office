@@ -7,6 +7,7 @@ export type PageSize = "A4" | "Letter" | "Legal" | "A5";
 export type Orientation = "portrait" | "landscape";
 export type Margins = "normal" | "narrow" | "moderate" | "wide";
 export type ViewMode = "page" | "web" | "focus";
+export type AIEngine = "webllm" | "ollama" | "api";
 
 export interface Settings {
   // Apariencia
@@ -32,10 +33,19 @@ export interface Settings {
   localFonts: FontDef[];
   recentFonts: string[];
   // IA
-  aiEngine: "webllm" | "ollama";
+  aiEngine: AIEngine;
   localModel: string;
   ollamaUrl: string;
   ollamaModel: string;
+  /** Minutos sin usar la IA local antes de liberar la memoria (0 = nunca) */
+  aiUnloadMinutes: number;
+  // API propia
+  apiProvider: "openai" | "anthropic";
+  openaiBaseUrl: string;
+  openaiKey: string;
+  openaiModel: string;
+  anthropicKey: string;
+  anthropicModel: string;
   aiLanguage: string;
   // Interfaz
   ribbonCollapsed: boolean;
@@ -73,6 +83,13 @@ export const DEFAULT_SETTINGS: Settings = {
   localModel: DEFAULT_LOCAL_MODEL,
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "",
+  aiUnloadMinutes: 5,
+  apiProvider: "openai",
+  openaiBaseUrl: "https://api.openai.com/v1",
+  openaiKey: "",
+  openaiModel: "",
+  anthropicKey: "",
+  anthropicModel: "claude-opus-5-5",
   aiLanguage: "español",
   ribbonCollapsed: false,
   notesSidebarWidth: 300,

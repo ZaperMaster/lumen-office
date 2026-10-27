@@ -7,11 +7,14 @@ import { LOCAL_MODELS } from "@/lib/localModels";
 import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
 import { IconButton } from "@/components/ui";
+import { currentModelName } from "@/lib/ai";
+import { ModelMemoryIndicator } from "@/components/ai/LocalAIStatus";
 
 export default function AssistantApp() {
   const navigate = useApp((s) => s.navigate);
   const openSettings = useApp((s) => s.openSettings);
-  const { aiEngine, localModel, ollamaModel, set } = useSettings();
+  // Sin selector: se re-renderiza con cualquier cambio de la configuración de IA
+  const { aiEngine, localModel, set } = useSettings();
 
   const createDocument = async (md: string) => {
     const heading = md.match(/^#\s+(.+)$/m)?.[1];
@@ -29,7 +32,12 @@ export default function AssistantApp() {
           <Sparkles className="size-4" />
         </span>
         <span className="text-[14px] font-semibold">Asistente IA</span>
-        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600">Local · sin conexión</span>
+        {aiEngine === "api" ? (
+          <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-600">Tu API</span>
+        ) : (
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600">Local · sin conexión</span>
+        )}
+        <ModelMemoryIndicator />
         <div className="ml-auto flex items-center gap-1">
           {aiEngine === "webllm" ? (
             <select
@@ -45,7 +53,7 @@ export default function AssistantApp() {
               ))}
             </select>
           ) : (
-            <span className="text-[12.5px] text-muted">Ollama · {ollamaModel || "sin modelo"}</span>
+            <span className="text-[12.5px] text-muted">{currentModelName()}</span>
           )}
           <IconButton label="Configurar la IA" onClick={() => openSettings("ai")}>
             <Settings2 className="size-4" />

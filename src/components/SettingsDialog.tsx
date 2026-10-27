@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Cpu, Download, HardDrive, Keyboard, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw } from "lucide-react";
+import { Check, Cpu, Download, Eye, EyeOff, HardDrive, KeyRound, Keyboard, MemoryStick, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw } from "lucide-react";
 import { RDialogRoot } from "@/components/ui/dialogPrimitives";
 import { THEMES, ACCENT_PRESETS, getTheme } from "@/lib/themes";
 import { LANGUAGES } from "@/lib/ai";
-import { LOCAL_MODELS, loadEngine, useLocalAI, webgpuAvailable } from "@/lib/localModels";
+import { ANTHROPIC_MODEL_OPTIONS, LOCAL_MODELS, loadEngine, loadRemote, refreshCached, useLocalAI, webgpuAvailable } from "@/lib/localModels";
 import { ModelProgress } from "@/components/ai/LocalAIStatus";
 import { db, type DocRecord } from "@/lib/db";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize } from "@/store/settings";
@@ -224,22 +224,34 @@ function PageSettings() {
   );
 }
 
+const API_PRESETS = [
+  { name: "OpenAI", url: "https://api.openai.com/v1" },
+  { name: "OpenRouter", url: "https://openrouter.ai/api/v1" },
+  { name: "Groq", url: "https://api.groq.com/openai/v1" },
+  { name: "DeepSeek", url: "https://api.deepseek.com/v1" },
+  { name: "Mistral", url: "https://api.mistral.ai/v1" },
+  { name: "LM Studio (local)", url: "http://localhost:1234/v1" },
+];
+
 function AISettings() {
   const s = useSettings();
   const local = useLocalAI();
   const toast = useApp((st) => st.toast);
   const [ollamaModels, setOllamaModels] = useState<string[] | null>(null);
   const [ollamaError, setOllamaError] = useState<string | null>(null);
+  const [apiModels, setApiModels] = useState<string[] | null>(null);
+  const [apiStatus, setApiStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [showKey, setShowKey] = useState(false);
   const gpu = webgpuAvailable();
 
   useEffect(() => {
-    if (gpu) loadEngine().then((m) => m.refreshCached()).catch(() => {});
-  }, [gpu]);
+    void refreshCached();
+  }, []);
 
   const checkOllama = async () => {
     setOllamaError(null);
     try {
-      const { listOllamaModels } = await loadEngine();
+      const { listOllamaModels } = await loadRemote();
       const models = await listOllamaModels(useSettings.getState().ollamaUrl);
       setOllamaModels(models);
       const current = useSettings.getState().ollamaModel;
@@ -255,18 +267,44 @@ function AISettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.aiEngine]);
 
+  const loadApiModels = async () => {
+    setApiStatus(null);
+    try {
+      const { listOpenAIModels } = await loadRemote();
+      const models = await listOpenAIModels(s.openaiBaseUrl, s.openaiKey);
+      setApiModels(models);
+      if (models.length && !s.openaiModel) s.set("openaiModel", models[0]);
+      setApiStatus({ ok: true, text: `Conectado · ${models.length} modelos disponibles` });
+    } catch (e) {
+      setApiModels(null);
+      setApiStatus({ ok: false, text: e instanceof Error ? e.message : "No se pudo conectar" });
+    }
+  };
+
+  const testApi = async () => {
+    setApiStatus({ ok: true, text: "Probando…" });
+    try {
+      const { streamText } = await import("@/lib/ai");
+      const reply = await streamText({ messages: [{ role: "user", content: "Responde solo con la palabra: listo" }], temperature: 0 });
+      setApiStatus({ ok: true, text: `Funciona. Respuesta: «${reply.slice(0, 40)}»` });
+    } catch (e) {
+      setApiStatus({ ok: false, text: e instanceof Error ? e.message : "Error" });
+    }
+  };
+
+  const engines = [
+    { id: "webllm", title: "Integrado (local)", desc: "En tu tarjeta gráfica. Sin conexión y sin enviar nada.", icon: <HardDrive className="size-4" /> },
+    { id: "ollama", title: "Ollama (local)", desc: "Modelos instalados con Ollama en este equipo.", icon: <Server className="size-4" /> },
+    { id: "api", title: "Tu propia API", desc: "OpenAI, OpenRouter, Groq, Anthropic… No consume memoria.", icon: <KeyRound className="size-4" /> },
+  ] as const;
+
   return (
     <>
-      <H desc="La IA funciona en tu propio equipo: sin cuentas, sin claves y sin enviar tus textos a internet.">Inteligencia artificial</H>
+      <H desc="Elige dónde se ejecuta la IA: en tu equipo (privado y sin conexión) o en un servicio con tu propia clave.">Inteligencia artificial</H>
 
       <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Motor</div>
-      <div className="mb-6 grid grid-cols-2 gap-2">
-        {(
-          [
-            { id: "webllm", title: "Integrado en Lumen", desc: "Se ejecuta en la tarjeta gráfica (WebGPU). No necesita instalar nada.", icon: <HardDrive className="size-4" /> },
-            { id: "ollama", title: "Ollama", desc: "Usa modelos instalados con Ollama en este equipo. Más modelos y más grandes.", icon: <Server className="size-4" /> },
-          ] as const
-        ).map((e) => (
+      <div className="mb-6 grid grid-cols-3 gap-2">
+        {engines.map((e) => (
           <button
             key={e.id}
             onClick={() => s.set("aiEngine", e.id)}
@@ -275,20 +313,20 @@ function AISettings() {
               s.aiEngine === e.id ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2",
             )}
           >
-            <div className="mb-1 flex items-center gap-2 text-[13.5px] font-medium">
+            <div className="mb-1 flex items-center gap-2 text-[13px] font-medium">
               {e.icon}
               {e.title}
             </div>
-            <div className="text-[12px] leading-snug text-muted">{e.desc}</div>
+            <div className="text-[11.5px] leading-snug text-muted">{e.desc}</div>
           </button>
         ))}
       </div>
 
-      {s.aiEngine === "webllm" ? (
+      {s.aiEngine === "webllm" && (
         <>
           {!gpu && (
             <div className="mb-4 rounded-[var(--radius)] border border-red-500/30 bg-red-500/10 p-3 text-[13px]">
-              Este equipo no admite WebGPU, así que el motor integrado no puede funcionar. Usa Ollama.
+              Este equipo no admite WebGPU, así que el motor integrado no puede funcionar. Usa Ollama o tu propia API.
             </div>
           )}
           <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Modelo</div>
@@ -310,20 +348,24 @@ function AISettings() {
                       <div className="flex items-center gap-2 text-[13.5px] font-medium">
                         {m.name}
                         {loaded ? (
-                          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10.5px] text-emerald-600">En uso</span>
+                          <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10.5px] text-amber-600">En memoria</span>
                         ) : downloaded ? (
                           <span className="rounded-full bg-surface-3 px-1.5 py-0.5 text-[10.5px] text-muted">Descargado</span>
                         ) : null}
                       </div>
                       <div className="text-[12px] text-muted">{m.hint}</div>
                       <div className="mt-0.5 text-[11.5px] text-muted">
-                        Descarga {m.sizeGB.toLocaleString("es-ES")} GB · memoria gráfica {m.vramGB.toLocaleString("es-ES")} GB
+                        Descarga {m.sizeGB.toLocaleString("es-ES")} GB · memoria al usarlo {m.vramGB.toLocaleString("es-ES")} GB
                       </div>
                     </div>
                   </button>
                   {gpu && (
                     <div className="flex shrink-0 gap-1">
-                      {!loaded && (
+                      {loaded ? (
+                        <Button size="sm" variant="outline" icon={<MemoryStick className="size-3.5" />} onClick={async () => { await (await loadEngine()).unloadModel(); toast("Memoria liberada", "success"); }}>
+                          Liberar
+                        </Button>
+                      ) : (
                         <Button
                           size="sm"
                           variant={downloaded ? "outline" : "primary"}
@@ -365,12 +407,14 @@ function AISettings() {
           </div>
           <ModelProgress className="mb-3" />
           {local.error && <p className="mb-3 text-[12.5px] text-red-500">{local.error}</p>}
-          <p className="mb-6 text-[12px] leading-relaxed text-muted">
-            La descarga solo hace falta una vez; después el modelo queda guardado en este equipo y funciona sin conexión.
+          <p className="mb-4 text-[12px] leading-relaxed text-muted">
+            La descarga solo hace falta una vez; después el modelo queda guardado y funciona sin conexión.
           </p>
         </>
-      ) : (
-        <div className="mb-6">
+      )}
+
+      {s.aiEngine === "ollama" && (
+        <div className="mb-4">
           <Field label="Dirección de Ollama" desc="Normalmente no hace falta cambiarla.">
             <div className="flex gap-2">
               <Input value={s.ollamaUrl} onChange={(e) => s.set("ollamaUrl", e.target.value)} className="w-56 font-mono text-[12.5px]" />
@@ -400,6 +444,116 @@ function AISettings() {
           {ollamaError && <p className="mt-2 text-[12.5px] text-red-500">{ollamaError}</p>}
           {ollamaModels && <p className="mt-2 text-[12.5px] text-emerald-600">Conectado con Ollama · {ollamaModels.length} modelos</p>}
         </div>
+      )}
+
+      {s.aiEngine === "api" && (
+        <div className="mb-4">
+          <div className="mb-4 rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-relaxed">
+            Con una API, el texto que mandes a la IA se envía a ese servicio y su uso se cobra en tu cuenta. La clave se guarda solo en este equipo.
+          </div>
+          <Field label="Proveedor">
+            <Segmented
+              value={s.apiProvider}
+              onChange={(v) => {
+                s.set("apiProvider", v);
+                setApiStatus(null);
+              }}
+              options={[
+                { value: "openai", label: "Compatible con OpenAI" },
+                { value: "anthropic", label: "Anthropic (Claude)" },
+              ]}
+            />
+          </Field>
+          {s.apiProvider === "openai" ? (
+            <>
+              <Field label="Servicio" desc="Cualquier API compatible con OpenAI. Elige uno o escribe la dirección.">
+                <div className="flex w-[300px] flex-col gap-1.5">
+                  <select
+                    value={API_PRESETS.find((p) => p.url === s.openaiBaseUrl)?.url ?? ""}
+                    onChange={(e) => {
+                      if (e.target.value) s.patch({ openaiBaseUrl: e.target.value, openaiModel: "" });
+                      setApiModels(null);
+                    }}
+                    className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]"
+                  >
+                    <option value="">Personalizado</option>
+                    {API_PRESETS.map((p) => (
+                      <option key={p.url} value={p.url}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Input value={s.openaiBaseUrl} onChange={(e) => s.set("openaiBaseUrl", e.target.value.trim())} className="font-mono text-[12px]" spellCheck={false} />
+                </div>
+              </Field>
+              <Field label="Clave de API" desc="No hace falta para servidores locales como LM Studio.">
+                <div className="flex w-[300px] gap-1.5">
+                  <Input type={showKey ? "text" : "password"} value={s.openaiKey} onChange={(e) => s.set("openaiKey", e.target.value.trim())} placeholder="sk-…" autoComplete="off" spellCheck={false} className="font-mono" />
+                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? "Ocultar clave" : "Mostrar clave"} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
+                </div>
+              </Field>
+              <Field label="Modelo" desc="Escríbelo o cárgalo de la lista del servicio.">
+                <div className="flex w-[300px] gap-1.5">
+                  {apiModels?.length ? (
+                    <select value={s.openaiModel} onChange={(e) => s.set("openaiModel", e.target.value)} className="h-9 min-w-0 flex-1 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
+                      {apiModels.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input value={s.openaiModel} onChange={(e) => s.set("openaiModel", e.target.value.trim())} placeholder="p. ej. gpt-4o-mini" spellCheck={false} className="font-mono" />
+                  )}
+                  <Button variant="outline" onClick={loadApiModels}>
+                    Cargar
+                  </Button>
+                </div>
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field label="Clave de API de Anthropic" desc="Se crea en console.anthropic.com → API Keys.">
+                <div className="flex w-[300px] gap-1.5">
+                  <Input type={showKey ? "text" : "password"} value={s.anthropicKey} onChange={(e) => s.set("anthropicKey", e.target.value.trim())} placeholder="sk-ant-…" autoComplete="off" spellCheck={false} className="font-mono" />
+                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? "Ocultar clave" : "Mostrar clave"} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
+                </div>
+              </Field>
+              <Field label="Modelo">
+                <select value={s.anthropicModel} onChange={(e) => s.set("anthropicModel", e.target.value)} className="h-9 w-[300px] rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
+                  {ANTHROPIC_MODEL_OPTIONS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </>
+          )}
+          <div className="mt-3 flex items-center gap-3">
+            <Button variant="primary" onClick={testApi}>
+              Probar conexión
+            </Button>
+            {apiStatus && <span className={cn("text-[12.5px]", apiStatus.ok ? "text-emerald-600" : "text-red-500")}>{apiStatus.text}</span>}
+          </div>
+        </div>
+      )}
+
+      {s.aiEngine !== "api" && (
+        <Field label="Liberar memoria automáticamente" desc="Tras este tiempo sin usar la IA, el modelo sale de la memoria. Volverá a cargarse (unos segundos) al usarla.">
+          <select
+            value={s.aiUnloadMinutes}
+            onChange={(e) => s.set("aiUnloadMinutes", Number(e.target.value))}
+            className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]"
+          >
+            {[1, 2, 5, 10, 30].map((m) => (
+              <option key={m} value={m}>
+                Tras {m} min
+              </option>
+            ))}
+            <option value={0}>Nunca</option>
+          </select>
+        </Field>
       )}
 
       <Field label="Idioma de las respuestas">
@@ -459,14 +613,14 @@ function General() {
         <Button variant="outline" icon={<Upload className="size-4" />} onClick={() => fileRef.current?.click()}>Importar</Button>
         <input ref={fileRef} type="file" accept=".json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) restore(f); }} />
       </Field>
-      <Field label="Restablecer configuración" desc="Vuelve a los valores originales. No borra documentos ni modelos descargados.">
+      <Field label="Restablecer configuración" desc="Vuelve a los valores originales. No borra documentos, modelos descargados ni claves de API.">
         <Button
           variant="outline"
           icon={<RotateCcw className="size-4" />}
           onClick={() => {
-            const { userName, localFonts, localModel } = s;
+            const { userName, localFonts, localModel, openaiKey, anthropicKey } = s;
             s.reset();
-            s.patch({ userName, localFonts, localModel });
+            s.patch({ userName, localFonts, localModel, openaiKey, anthropicKey });
             toast("Configuración restablecida", "success");
           }}
         >

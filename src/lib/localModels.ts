@@ -24,6 +24,13 @@ export const LOCAL_MODELS: LocalModel[] = [
 
 export const DEFAULT_LOCAL_MODEL = LOCAL_MODELS[0].id;
 
+/** Modelos de Anthropic disponibles con la API propia. */
+export const ANTHROPIC_MODEL_OPTIONS = [
+  { id: "claude-opus-5-5", name: "Claude Opus 5.5 (máxima calidad)" },
+  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5 (rápido)" },
+  { id: "claude-haiku-5-5", name: "Claude Haiku 5.5 (el más económico)" },
+];
+
 export interface ChatMsg {
   role: "user" | "assistant";
   content: string;
@@ -53,5 +60,24 @@ export function webgpuAvailable(): boolean {
   return typeof navigator !== "undefined" && "gpu" in navigator;
 }
 
-/** Carga perezosa del motor local. */
+/** Carga perezosa del motor local (unos 6 MB de código: solo cuando se usa). */
 export const loadEngine = () => import("@/lib/localAI");
+
+/** Carga perezosa de los proveedores remotos (Ollama y APIs). */
+export const loadRemote = () => import("@/lib/remoteAI");
+
+/**
+ * Comprueba qué modelos están descargados leyendo directamente la caché del
+ * navegador, sin cargar el motor. Un modelo está completo si tiene su tensor-cache.json.
+ */
+export async function refreshCached() {
+  const cached: Record<string, boolean> = {};
+  try {
+    const cache = await caches.open("webllm/model");
+    const urls = (await cache.keys()).map((r) => r.url);
+    for (const m of LOCAL_MODELS) cached[m.id] = urls.some((u) => u.includes(`/${m.id}/`) && u.endsWith("tensor-cache.json"));
+  } catch {
+    /* sin acceso a la caché */
+  }
+  useLocalAI.setState({ cached });
+}
