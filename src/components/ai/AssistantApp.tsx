@@ -8,7 +8,6 @@ import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
 import { IconButton } from "@/components/ui";
 import { currentModelName } from "@/lib/ai";
-import { ModelMemoryIndicator } from "@/components/ai/LocalAIStatus";
 
 export default function AssistantApp() {
   const navigate = useApp((s) => s.navigate);
@@ -37,7 +36,6 @@ export default function AssistantApp() {
         ) : (
           <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600">Local · sin conexión</span>
         )}
-        <ModelMemoryIndicator />
         <div className="ml-auto flex items-center gap-1">
           {aiEngine === "webllm" ? (
             <select

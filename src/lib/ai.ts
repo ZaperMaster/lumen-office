@@ -70,7 +70,7 @@ export async function streamText({ messages, system, signal, temperature, onText
   } else {
     const remote = await loadRemote();
     if (s.aiEngine === "ollama") {
-      text = await remote.streamOllama({ baseUrl: s.ollamaUrl, model: s.ollamaModel, keepAliveMinutes: s.aiUnloadMinutes, ...common });
+      text = await remote.streamOllama({ baseUrl: s.ollamaUrl, model: s.ollamaModel, keepAliveMinutes: s.aiAutoUnload ? Math.max(1, s.aiUnloadMinutes) : 0, ...common });
     } else if (s.apiProvider === "anthropic") {
       // Los modelos actuales de Anthropic no admiten temperatura: se controla con el esfuerzo
       text = await remote.streamAnthropic({

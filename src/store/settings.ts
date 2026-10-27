@@ -37,7 +37,9 @@ export interface Settings {
   localModel: string;
   ollamaUrl: string;
   ollamaModel: string;
-  /** Minutos sin usar la IA local antes de liberar la memoria (0 = nunca) */
+  /** Liberar la memoria del modelo local cuando no se usa (si no, responde antes pero ocupa ~3 GB) */
+  aiAutoUnload: boolean;
+  /** Minutos sin usar la IA local antes de liberar la memoria */
   aiUnloadMinutes: number;
   // API propia
   apiProvider: "openai" | "anthropic";
@@ -83,6 +85,7 @@ export const DEFAULT_SETTINGS: Settings = {
   localModel: DEFAULT_LOCAL_MODEL,
   ollamaUrl: "http://localhost:11434",
   ollamaModel: "",
+  aiAutoUnload: true,
   aiUnloadMinutes: 5,
   apiProvider: "openai",
   openaiBaseUrl: "https://api.openai.com/v1",
@@ -108,10 +111,15 @@ export const useSettings = create<Settings & SettingsActions>()(
     }),
     {
       name: "lumen.settings",
-      version: 2,
-      // v2: la IA pasa a ser local; se elimina la antigua clave de API guardada
-      migrate: (persisted) => {
+      version: 3,
+      migrate: (persisted, version) => {
+        // v2: la IA pasa a ser local; se elimina la antigua clave de API guardada
         const { aiApiKey: _k, aiModel: _m, ...rest } = (persisted ?? {}) as Record<string, unknown>;
+        // v3: «nunca liberar» (0 minutos) pasa a ser un interruptor aparte
+        if (version < 3) {
+          rest.aiAutoUnload = rest.aiUnloadMinutes !== 0;
+          if (!rest.aiUnloadMinutes) rest.aiUnloadMinutes = 5;
+        }
         return rest as unknown as Settings & SettingsActions;
       },
     },

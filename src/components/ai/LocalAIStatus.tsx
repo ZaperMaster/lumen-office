@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Cpu, Download, Loader2, MemoryStick, Globe } from "lucide-react";
+import { Cpu, Download, Loader2, Globe } from "lucide-react";
 import { LOCAL_MODELS, loadEngine, refreshCached, useLocalAI, webgpuAvailable } from "@/lib/localModels";
 import { useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
-import { Button, Tooltip, cn } from "@/components/ui";
+import { Button, cn } from "@/components/ui";
 
 /** Barra de progreso de descarga/carga del modelo. */
 export function ModelProgress({ className }: { className?: string }) {
@@ -22,28 +22,6 @@ export function ModelProgress({ className }: { className?: string }) {
         <div className="h-full rounded-full bg-accent transition-[width] duration-300" style={{ width: `${Math.max(2, progress * 100)}%` }} />
       </div>
     </div>
-  );
-}
-
-/** Indicador compacto: aparece solo cuando el modelo local ocupa memoria, con botón para liberarla. */
-export function ModelMemoryIndicator({ className }: { className?: string }) {
-  const loadedModel = useLocalAI((s) => s.loadedModel);
-  const minutes = useSettings((s) => s.aiUnloadMinutes);
-  if (!loadedModel) return null;
-  const name = LOCAL_MODELS.find((m) => m.id === loadedModel)?.name ?? "IA";
-  return (
-    <Tooltip
-      label={minutes > 0 ? `${name} está en memoria. Se liberará solo tras ${minutes} min sin usarla.` : `${name} está en memoria.`}
-      side="top"
-    >
-      <button
-        onClick={() => loadEngine().then((m) => m.unloadModel())}
-        className={cn("flex items-center gap-1 rounded px-1.5 py-0.5 text-[11.5px] text-amber-600 hover:bg-amber-500/10", className)}
-      >
-        <MemoryStick className="size-3.5" />
-        IA en memoria · Liberar
-      </button>
-    </Tooltip>
   );
 }
 
@@ -110,7 +88,9 @@ export function LocalAIBanner() {
       </div>
       <p className="mb-2.5 text-[12.5px] text-muted">
         {downloaded
-          ? "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se libera solo cuando dejas de usarlo."
+          ? s.aiAutoUnload
+            ? "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se libera solo cuando dejas de usarlo."
+            : "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se queda cargado para responder más rápido."
           : `Funciona sin conexión y tus textos no salen del equipo. La primera vez se descarga el modelo (${model?.sizeGB.toLocaleString("es-ES")} GB).`}
       </p>
       {error && <p className="mb-2 text-[12.5px] text-red-500">{error}</p>}

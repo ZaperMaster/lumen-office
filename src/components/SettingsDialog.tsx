@@ -540,20 +540,34 @@ function AISettings() {
       )}
 
       {s.aiEngine !== "api" && (
-        <Field label="Liberar memoria automáticamente" desc="Tras este tiempo sin usar la IA, el modelo sale de la memoria. Volverá a cargarse (unos segundos) al usarla.">
-          <select
-            value={s.aiUnloadMinutes}
-            onChange={(e) => s.set("aiUnloadMinutes", Number(e.target.value))}
-            className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]"
+        <>
+          <Field
+            label="Liberar memoria automáticamente"
+            desc="Cuando no usas la IA, el modelo sale de la memoria. Al volver a usarla tarda unos segundos en cargarse."
           >
-            {[1, 2, 5, 10, 30].map((m) => (
-              <option key={m} value={m}>
-                Tras {m} min
-              </option>
-            ))}
-            <option value={0}>Nunca</option>
-          </select>
-        </Field>
+            <Switch checked={s.aiAutoUnload} onChange={(v) => s.set("aiAutoUnload", v)} label="Liberar memoria automáticamente" />
+          </Field>
+          {s.aiAutoUnload ? (
+            <Field label="Liberar tras" desc="Tiempo sin usar la IA antes de liberar la memoria.">
+              <select
+                value={s.aiUnloadMinutes}
+                onChange={(e) => s.set("aiUnloadMinutes", Number(e.target.value))}
+                className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]"
+              >
+                {[1, 2, 5, 10, 30].map((m) => (
+                  <option key={m} value={m}>
+                    {m} min
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <div className="my-2 rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-relaxed">
+              <b>La IA responderá más rápido</b>, pero el modelo se queda cargado mientras la app esté abierta y ocupa unos{" "}
+              {(LOCAL_MODELS.find((m) => m.id === s.localModel)?.vramGB ?? 3).toLocaleString("es-ES")} GB de memoria.
+            </div>
+          )}
+        </>
       )}
 
       <Field label="Idioma de las respuestas">

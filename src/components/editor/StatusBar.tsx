@@ -4,7 +4,6 @@ import { useSettings, type ViewMode } from "@/store/settings";
 import { countWords } from "@/lib/db";
 import { readingTime } from "@/lib/format";
 import { Slider, Tooltip, cn } from "@/components/ui";
-import { ModelMemoryIndicator } from "@/components/ai/LocalAIStatus";
 
 export type SaveState = "saved" | "saving" | "dirty";
 
@@ -54,7 +53,6 @@ export function StatusBar({
       <span className="hidden md:inline">{readingTime(stats.words)}</span>
       <span className="hidden md:inline">Español (España)</span>
       <SaveIndicator state={saveState} />
-      <ModelMemoryIndicator />
       <div className="ml-auto flex items-center gap-1">
         {views.map((v) => (
           <Tooltip key={v.id} label={v.label} side="top">

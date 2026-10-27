@@ -44,15 +44,20 @@ export async function unloadModel() {
   w?.terminate();
 }
 
-/** Programa la liberación tras el tiempo de inactividad configurado. */
+/** Programa la liberación tras el tiempo de inactividad configurado (si está activada). */
 function scheduleIdleUnload() {
   clearTimeout(idleTimer);
-  const minutes = useSettings.getState().aiUnloadMinutes;
-  if (minutes <= 0) return;
+  const { aiAutoUnload, aiUnloadMinutes } = useSettings.getState();
+  if (!aiAutoUnload || !engine) return;
   idleTimer = setTimeout(() => {
     if (busy === 0 && !loading) void unloadModel();
-  }, minutes * 60_000);
+  }, Math.max(1, aiUnloadMinutes) * 60_000);
 }
+
+// Si el usuario cambia la opción con el modelo ya cargado, se aplica al momento
+useSettings.subscribe((s, prev) => {
+  if (s.aiAutoUnload !== prev.aiAutoUnload || s.aiUnloadMinutes !== prev.aiUnloadMinutes) scheduleIdleUnload();
+});
 
 /* ------------------------------------------------------------------ */
 /*  Carga                                                              */

@@ -15,7 +15,6 @@ import { useSettings } from "@/store/settings";
 import { getTheme } from "@/lib/themes";
 import { Button, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Segmented, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
-import { ModelMemoryIndicator } from "@/components/ai/LocalAIStatus";
 
 type Section = NonNullable<Extract<Route, { name: "home" }>["section"]>;
 
@@ -78,7 +77,6 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
         ))}
       </nav>
       <div className="mt-auto flex flex-col gap-0.5">
-        <ModelMemoryIndicator className="mb-1 justify-center" />
         <button
           onClick={() => set("themeId", dark ? "light" : "dark")}
           className="flex h-9 items-center gap-3 rounded-[var(--radius)] px-3 text-[13.5px] font-medium text-muted hover:bg-surface-2 hover:text-text"
