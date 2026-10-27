@@ -685,7 +685,7 @@ function About() {
     <div className="flex flex-col items-center pt-10 text-center">
       <Logo className="mb-4 size-16" />
       <div className="text-[22px] font-bold">Lumen Office</div>
-      <div className="mb-4 text-muted">Versión 0.2.0</div>
+      <div className="mb-4 text-muted">Versión 0.3.0</div>
       <p className="max-w-md text-[13.5px] text-muted">
         Suite ofimática con documentos, notas y asistente de IA local. Hecha con React, Tiptap, WebLLM y Tauri. Tus archivos y tus textos no salen de tu equipo.
       </p>
