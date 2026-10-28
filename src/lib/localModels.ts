@@ -63,6 +63,26 @@ export function webgpuAvailable(): boolean {
 /** Carga perezosa del motor local (unos 6 MB de código: solo cuando se usa). */
 export const loadEngine = () => import("@/lib/localAI");
 
+/**
+ * Prepara la IA local al abrir cualquier parte de la IA, para que la primera respuesta
+ * llegue al momento. Solo si el motor integrado está elegido y el modelo ya está
+ * descargado: nunca inicia una descarga por su cuenta.
+ */
+export async function preloadLocalAI(aiEngine: string, localModel: string): Promise<void> {
+  // (Recibe los ajustes como parámetros: importar la configuración aquí crearía un ciclo de módulos)
+  if (aiEngine !== "webllm" || !webgpuAvailable()) return;
+  const st = useLocalAI.getState();
+  if (st.loadedModel === localModel && st.status === "ready") {
+    // Ya cargado: solo falta asegurarse de que está calentado
+    void loadEngine().then((m) => m.preloadModel(localModel));
+    return;
+  }
+  if (st.status === "loading") return;
+  await refreshCached();
+  if (!useLocalAI.getState().cached[localModel]) return;
+  void loadEngine().then((m) => m.preloadModel(localModel));
+}
+
 /** Carga perezosa de los proveedores remotos (Ollama y APIs). */
 export const loadRemote = () => import("@/lib/remoteAI");
 

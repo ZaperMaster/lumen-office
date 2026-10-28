@@ -35,6 +35,7 @@ export async function unloadModel() {
   const w = worker;
   engine = null;
   worker = null;
+  warmedModel = null;
   useLocalAI.setState({ status: "idle", loadedModel: null, progress: 0, message: "" });
   try {
     await eng?.unload();
@@ -129,6 +130,50 @@ export async function deleteLocalModel(modelId: string) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Precarga y calentamiento                                           */
+/* ------------------------------------------------------------------ */
+
+/** Calentamiento en curso del modelo cargado (las peticiones reales lo esperan). */
+let warming: Promise<void> | null = null;
+let warmedModel: string | null = null;
+
+/**
+ * La primera generación tras cargar el modelo tarda ~20 s porque la tarjeta gráfica
+ * prepara sus programas. Se hace una generación mínima en segundo plano para que,
+ * cuando el usuario pida algo, responda al momento.
+ */
+async function warmUp(eng: WebWorkerMLCEngine, modelId: string) {
+  if (warmedModel === modelId) return;
+  if (!warming) {
+    warming = (async () => {
+      try {
+        busy++;
+        await eng.chat.completions.create({ messages: [{ role: "user", content: "Hola" }], max_tokens: 1, temperature: 0 });
+        await eng.resetChat();
+        warmedModel = modelId;
+      } catch {
+        /* si falla, la primera petición real hará el trabajo */
+      } finally {
+        busy--;
+        warming = null;
+        scheduleIdleUnload();
+      }
+    })();
+  }
+  await warming;
+}
+
+/** Carga y calienta el modelo en segundo plano. Nunca descarga: solo si ya está en el equipo. */
+export async function preloadModel(modelId: string): Promise<void> {
+  try {
+    const eng = await ensureModel(modelId);
+    await warmUp(eng, modelId);
+  } catch {
+    /* la precarga es opcional: los errores se mostrarán al usarla */
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Generación                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -142,6 +187,8 @@ export async function streamWebLLM(opts: {
   onText?: (delta: string, full: string) => void;
 }): Promise<string> {
   const eng = await ensureModel(opts.modelId);
+  // Si se está calentando, se espera: el motor atiende una petición cada vez
+  if (warming) await warming;
   busy++;
   clearTimeout(idleTimer);
   const messages: ChatCompletionMessageParam[] = [{ role: "system", content: opts.system }, ...opts.messages];

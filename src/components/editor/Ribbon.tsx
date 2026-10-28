@@ -1,3 +1,4 @@
+import { usePreloadAI } from "@/components/ai/usePreloadAI";
 import { useRef, useState, type ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
 import {
@@ -696,6 +697,7 @@ function ViewTab() {
 /* ------------------------------------------------------------------ */
 
 function AITab({ editor }: { editor: Editor }) {
+  usePreloadAI();
   const { run, setPanelOpen, panelOpen } = useAI();
   return (
     <>

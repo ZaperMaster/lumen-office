@@ -1,3 +1,4 @@
+import { usePreloadAI } from "@/components/ai/usePreloadAI";
 import type { ReactNode } from "react";
 import type { Editor } from "@tiptap/react";
 import {
@@ -22,6 +23,8 @@ const ICONS: Record<string, ReactNode> = {
 
 /** Contenido del menú de acciones de IA (se usa en la cinta y en el menú flotante). */
 export function AIActionsMenuContent({ editor, align = "start" }: { editor: Editor; align?: "start" | "end" | "center" }) {
+  // El menú solo se monta al abrirse: buen momento para preparar el modelo
+  usePreloadAI();
   const run = useAI((s) => s.run);
   const setPanelOpen = useAI((s) => s.setPanelOpen);
   const item = (id: string) => {

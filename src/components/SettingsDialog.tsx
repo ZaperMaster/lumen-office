@@ -11,7 +11,7 @@ import { db, type DocRecord } from "@/lib/db";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize } from "@/store/settings";
 import { useApp } from "@/store/app";
 import { FontPicker, FontSizePicker } from "@/components/editor/controls";
-import { Button, Input, Kbd, Segmented, Slider, Switch, cn } from "@/components/ui";
+import { Button, Dialog, Input, Kbd, Segmented, Slider, Switch, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 
 const TABS = [
@@ -750,6 +750,35 @@ function About() {
       >
         <span className="text-[12.5px] text-muted">© Alejandro Zapata</span>
       </Field>
+      <Field label="Licencias de terceros" desc="Avisos de copyright y licencias de las librerías que incluye la app.">
+        <ThirdPartyNotices />
+      </Field>
+    </>
+  );
+}
+
+/** Muestra el archivo de avisos de terceros que se genera con «npm run notices». */
+function ThirdPartyNotices() {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState<string | null>(null);
+  const load = () => {
+    setOpen(true);
+    if (text === null)
+      fetch("/third-party-notices.txt")
+        .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+        .then(setText)
+        .catch(() => setText("No se pudieron cargar los avisos."));
+  };
+  return (
+    <>
+      <Button variant="outline" onClick={load}>
+        Ver licencias
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen} title="Licencias de terceros" className="w-[min(94vw,820px)]">
+        <pre className="max-h-[60vh] overflow-auto rounded-[var(--radius)] bg-surface-2 p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap text-text">
+          {text ?? "Cargando…"}
+        </pre>
+      </Dialog>
     </>
   );
 }

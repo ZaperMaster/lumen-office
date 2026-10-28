@@ -68,6 +68,9 @@ if (!dryRun) {
   }
 }
 
+console.log("▶ Generando los avisos de licencias de terceros…");
+execFileSync(process.execPath, [join(root, "scripts", "notices.mjs")], { cwd: root, stdio: "inherit" });
+
 console.log(`▶ Compilando Lumen Office ${version} con firma de actualizaciones…`);
 // La firma de actualizaciones solo se activa aquí: las compilaciones normales no necesitan la clave
 const updaterConf = join(tmpdir(), "lumen-updater.conf.json");

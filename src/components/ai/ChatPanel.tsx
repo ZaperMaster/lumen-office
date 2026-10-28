@@ -1,3 +1,4 @@
+import { usePreloadAI } from "@/components/ai/usePreloadAI";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { ArrowUp, Copy, FilePlus2, Plus, Sparkles, Square, Trash2, X, CornerDownLeft } from "lucide-react";
@@ -65,6 +66,7 @@ export function ChatPanel({
   const toast = useApp((s) => s.toast);
   // Se suscribe al motor/modelo para refrescar el nombre mostrado
   useSettings((s) => `${s.aiEngine}|${s.localModel}|${s.ollamaModel}`);
+  usePreloadAI();
   const busy = controller !== null;
 
   useEffect(() => {
