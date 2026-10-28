@@ -1,7 +1,7 @@
 # Lumen Office
 
-Suite ofimática de escritorio para Windows con **Documentos** (procesador de textos tipo Word), **Notas** y un
-**Asistente de IA** que puede funcionar por completo en tu equipo.
+Suite ofimática de escritorio para Windows con **Documentos** (procesador de textos tipo Word), **Hojas de cálculo**
+(tipo Excel), **Presentaciones** (tipo PowerPoint), **Notas** y un **Asistente de IA** que puede funcionar por completo en tu equipo.
 Hecha con **TypeScript + React + Tiptap** y empaquetada como app de escritorio con **Tauri 2**.
 
 **Descargar:** [última versión](https://github.com/ZaperMaster/lumen-office/releases/latest) → `Lumen.Office_x.y.z_x64-setup.exe`.
@@ -10,7 +10,8 @@ Una vez instalada, la app se actualiza sola.
 ## Qué incluye
 
 **Inicio tipo Office**
-- Elegir herramienta (Documento, Notas, Asistente IA), plantillas con miniatura, recientes, búsqueda y papelera.
+- Elegir herramienta (Documento, Hoja de cálculo, Presentación, Notas, Asistente IA), plantillas con miniatura,
+  recientes, búsqueda y papelera.
 
 **Documentos**
 - Cinta de opciones: Archivo, Inicio, Insertar, Diseño, Revisar, Vista, IA y la pestaña contextual Tabla.
@@ -21,10 +22,25 @@ Una vez instalada, la app se actualiza sola.
 - **Vínculos**: Ctrl+clic para abrirlos y menú para abrir, editar, copiar o quitar.
 - Buscar y reemplazar, contador de palabras y menú flotante sobre la selección.
 
+**Hojas de cálculo**
+- Fórmulas con nombres en español o inglés (SUMA, SI, BUSCARV, SUMAR.SI.CONJUNTO…), sugerencias al escribir y
+  referencias con el ratón; varias hojas por libro.
+- Formatos de número (€, %, fechas), estilos, bordes, combinar celdas, inmovilizar, ocultar filas y columnas.
+- Relleno de series, copiar y pegar (también desde Excel), ordenar, filtros, quitar duplicados, buscar y reemplazar.
+- Formato condicional (reglas, barras de datos, escalas de color), formato de tabla, listas desplegables y comentarios.
+- Gráficos (columnas, barras, líneas, área, circular, anillo, dispersión) y tablas dinámicas.
+- IA: escribir fórmulas, analizar datos y generar tablas. Abre y guarda Excel (.xlsx) y CSV.
+
+**Presentaciones**
+- Diapositivas con diseños, 8 temas, textos, imágenes y formas que se mueven, redimensionan y giran.
+- Transiciones, animaciones, notas del orador y modo presentación a pantalla completa (F5).
+- IA: crear una presentación entera a partir de un tema y escribir las notas del orador.
+- Abre y guarda PowerPoint (.pptx); imprimir y PDF.
+
 **Archivos, como en Word**
 - **Guardar** (Ctrl+S) reemplaza el archivo vinculado; **Guardar como** (F12) elige carpeta, nombre y formato.
 - **Exportar una copia** a Word (.docx), Lumen (.lumen, sin pérdidas), Markdown, HTML, texto o PDF (imprimir).
-- **Abrir archivo** (Ctrl+O): .docx, .lumen, .md, .html y .txt.
+- **Abrir archivo** (Ctrl+O): .docx, .xlsx, .csv, .pptx, .lumen, .md, .html y .txt.
 - **Autoguardado en el archivo** y aviso **Guardar / No guardar / Cancelar** al salir o cerrar con cambios pendientes.
 
 **Notas**

@@ -1,0 +1,143 @@
+import type { CSSProperties, ReactNode } from "react";
+import { SLIDE_H, SLIDE_W, htmlText, theme as getTheme, type Slide, type SlideEl, type Theme } from "@/lib/slides/model";
+
+/* Dibujo de una diapositiva (miniaturas, editor, modo presentación e impresión). */
+
+export function elColor(el: SlideEl, t: Theme): string {
+  if (el.color) return el.color;
+  if (el.role === "title") return t.title;
+  // Texto blanco sobre las figuras de color; sobre las transparentes, el del tema
+  const translucent = el.fill === "transparent" || (el.fill?.length ?? 0) === 9;
+  return el.type === "shape" && !translucent ? "#ffffff" : t.text;
+}
+
+export function elFont(el: SlideEl, t: Theme): string {
+  return el.font ?? (el.role === "title" ? t.titleFont : t.bodyFont);
+}
+
+/** Figura en SVG que ocupa todo el elemento. */
+export function ShapeSvg({ el, accent }: { el: SlideEl; accent: string }) {
+  const w = el.w;
+  const h = el.h;
+  const sw = el.strokeW ?? 0;
+  const fill = el.fill ?? accent;
+  const stroke = el.stroke ?? "none";
+  const p = sw / 2;
+  let shape: ReactNode;
+  switch (el.shape) {
+    case "ellipse":
+      shape = <ellipse cx={w / 2} cy={h / 2} rx={Math.max(0, w / 2 - p)} ry={Math.max(0, h / 2 - p)} />;
+      break;
+    case "roundRect":
+      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} rx={Math.min(w, h) * 0.12} />;
+      break;
+    case "triangle":
+      shape = <polygon points={`${w / 2},${p} ${w - p},${h - p} ${p},${h - p}`} />;
+      break;
+    case "diamond":
+      shape = <polygon points={`${w / 2},${p} ${w - p},${h / 2} ${w / 2},${h - p} ${p},${h / 2}`} />;
+      break;
+    case "arrow": {
+      const head = Math.min(w * 0.4, h);
+      shape = <polygon points={`${p},${h * 0.3} ${w - head},${h * 0.3} ${w - head},${p} ${w - p},${h / 2} ${w - head},${h - p} ${w - head},${h * 0.7} ${p},${h * 0.7}`} />;
+      break;
+    }
+    case "star": {
+      const pts: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        const r = i % 2 ? 0.4 : 1;
+        pts.push(`${w / 2 + (r * (w / 2 - p)) * Math.cos(a)},${h / 2 + (r * (h / 2 - p)) * Math.sin(a) + (i % 2 ? 0 : h * 0.04)}`);
+      }
+      shape = <polygon points={pts.join(" ")} />;
+      break;
+    }
+    case "line":
+      return (
+        <svg width={w} height={h} className="absolute inset-0 overflow-visible">
+          <line x1={0} y1={h / 2} x2={w} y2={h / 2} stroke={el.stroke ?? accent} strokeWidth={Math.max(2, sw)} strokeLinecap="round" />
+        </svg>
+      );
+    default:
+      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} />;
+  }
+  return (
+    <svg width={w} height={h} className="absolute inset-0 overflow-visible" fill={fill} stroke={stroke} strokeWidth={sw}>
+      {shape}
+    </svg>
+  );
+}
+
+/** Estilo del texto de un elemento. */
+export function textStyle(el: SlideEl, t: Theme): CSSProperties {
+  return {
+    fontSize: el.fontSize ?? 28,
+    fontFamily: elFont(el, t),
+    color: elColor(el, t),
+    textAlign: el.align ?? "left",
+    fontWeight: el.bold ? 700 : 400,
+    justifyContent: el.valign === "middle" ? "center" : el.valign === "bottom" ? "flex-end" : "flex-start",
+    ["--slide-accent" as string]: t.accent,
+  };
+}
+
+export function ElementView({ el, t, showPlaceholder }: { el: SlideEl; t: Theme; showPlaceholder?: boolean }) {
+  const empty = !htmlText(el.html);
+  return (
+    <>
+      {el.type === "shape" && <ShapeSvg el={el} accent={t.accent} />}
+      {el.type === "image" && el.src && <img src={el.src} alt="" draggable={false} className="absolute inset-0 size-full object-fill" />}
+      {(el.type === "text" || el.type === "shape") && (
+        <div className="slide-text-box" style={textStyle(el, t)}>
+          {empty && showPlaceholder && el.placeholder ? (
+            <div className="slide-placeholder">{el.placeholder}</div>
+          ) : (
+            <div className="slide-text" dangerouslySetInnerHTML={{ __html: el.html ?? "" }} />
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+export function elBoxStyle(el: SlideEl): CSSProperties {
+  return {
+    left: el.x,
+    top: el.y,
+    width: el.w,
+    height: el.h,
+    transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
+    opacity: el.opacity,
+  };
+}
+
+/** Fondo y adorno del tema. */
+export function SlideBackground({ slide, t }: { slide: Slide; t: Theme }) {
+  return (
+    <>
+      <div className="absolute inset-0" style={{ background: slide.bg ?? t.bg }} />
+      {t.band && <div className="absolute bottom-0 left-0 h-[10px] w-full" style={{ background: t.band }} />}
+    </>
+  );
+}
+
+/** Diapositiva completa a la escala indicada (para miniaturas y presentación). */
+export function SlideView({ slide, themeId, scale, className, animate }: { slide: Slide; themeId: string; scale: number; className?: string; animate?: boolean }) {
+  const t = getTheme(themeId);
+  return (
+    <div className={className} style={{ width: SLIDE_W * scale, height: SLIDE_H * scale, position: "relative", overflow: "hidden" }}>
+      <div className="slide-canvas" style={{ width: SLIDE_W, height: SLIDE_H, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
+        <SlideBackground slide={slide} t={t} />
+        {slide.els.map((el, i) => (
+          <div
+            key={el.id}
+            className={animate && el.anim && el.anim !== "none" ? `slide-el slide-anim-${el.anim}` : "slide-el"}
+            style={{ ...elBoxStyle(el), animationDelay: animate ? `${0.25 + i * 0.18}s` : undefined }}
+          >
+            <ElementView el={el} t={t} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

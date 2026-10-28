@@ -697,11 +697,15 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       if (cancelled) return;
       setPrintHtml(sheetHtml(wbRef.current, wbRef.current.active));
       // Se espera a que la tabla esté en la página antes de imprimir
-      setTimeout(() => {
-        window.print();
-        setPrinting(false);
-        setPrintHtml(null);
-      }, 80);
+      window.addEventListener(
+        "afterprint",
+        () => {
+          setPrinting(false);
+          setPrintHtml(null);
+        },
+        { once: true },
+      );
+      setTimeout(() => window.print(), 80);
     });
     return () => {
       cancelled = true;

@@ -32,7 +32,7 @@ export interface DocRecord {
   data?: unknown;
 }
 
-export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt" | "xlsx" | "csv";
+export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt" | "xlsx" | "csv" | "pptx";
 
 class LumenDB extends Dexie {
   docs!: EntityTable<DocRecord, "id">;

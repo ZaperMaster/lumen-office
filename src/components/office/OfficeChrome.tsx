@@ -1,11 +1,11 @@
 import { useRef, type ReactNode } from "react";
 import {
-  ArrowLeft, BookOpen, FileDown, FilePlus2, FolderOpen, FolderSearch, House, Loader2, Moon, Printer,
+  ArrowLeft, BookOpen, FileDown, FilePlus2, FolderOpen, FolderSearch, House, Loader2, Moon, Presentation, Printer,
   Save, SaveAll, Settings, Sheet, StickyNote, Star, Sun,
 } from "lucide-react";
 import { updateDoc, type DocRecord } from "@/lib/db";
 import { fileName, isDesktop, openFileFromDisk, revealInFolder } from "@/lib/files";
-import { newDocument, newNote, newSheet, openDoc } from "@/lib/actions";
+import { newDocument, newNote, newSheet, newSlides, openDoc } from "@/lib/actions";
 import { getTheme } from "@/lib/themes";
 import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -150,6 +150,7 @@ export function OfficeFileMenu({
           <MenuSeparator />
           <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>Nuevo documento</MenuItem>
           <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>Nueva hoja de cálculo</MenuItem>
+          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>Nueva presentación</MenuItem>
           <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>Nueva nota</MenuItem>
           <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>Abrir archivo…</MenuItem>
           <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Archivos recientes</MenuItem>
@@ -175,7 +176,7 @@ export function OfficeFileMenu({
       <input
         ref={fileRef}
         type="file"
-        accept=".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv"
+        accept=".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx"
         hidden
         onChange={async (e) => {
           const f = e.target.files?.[0];

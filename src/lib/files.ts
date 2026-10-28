@@ -21,6 +21,7 @@ export const FORMATS: Record<FileFormat, { label: string; ext: string; mime: str
   txt: { label: "Texto sin formato", ext: "txt", mime: "text/plain;charset=utf-8" },
   xlsx: { label: "Libro de Excel", ext: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
   csv: { label: "CSV (valores separados por punto y coma)", ext: "csv", mime: "text/csv;charset=utf-8" },
+  pptx: { label: "Presentación de PowerPoint", ext: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation" },
 };
 
 /** Formatos para «Guardar» y «Guardar como», en orden de preferencia. */
@@ -244,9 +245,10 @@ export async function openFileFromDisk(): Promise<DocRecord | null> {
     multiple: false,
     directory: false,
     filters: [
-      { name: "Archivos compatibles", extensions: ["docx", "lumen", "md", "markdown", "html", "htm", "txt", "xlsx", "csv"] },
+      { name: "Archivos compatibles", extensions: ["docx", "lumen", "md", "markdown", "html", "htm", "txt", "xlsx", "csv", "pptx"] },
       { name: "Documento de Word", extensions: ["docx"] },
       { name: "Libro de Excel", extensions: ["xlsx", "csv"] },
+      { name: "Presentación de PowerPoint", extensions: ["pptx"] },
       { name: "Documento de Lumen", extensions: ["lumen"] },
     ],
   });

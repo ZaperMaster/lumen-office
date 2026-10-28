@@ -6,10 +6,12 @@ import {
 } from "lucide-react";
 import { KIND_LABEL, db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
 import { SHEET_TEMPLATES, type SheetTemplate } from "@/lib/sheet/templates";
+import { SLIDES_TEMPLATES, type SlidesTemplate } from "@/lib/slides/templates";
+import { theme as slideTheme } from "@/lib/slides/model";
 import { TEMPLATES, type Template } from "@/lib/templates";
-import { createFromTemplate, newDocument, newNote, newSheet, openDoc } from "@/lib/actions";
+import { createFromTemplate, newDocument, newNote, newSheet, newSlides, openDoc } from "@/lib/actions";
 // El módulo de importación (editor, docx, Excel) se carga solo al importar
-const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv";
+const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -153,10 +155,10 @@ function HomeSection() {
     {
       id: "slides",
       name: "Presentaciones",
-      description: "Diapositivas con temas.",
+      description: "Diapositivas con temas, IA y PowerPoint.",
       icon: <Presentation className="size-6" />,
       gradient: "linear-gradient(135deg,#ef4444,#f97316)",
-      soon: true,
+      action: () => newSlides(),
     },
   ];
 
@@ -198,6 +200,13 @@ function HomeSection() {
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {SHEET_TEMPLATES.map((t) => (
           <SheetTemplateCard key={t.id} tpl={t} />
+        ))}
+      </div>
+
+      <SectionTitle>Presentaciones</SectionTitle>
+      <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
+        {SLIDES_TEMPLATES.map((t) => (
+          <SlidesTemplateCard key={t.id} tpl={t} />
         ))}
       </div>
 
@@ -277,6 +286,31 @@ function SheetTemplateCard({ tpl }: { tpl: SheetTemplate }) {
   );
 }
 
+function SlidesTemplateCard({ tpl }: { tpl: SlidesTemplate }) {
+  const th = slideTheme(tpl.theme);
+  return (
+    <button onClick={() => newSlides(tpl.id)} className="group text-left">
+      <div
+        className="relative mb-2 aspect-video overflow-hidden rounded-[var(--radius)] border border-border shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:border-accent group-hover:shadow-soft"
+        style={{ background: th.bg }}
+      >
+        {tpl.id === "blank" ? (
+          <div className="grid h-full place-items-center text-[#f3a58a]"><Presentation className="size-8" /></div>
+        ) : (
+          <div className="flex h-full flex-col items-center justify-center gap-1.5 px-3">
+            <div className="h-2 w-3/4 rounded-sm" style={{ background: th.title }} />
+            <div className="h-1 w-1/2 rounded-sm opacity-60" style={{ background: th.text }} />
+            <div className="mt-1 h-1 w-8 rounded-full" style={{ background: th.accent }} />
+          </div>
+        )}
+        {th.band && <div className="absolute right-0 bottom-0 left-0 h-1" style={{ background: th.band }} />}
+      </div>
+      <div className="truncate text-[13px] font-medium">{tpl.name}</div>
+      <div className="truncate text-[11.5px] text-muted">{tpl.description}</div>
+    </button>
+  );
+}
+
 /** Dibuja una miniatura esquemática del documento. */
 function TemplatePreview({ tpl }: { tpl: Template }) {
   const lines = useMemo(() => {
@@ -344,7 +378,7 @@ function QuickSearch() {
 /*  Lista de recientes                                                 */
 /* ------------------------------------------------------------------ */
 
-type Filter = "all" | "document" | "sheet" | "note" | "favorite";
+type Filter = "all" | "document" | "sheet" | "slides" | "note" | "favorite";
 
 function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: string }) {
   const [filter, setFilter] = useState<Filter>("all");
@@ -366,6 +400,7 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
               { value: "all", label: "Todos" },
               { value: "document", label: "Documentos" },
               { value: "sheet", label: "Hojas" },
+              { value: "slides", label: "Presentaciones" },
               { value: "note", label: "Notas" },
               { value: "favorite", label: "Favoritos" },
             ]}
@@ -398,6 +433,9 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
 }
 
 function DocIcon({ doc }: { doc: DocRecord }) {
+  if (doc.kind === "slides") {
+    return <span className="grid size-7 place-items-center rounded-md bg-orange-500/15 text-orange-600"><Presentation className="size-4" /></span>;
+  }
   if (doc.kind === "sheet") {
     return <span className="grid size-7 place-items-center rounded-md bg-emerald-500/15 text-emerald-600"><Sheet className="size-4" /></span>;
   }
@@ -479,6 +517,10 @@ function NewSection() {
       <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         {SHEET_TEMPLATES.map((t) => <SheetTemplateCard key={t.id} tpl={t} />)}
       </div>
+      <SectionTitle>Presentaciones</SectionTitle>
+      <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+        {SLIDES_TEMPLATES.map((t) => <SlidesTemplateCard key={t.id} tpl={t} />)}
+      </div>
       <SectionTitle>Notas</SectionTitle>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         <button onClick={() => newNote()} className="group text-left">
@@ -513,7 +555,7 @@ function OpenSection() {
       <div className="mb-7 flex items-end justify-between">
         <div>
           <h1 className="mb-1 text-[26px] font-bold tracking-tight">Abrir</h1>
-          <p className="text-muted">Todos tus documentos, hojas de cálculo y notas guardados en este equipo.</p>
+          <p className="text-muted">Todos tus documentos, hojas de cálculo, presentaciones y notas guardados en este equipo.</p>
         </div>
         <Button
           variant="primary"
@@ -540,7 +582,7 @@ function OpenSection() {
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"
       >
         <Upload className="mb-2 size-6" />
-        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.xlsx</b>, <b>.csv</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
+        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.xlsx</b>, <b>.csv</b>, <b>.pptx</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
       </div>
       <RecentList title="Todos los archivos" />
     </>

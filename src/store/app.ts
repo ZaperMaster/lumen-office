@@ -5,6 +5,7 @@ export type Route =
   | { name: "document"; id: string }
   | { name: "notes"; id?: string }
   | { name: "sheet"; id: string }
+  | { name: "slides"; id: string }
   | { name: "assistant" };
 
 export interface ToastAction {

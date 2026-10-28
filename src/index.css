@@ -434,3 +434,39 @@ button:disabled {
   background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); cursor: pointer;
 }
 .sg-dropdown-btn:hover { color: var(--text); border-color: var(--accent); }
+
+/* ------------------------------------------------------------------ */
+/*  Presentaciones                                                     */
+/* ------------------------------------------------------------------ */
+
+.slide-canvas { position: absolute; left: 0; top: 0; overflow: hidden; }
+.slide-el { position: absolute; }
+.slide-text-box { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 8px 14px; overflow: hidden; line-height: 1.22; overflow-wrap: anywhere; }
+.slide-text p, .slide-text div { margin: 0; }
+.slide-text ul, .slide-text ol { margin: 0; padding-left: 1.15em; }
+.slide-text ul { list-style: disc; }
+.slide-text ol { list-style: decimal; }
+.slide-text li { margin: 0.32em 0; }
+.slide-text li::marker { color: var(--slide-accent); }
+.slide-text[contenteditable="true"] { outline: none; cursor: text; min-height: 1.2em; user-select: text; }
+.slide-placeholder { opacity: 0.42; }
+.slide-anim-fade { animation: slide-fade 0.6s ease both; }
+.slide-anim-fly { animation: slide-fly 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.slide-anim-zoom { animation: slide-zoom 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes slide-fade { from { opacity: 0; } }
+@keyframes slide-fly { from { opacity: 0; transform: translateY(60px); } }
+@keyframes slide-zoom { from { opacity: 0; transform: scale(0.6); } }
+.slide-tr-fade { animation: slide-fade 0.55s ease both; }
+.slide-tr-slide { animation: slide-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.slide-tr-zoom { animation: slide-zoom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes slide-in { from { transform: translateX(8%); opacity: 0; } }
+.stage-handle { position: absolute; width: 11px; height: 11px; background: #fff; border: 1.5px solid var(--accent); border-radius: 2px; z-index: 5; }
+.stage-rot { position: absolute; width: 13px; height: 13px; border-radius: 50%; background: #fff; border: 1.5px solid var(--accent); z-index: 5; cursor: grab; }
+.stage-guide { position: absolute; background: #ec4899; z-index: 6; pointer-events: none; }
+.slides-print { display: none; }
+@media print {
+  .slides-app { display: none !important; }
+  .slides-print { display: block !important; }
+  .slides-print .slide-page { break-after: page; width: 1280px; height: 720px; position: relative; overflow: hidden; }
+  .slides-print .slide-page:last-child { break-after: auto; }
+}

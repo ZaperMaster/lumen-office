@@ -2,7 +2,7 @@ import { createDoc, type DocRecord } from "@/lib/db";
 import { importFromFile } from "@/lib/io";
 
 /** Extensiones que se pueden abrir en Lumen. */
-export const ACCEPTED_FILES = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv";
+export const ACCEPTED_FILES = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
 
 const baseName = (name: string) => name.replace(/\.[^.]+$/, "");
 
@@ -18,6 +18,16 @@ export async function importAnyFile(file: File, extra: Partial<Pick<DocRecord, "
       throw new Error(`No se pudo leer «${file.name}». ¿Es un libro de Excel válido?`);
     }
     return createDoc("sheet", { title: baseName(file.name), data: wb, text: workbookText(wb), ...extra });
+  }
+  if (ext === "pptx") {
+    const [{ readPptx }, { deckText }] = await Promise.all([import("@/lib/slides/pptx"), import("@/lib/slides/model")]);
+    let deck;
+    try {
+      deck = await readPptx(await file.arrayBuffer());
+    } catch {
+      throw new Error(`No se pudo leer «${file.name}». ¿Es una presentación de PowerPoint válida?`);
+    }
+    return createDoc("slides", { title: baseName(file.name), data: deck, text: deckText(deck), ...extra });
   }
   return importFromFile(file, extra);
 }

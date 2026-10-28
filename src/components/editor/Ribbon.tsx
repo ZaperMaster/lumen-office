@@ -8,7 +8,7 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, FilePlus2, StickyNote, Sheet, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
+  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
 } from "lucide-react";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
@@ -16,7 +16,7 @@ import { useAI } from "@/components/ai/aiStore";
 import { printDocument, ACCEPTED_IMPORTS } from "@/lib/io";
 import { isDesktop, openFileFromDisk, revealInFolder } from "@/lib/files";
 import type { FileFormat } from "@/lib/db";
-import { newDocument, newNote, newSheet, openDoc } from "@/lib/actions";
+import { newDocument, newNote, newSheet, newSlides, openDoc } from "@/lib/actions";
 import { normalizeUrl } from "@/lib/openExternal";
 import { PAGE_NUMBER_FORMATS, type Slot } from "@/lib/pageLayout";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize, type ViewMode } from "@/store/settings";
@@ -184,6 +184,7 @@ function FileMenu({ files }: { files: FileActions }) {
           <MenuSeparator />
           <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>Nuevo documento</MenuItem>
           <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>Nueva hoja de cálculo</MenuItem>
+          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>Nueva presentación</MenuItem>
           <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>Nueva nota</MenuItem>
           <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>Abrir archivo…</MenuItem>
           <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Documentos recientes</MenuItem>
