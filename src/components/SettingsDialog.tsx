@@ -359,6 +359,7 @@ function AISettings() {
                       <div className="mt-0.5 text-[11.5px] text-muted">
                         Descarga {m.sizeGB.toLocaleString("es-ES")} GB · memoria al usarlo {m.vramGB.toLocaleString("es-ES")} GB
                       </div>
+                      <div className={cn("mt-0.5 text-[11.5px]", m.commercial ? "text-muted" : "text-amber-600")}>Licencia: {m.license}</div>
                     </div>
                   </button>
                   {gpu && (
