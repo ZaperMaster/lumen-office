@@ -10,6 +10,8 @@ import { UpdateBanner } from "@/components/UpdateBanner";
 import { WindowControls, WINDOW_CONTROLS_WIDTH } from "@/components/WindowControls";
 import { installCloseGuard } from "@/lib/closeGuard";
 import { isDesktop } from "@/lib/files";
+import { refreshLicense, useLicense } from "@/lib/license";
+import { LicenseScreen } from "@/components/LicenseScreen";
 
 // Espacio que las barras superiores dejan a los botones de la ventana (solo en la app de escritorio)
 document.documentElement.style.setProperty("--wc", isDesktop() ? `${WINDOW_CONTROLS_WIDTH}px` : "0px");
@@ -69,18 +71,22 @@ function Loading() {
 export default function App() {
   const route = useApp((s) => s.route);
   const settingsOpen = useApp((s) => s.settingsOpen);
+  const license = useLicense((s) => s.status);
+  useEffect(() => void refreshLicense(), []);
 
   return (
     <TooltipProvider>
       <ThemeSync />
-      <Suspense fallback={<Loading />}>
+      {license === "loading" && <Loading />}
+      {license === "expired" && <LicenseScreen />}
+      {(license === "trial" || license === "licensed") && <Suspense fallback={<Loading />}>
         {route.name === "home" && <Launcher />}
         {route.name === "document" && <DocumentApp key={route.id} id={route.id} />}
         {route.name === "notes" && <NotesApp />}
         {route.name === "assistant" && <AssistantApp />}
         {route.name === "sheet" && <SheetApp key={route.id} id={route.id} />}
         {route.name === "slides" && <SlidesApp key={route.id} id={route.id} />}
-      </Suspense>
+      </Suspense>}
       {settingsOpen && (
         <Suspense fallback={null}>
           <SettingsDialog />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Cpu, Download, Eye, EyeOff, HardDrive, KeyRound, Keyboard, MemoryStick, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw } from "lucide-react";
+import { Check, Cpu, Download, Eye, EyeOff, HardDrive, KeyRound, Keyboard, MemoryStick, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw, BadgeCheck, ShoppingCart } from "lucide-react";
 import { RDialogRoot } from "@/components/ui/dialogPrimitives";
 import { THEMES, ACCENT_PRESETS, getTheme } from "@/lib/themes";
 import { LANGUAGES } from "@/lib/ai";
@@ -13,6 +13,8 @@ import { useApp } from "@/store/app";
 import { FontPicker, FontSizePicker } from "@/components/editor/controls";
 import { Button, Dialog, Input, Kbd, Segmented, Slider, Switch, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
+import { useLicense } from "@/lib/license";
+import { LicenseKeyForm, buyLicense } from "@/components/LicenseScreen";
 
 const TABS = [
   { id: "appearance", label: "Apariencia", icon: Palette },
@@ -20,6 +22,7 @@ const TABS = [
   { id: "page", label: "Página", icon: FileText },
   { id: "ai", label: "Inteligencia artificial", icon: Sparkles },
   { id: "general", label: "General y datos", icon: User },
+  { id: "license", label: "Licencia", icon: KeyRound },
   { id: "shortcuts", label: "Atajos de teclado", icon: Keyboard },
   { id: "about", label: "Acerca de", icon: Info },
 ] as const;
@@ -51,6 +54,7 @@ export function SettingsDialog() {
           {settingsTab === "page" && <PageSettings />}
           {settingsTab === "ai" && <AISettings />}
           {settingsTab === "general" && <General />}
+          {settingsTab === "license" && <LicenseSettings />}
           {settingsTab === "shortcuts" && <Shortcuts />}
           {settingsTab === "about" && <About />}
         </div>
@@ -590,21 +594,60 @@ function AISettings() {
   );
 }
 
+function LicenseSettings() {
+  const { status, daysLeft, info } = useLicense();
+  const toast = useApp((st) => st.toast);
+  return (
+    <>
+      <H desc="Lumen Office se puede probar gratis durante 14 días. Después hace falta una licencia.">Licencia</H>
+      {status === "licensed" && info ? (
+        <div className="mb-5 rounded-[var(--radius)] border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-emerald-700 dark:text-emerald-400">
+            <BadgeCheck className="size-5" /> Activado
+          </div>
+          <div className="text-[13px]">
+            {info.name} · {info.email}
+          </div>
+          <div className="text-[12px] text-muted">
+            Licencia {info.plan} · emitida el {new Date(info.issued).toLocaleDateString("es-ES")}
+            {info.expires ? ` · válida hasta el ${new Date(info.expires).toLocaleDateString("es-ES")}` : " · sin caducidad"}
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 rounded-[var(--radius)] border border-border bg-surface-2 p-4">
+          <div className="mb-1 text-[14px] font-semibold">{status === "trial" ? `Prueba gratuita: ${daysLeft === 1 ? "queda 1 día" : `quedan ${daysLeft} días`}` : "La prueba ha terminado"}</div>
+          <p className="mb-3 text-[12.5px] text-muted">Si ya tienes una clave, pégala aquí para activar Lumen Office en este equipo.</p>
+          <LicenseKeyForm />
+          <Button variant="ghost" size="sm" className="mt-2" icon={<ShoppingCart className="size-3.5" />} onClick={buyLicense}>
+            Conseguir una licencia
+          </Button>
+        </div>
+      )}
+      {status === "licensed" && (
+        <Field label="Quitar la licencia de este equipo" desc="Por ejemplo, para usarla en otro ordenador. Podrás volver a activarla con la misma clave.">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              if (!confirm("¿Quitar la licencia de este equipo? Guarda tu clave antes para poder volver a activarla.")) return;
+              const { deactivate } = await import("@/lib/license");
+              await deactivate();
+              toast("Licencia quitada de este equipo");
+            }}
+          >
+            Quitar
+          </Button>
+        </Field>
+      )}
+    </>
+  );
+}
+
 function General() {
   const s = useSettings();
   const toast = useApp((st) => st.toast);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const backup = async () => {
-    const docs = await db.docs.toArray();
-    const blob = new Blob([JSON.stringify({ app: "lumen", version: 1, exportedAt: new Date().toISOString(), docs }, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `lumen-copia-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast(`Copia de seguridad con ${docs.length} elementos creada`, "success");
-  };
+  const backup = () => void import("@/lib/backup").then((m) => m.exportBackup());
 
   const restore = async (file: File) => {
     try {

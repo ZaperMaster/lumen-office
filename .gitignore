@@ -6,3 +6,7 @@ src-tauri/gen
 .DS_Store
 .env*
 .claude/
+
+# Claves privadas (nunca al repositorio)
+*.pem
+*.key

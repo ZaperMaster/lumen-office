@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   Clock, Copy, FilePlus2, FileText, FolderOpen, Home, MoreHorizontal, Moon, Pin, PinOff, Presentation,
-  RotateCcw, Search, Settings, Sheet, Sparkles, Star, StickyNote, Sun, Trash2, Upload,
+  KeyRound, RotateCcw, Search, Settings, Sheet, Sparkles, Star, StickyNote, Sun, Trash2, Upload,
 } from "lucide-react";
 import { KIND_LABEL, db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
 import { SHEET_TEMPLATES, type SheetTemplate } from "@/lib/sheet/templates";
@@ -15,6 +15,7 @@ const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
+import { useLicense } from "@/lib/license";
 import { getTheme } from "@/lib/themes";
 import { Button, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Segmented, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
@@ -82,6 +83,7 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
         ))}
       </nav>
       <div className="mt-auto flex flex-col gap-0.5">
+        <TrialBadge />
         <button
           onClick={() => set("themeId", dark ? "light" : "dark")}
           className="flex h-9 items-center gap-3 rounded-[var(--radius)] px-3 text-[13.5px] font-medium text-muted hover:bg-surface-2 hover:text-text"
@@ -488,6 +490,31 @@ function DocRow({ doc }: { doc: DocRecord }) {
         </MenuContent>
       </Menu>
     </div>
+  );
+}
+
+/** Días de prueba que quedan (o nada si ya está activada). */
+function TrialBadge() {
+  const { status, daysLeft } = useLicense();
+  const openSettings = useApp((s) => s.openSettings);
+  if (status !== "trial") return null;
+  const urgent = daysLeft <= 3;
+  return (
+    <button
+      onClick={() => openSettings("license")}
+      className={cn(
+        "mb-2 flex flex-col items-start gap-0.5 rounded-[var(--radius)] border px-3 py-2 text-left transition-colors",
+        urgent ? "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/15" : "border-border bg-surface-2 hover:border-accent/40",
+      )}
+    >
+      <span className="flex items-center gap-1.5 text-[12.5px] font-semibold">
+        <KeyRound className="size-3.5" />
+        Prueba gratuita
+      </span>
+      <span className="text-[11.5px] text-muted">
+        {daysLeft === 1 ? "Queda 1 día" : `Quedan ${daysLeft} días`} · <span className="text-accent">Activar</span>
+      </span>
+    </button>
   );
 }
 

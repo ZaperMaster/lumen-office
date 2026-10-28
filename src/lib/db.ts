@@ -36,11 +36,17 @@ export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt" | "xlsx" | "cs
 
 class LumenDB extends Dexie {
   docs!: EntityTable<DocRecord, "id">;
+  /** Datos internos de la app (licencia, prueba…) */
+  meta!: EntityTable<{ key: string; value: unknown }, "key">;
 
   constructor() {
     super("lumen");
     this.version(1).stores({
       docs: "id, kind, updatedAt, openedAt, pinned, favorite, deletedAt, *tags",
+    });
+    this.version(2).stores({
+      docs: "id, kind, updatedAt, openedAt, pinned, favorite, deletedAt, *tags",
+      meta: "key",
     });
   }
 }

@@ -127,3 +127,15 @@ ventana de Windows. Desde **Configuración → General y datos** se puede export
 Puedes **leer el código** y **usar Lumen Office gratis para fines no comerciales** (uso personal, estudio,
 organizaciones sin ánimo de lucro…). **No está permitido modificarla, crear obras derivadas, redistribuirla
 ni venderla.** Para cualquier otro uso (incluido el comercial) hace falta una licencia escrita del autor.
+
+### Prueba y clave de licencia
+
+La app se puede **probar gratis durante 14 días**. Después pide una **clave de licencia** (Configuración → Licencia).
+Las claves están firmadas digitalmente por el autor y la app las comprueba sin conexión.
+
+Para el autor, las claves se crean con `scripts/license.mjs` (la clave privada de firma vive fuera del proyecto,
+en `%USERPROFILE%\.lumen\`, y nunca se sube al repositorio):
+
+```bash
+node scripts/license.mjs crear --nombre "Nombre del cliente" --email cliente@ejemplo.com
+```
