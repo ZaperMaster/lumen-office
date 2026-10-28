@@ -3,6 +3,7 @@ import { saveAs } from "file-saver";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import { buildDocx, buildHtmlPage, buildLumen, buildMarkdown, importFromFile, safeFileName } from "@/lib/io";
 import { useApp } from "@/store/app";
+import type { PageLayout } from "@/lib/pageLayout";
 
 /*
  * Archivos en el disco, como en Word:
@@ -44,13 +45,14 @@ export interface DocSource {
   html: string;
   text: string;
   title: string;
+  pageLayout?: PageLayout | null;
 }
 
 async function buildBytes(format: FileFormat, src: DocSource): Promise<Uint8Array> {
-  if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title)).arrayBuffer());
+  if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title, src.pageLayout)).arrayBuffer());
   const text =
     format === "lumen"
-      ? buildLumen(src.json, src.title)
+      ? buildLumen(src.json, src.title, src.pageLayout)
       : format === "md"
         ? buildMarkdown(src.html, src.title)
         : format === "html"

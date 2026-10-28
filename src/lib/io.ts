@@ -3,14 +3,15 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import TurndownService from "turndown";
 import {
-  AlignmentType, BorderStyle, Document, ExternalHyperlink, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
-  ImageRun, LevelFormat, Packer, PageBreak, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
+  AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
+  ImageRun, LevelFormat, Packer, PageBreak, PageNumber, TabStopType, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
   PageOrientation, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
   type IParagraphOptions, type ParagraphChild,
 } from "docx";
 import { buildExtensions } from "@/components/editor/extensions";
 import { createDoc, type DocRecord } from "@/lib/db";
 import { MARGINS, PAGE_SIZES, useSettings } from "@/store/settings";
+import { hasContent, withDefaults, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
 
 /* ------------------------------------------------------------------ */
 /*  Conversión de formatos                                             */
@@ -88,9 +89,9 @@ export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, 
   const title = file.name.replace(/\.[^.]+$/, "");
   let html: string;
   if (ext === "lumen") {
-    const data = JSON.parse(await file.text()) as { app?: string; title?: string; content?: JSONContent };
+    const data = JSON.parse(await file.text()) as { app?: string; title?: string; content?: JSONContent; pageLayout?: PageLayout };
     if (data.app !== "lumen" || !data.content) throw new Error("El archivo .lumen está dañado.");
-    return createDoc("document", { title: data.title || title, content: data.content, ...extra });
+    return createDoc("document", { title: data.title || title, content: data.content, pageLayout: data.pageLayout ?? null, ...extra });
   }
   if (ext === "docx") {
     const mammoth = await import("mammoth");
@@ -130,8 +131,8 @@ export function buildMarkdown(html: string, title: string): string {
 }
 
 /** Formato propio de Lumen: el documento completo, sin pérdidas, en JSON. */
-export function buildLumen(content: JSONContent, title: string): string {
-  return JSON.stringify({ app: "lumen", format: 1, title, content }, null, 1);
+export function buildLumen(content: JSONContent, title: string, pageLayout?: PageLayout | null): string {
+  return JSON.stringify({ app: "lumen", format: 1, title, content, pageLayout: pageLayout ?? undefined }, null, 1);
 }
 
 export function buildHtmlPage(html: string, title: string): string {
@@ -373,11 +374,47 @@ async function blockToDocx(node: JSONContent, ctx: Ctx, extra: Partial<IParagrap
   }
 }
 
-export async function buildDocx(content: JSONContent, title: string): Promise<Blob> {
+/**
+ * Párrafo de encabezado o pie con sus tres partes (izquierda, centro y derecha),
+ * usando tabulaciones como hace Word. Los números de página son campos de Word.
+ */
+function hfParagraph(hf: HeaderFooter, title: string, author: string, widthTwips: number, fontPt: number): Paragraph {
+  const parts = (text: string) => {
+    const out: (string | (typeof PageNumber)[keyof typeof PageNumber])[] = [];
+    const resolved = text.replaceAll("{titulo}", title || "Documento sin título").replaceAll("{fecha}", new Date().toLocaleDateString("es-ES")).replaceAll("{autor}", author);
+    for (const piece of resolved.split(/(\{paginas?\})/)) {
+      if (piece === "{pagina}") out.push(PageNumber.CURRENT);
+      else if (piece === "{paginas}") out.push(PageNumber.TOTAL_PAGES);
+      else if (piece) out.push(piece);
+    }
+    return out;
+  };
+  const size = Math.round(fontPt * 2);
+  return new Paragraph({
+    tabStops: [
+      { type: TabStopType.CENTER, position: Math.round(widthTwips / 2) },
+      { type: TabStopType.RIGHT, position: widthTwips },
+    ],
+    children: [
+      new TextRun({ children: parts(hf.left), size }),
+      new TextRun({ children: ["\t", ...parts(hf.center)], size }),
+      new TextRun({ children: ["\t", ...parts(hf.right)], size }),
+    ],
+  });
+}
+
+export async function buildDocx(content: JSONContent, title: string, pageLayout?: PageLayout | null): Promise<Blob> {
   const s = useSettings.getState();
   const size = PAGE_SIZES[s.pageSize];
   const margin = MARGINS[s.margins];
   const landscape = s.orientation === "landscape";
+  const layout = withDefaults(pageLayout);
+  // Ancho del texto (sin márgenes), para colocar el centro y la derecha del encabezado
+  const textWidth = Math.round(((landscape ? size.h : size.w) - 2 * margin.h) * MM_TO_TWIP);
+  const hasHeader = hasContent(layout.header);
+  const hasFooter = hasContent(layout.footer);
+  const emptyHeader = () => new Header({ children: [new Paragraph("")] });
+  const emptyFooter = () => new Footer({ children: [new Paragraph("")] });
   const ctx: Ctx = { bulletRef: "lumen-bullets", numberRef: "lumen-numbers", numberInstance: 0 };
   const children: (Paragraph | Table)[] = [];
   for (const n of content.content ?? []) children.push(...(await blockToDocx(n, ctx)));
@@ -424,9 +461,26 @@ export async function buildDocx(content: JSONContent, title: string): Promise<Bl
               bottom: Math.round(margin.v * MM_TO_TWIP),
               left: Math.round(margin.h * MM_TO_TWIP),
               right: Math.round(margin.h * MM_TO_TWIP),
+              // Distancia del encabezado y el pie al borde, como Word (1,25 cm)
+              header: Math.round(Math.min(12.7, margin.v / 2) * MM_TO_TWIP),
+              footer: Math.round(Math.min(12.7, margin.v / 2) * MM_TO_TWIP),
             },
+            pageNumbers: { start: layout.startNumber },
           },
+          titlePage: layout.differentFirstPage,
         },
+        headers: hasHeader
+          ? {
+              default: new Header({ children: [hfParagraph(layout.header, title, s.userName, textWidth, 9.5)] }),
+              ...(layout.differentFirstPage ? { first: emptyHeader() } : {}),
+            }
+          : undefined,
+        footers: hasFooter
+          ? {
+              default: new Footer({ children: [hfParagraph(layout.footer, title, s.userName, textWidth, 9.5)] }),
+              ...(layout.differentFirstPage ? { first: emptyFooter() } : {}),
+            }
+          : undefined,
         children: children.length ? children : [new Paragraph("")],
       },
     ],

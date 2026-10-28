@@ -8,7 +8,7 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, FilePlus2, StickyNote, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
+  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, FilePlus2, StickyNote, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
 } from "lucide-react";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
@@ -18,6 +18,7 @@ import { isDesktop, openFileFromDisk, revealInFolder } from "@/lib/files";
 import type { FileFormat } from "@/lib/db";
 import { newDocument, newNote, openDoc } from "@/lib/actions";
 import { normalizeUrl } from "@/lib/openExternal";
+import { PAGE_NUMBER_FORMATS, type Slot } from "@/lib/pageLayout";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize, type ViewMode } from "@/store/settings";
 import { useApp } from "@/store/app";
 import {
@@ -27,14 +28,23 @@ import {
 
 type Tab = "home" | "insert" | "layout" | "review" | "view" | "ai" | "table";
 
+/** Acciones de encabezado, pie y numeración que ofrece el documento. */
+export interface LayoutActions {
+  edit: (zone: "header" | "footer") => void;
+  setPageNumber: (zone: "header" | "footer", slot: Slot, text: string) => void;
+  removePageNumbers: () => void;
+  hasPageNumbers: boolean;
+}
+
 export interface RibbonProps {
   editor: Editor;
   files: FileActions;
+  layout: LayoutActions;
   onFind: (replace?: boolean) => void;
   onWordCount: () => void;
 }
 
-export function Ribbon({ editor, files, onFind, onWordCount }: RibbonProps) {
+export function Ribbon({ editor, files, layout, onFind, onWordCount }: RibbonProps) {
   const flags = useEditorFlags(editor);
   const [tab, setTab] = useState<Tab>("home");
   const { ribbonCollapsed, set } = useSettings();
@@ -87,7 +97,7 @@ export function Ribbon({ editor, files, onFind, onWordCount }: RibbonProps) {
           }}
         >
           {activeTab === "home" && <HomeTab editor={editor} flags={flags} />}
-          {activeTab === "insert" && <InsertTab editor={editor} />}
+          {activeTab === "insert" && <InsertTab editor={editor} layout={layout} />}
           {activeTab === "layout" && <LayoutTab editor={editor} />}
           {activeTab === "review" && <ReviewTab editor={editor} onFind={onFind} onWordCount={onWordCount} />}
           {activeTab === "view" && <ViewTab />}
@@ -369,6 +379,15 @@ function LineHeightMenu({ editor, current }: { editor: Editor; current: string |
 /*  Insertar                                                           */
 /* ------------------------------------------------------------------ */
 
+const PAGE_NUMBER_POSITIONS: { label: string; zone: "header" | "footer"; slot: Slot }[] = [
+  { label: "Abajo · centro", zone: "footer", slot: "center" },
+  { label: "Abajo · derecha", zone: "footer", slot: "right" },
+  { label: "Abajo · izquierda", zone: "footer", slot: "left" },
+  { label: "Arriba · derecha", zone: "header", slot: "right" },
+  { label: "Arriba · centro", zone: "header", slot: "center" },
+  { label: "Arriba · izquierda", zone: "header", slot: "left" },
+];
+
 const SYMBOLS = "© ® ™ € £ ¥ ¢ $ ° ± × ÷ ≠ ≈ ≤ ≥ ∞ √ ∑ π Ω α β γ δ µ → ← ↑ ↓ ↔ ⇒ • · … — – « » ¿ ¡ § ¶ † ‡ ✓ ✗ ★ ☆ ♥ ♦ ♣ ♠ ½ ¼ ¾ ² ³ ‰".split(" ");
 const EMOJIS = "😀 😂 😊 😍 🤔 😎 😢 😡 👍 👎 👏 🙏 💪 🎉 🔥 ✨ ⭐ 💡 📌 📎 📝 📅 ✅ ❌ ⚠️ ❤️ 💙 💚 🚀 🎯 📈 📉 💼 🏠 ☕ 🌍 🌞 🌙 ⏰ 📞 📧 🔗 🔒 🔑 🧠 🎵 📷 🛒".split(" ");
 
@@ -381,7 +400,7 @@ export function readImageFile(file: File): Promise<string> {
   });
 }
 
-function InsertTab({ editor }: { editor: Editor }) {
+function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const c = () => editor.chain().focus();
   const [imgUrl, setImgUrl] = useState("");
@@ -391,6 +410,34 @@ function InsertTab({ editor }: { editor: Editor }) {
       <Group label="Páginas">
         <Big icon={<SeparatorHorizontal />} label="Salto de página" onClick={() => c().setPageBreak().run()} title="Salto de página (Ctrl+Enter)" />
         <Big icon={<Minus />} label="Línea horizontal" onClick={() => c().setHorizontalRule().run()} />
+      </Group>
+      <Group label="Encabezado y pie">
+        <Big icon={<PanelTop />} label="Encabezado" onClick={() => layout.edit("header")} title="Texto en la parte de arriba de cada página" />
+        <Big icon={<PanelBottom />} label="Pie de página" onClick={() => layout.edit("footer")} title="Texto en la parte de abajo de cada página" />
+        <Menu>
+          <MenuTrigger asChild>
+            <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
+              <Hash className="size-[22px]" />
+              Número de página
+            </button>
+          </MenuTrigger>
+          <MenuContent className="w-[260px]">
+            {PAGE_NUMBER_POSITIONS.map((p) => (
+              <SubMenu key={p.label} label={p.label} icon={p.zone === "header" ? <ArrowUpToLine /> : <ArrowDownToLine />}>
+                {PAGE_NUMBER_FORMATS.map((fmt) => (
+                  <MenuItem key={fmt.id} onSelect={() => layout.setPageNumber(p.zone, p.slot, fmt.text)}>
+                    {fmt.label}
+                  </MenuItem>
+                ))}
+              </SubMenu>
+            ))}
+            <MenuSeparator />
+            <MenuItem icon={<Settings2 />} onSelect={() => layout.edit("footer")}>Formato y primera página…</MenuItem>
+            <MenuItem icon={<Trash2 />} danger disabled={!layout.hasPageNumbers} onSelect={layout.removePageNumbers}>
+              Quitar números de página
+            </MenuItem>
+          </MenuContent>
+        </Menu>
       </Group>
       <Group label="Tablas">
         <Popover>

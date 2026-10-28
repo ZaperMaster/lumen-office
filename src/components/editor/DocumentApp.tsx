@@ -13,7 +13,10 @@ import { openDoc } from "@/lib/actions";
 import { getTheme } from "@/lib/themes";
 import { MARGINS, MM_TO_PX, PAGE_SIZES, useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
-import { Ribbon, type FileActions } from "@/components/editor/Ribbon";
+import { Ribbon, type FileActions, type LayoutActions } from "@/components/editor/Ribbon";
+import { HeaderFooterDialog } from "@/components/editor/HeaderFooterDialog";
+import type { PaginationStorage } from "@/components/editor/pagination";
+import { pageTexts, withDefaults, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
 import { FindBar } from "@/components/editor/FindBar";
 import { StatusBar, SaveIndicator } from "@/components/editor/StatusBar";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
@@ -26,6 +29,24 @@ import { ChatPanel } from "@/components/ai/ChatPanel";
 import { useAI } from "@/components/ai/aiStore";
 import { Button, IconButton, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
+
+/** Espacio entre hojas en la vista de páginas (px). */
+const PAGE_GAP = 24;
+
+/** Encabezado de la primera página o pie de la última (los demás van entre páginas). */
+function HfZone({ zone, height, texts, onEdit }: { zone: "header" | "footer"; height: number; texts: HeaderFooter; onEdit: (z: "header" | "footer") => void }) {
+  return (
+    <div className="hf-zone relative" data-zone={zone} style={{ height }} onDoubleClick={() => onEdit(zone)} title="Doble clic para editar">
+      {zone === "footer" && <span className="hf-hint">Doble clic para editar el pie de página</span>}
+      <span className="hf-row">
+        <span className="hf-cell hf-left">{texts.left}</span>
+        <span className="hf-cell hf-center">{texts.center}</span>
+        <span className="hf-cell hf-right">{texts.right}</span>
+      </span>
+      {zone === "header" && <span className="hf-hint">Doble clic para editar el encabezado</span>}
+    </div>
+  );
+}
 
 export default function DocumentApp({ id }: { id: string }) {
   const doc = useLiveQuery(() => db.docs.get(id).then((d) => d ?? null), [id]);
@@ -86,6 +107,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       html: editor.getHTML(),
       text: editor.getText({ blockSeparator: "\n\n" }),
       title: titleRef.current,
+      pageLayout: docRef.current.pageLayout ?? null,
     }),
     [editor],
   );
@@ -210,23 +232,86 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
   const pageW = (landscape ? size.h : size.w) * MM_TO_PX;
   const pageH = (landscape ? size.w : size.h) * MM_TO_PX;
 
-  // Número de páginas aproximado según la altura del contenido
+  /* ---------------- Páginas reales: encabezado, pie y numeración ---------------- */
+  const layout = useMemo(() => withDefaults(doc.pageLayout), [doc.pageLayout]);
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+  const [lastUsed, setLastUsed] = useState(0);
+  const [hfZone, setHfZone] = useState<"header" | "footer" | null>(null);
+  const mt = margin.v * MM_TO_PX;
+  const mb = margin.v * MM_TO_PX;
+  const contentH = pageH - mt - mb;
+
+  const saveLayout = useCallback(
+    (next: PageLayout) => {
+      edits.current += 1; // cuenta como cambio para guardar en el archivo
+      void updateDoc(doc.id, { pageLayout: next });
+    },
+    [doc.id],
+  );
+
+  const layoutActions: LayoutActions = useMemo(
+    () => ({
+      edit: (zone) => setHfZone(zone),
+      setPageNumber: (zone, slot, text) => {
+        // Un solo número de página: se quita de donde estuviera antes
+        const strip = (hf: HeaderFooter): HeaderFooter => ({
+          left: hf.left.includes("{pagina}") ? "" : hf.left,
+          center: hf.center.includes("{pagina}") ? "" : hf.center,
+          right: hf.right.includes("{pagina}") ? "" : hf.right,
+        });
+        const next = { ...layout, header: strip(layout.header), footer: strip(layout.footer) };
+        next[zone] = { ...next[zone], [slot]: text };
+        saveLayout(next);
+      },
+      removePageNumbers: () => {
+        const strip = (hf: HeaderFooter): HeaderFooter => ({
+          left: hf.left.includes("{pagina}") ? "" : hf.left,
+          center: hf.center.includes("{pagina}") ? "" : hf.center,
+          right: hf.right.includes("{pagina}") ? "" : hf.right,
+        });
+        saveLayout({ ...layout, header: strip(layout.header), footer: strip(layout.footer) });
+      },
+      hasPageNumbers: JSON.stringify([layout.header, layout.footer]).includes("{pagina}"),
+    }),
+    [layout, saveLayout],
+  );
+
+  // La paginación necesita las medidas de la hoja y los textos de encabezado y pie
+  const userName = s.userName;
   useEffect(() => {
-    const el = paperRef.current;
-    if (!el) return;
-    const count = () => {
-      const byHeight = Math.ceil((el.scrollHeight - 2) / pageH);
-      const byBreaks = el.querySelectorAll(".page-break").length + 1;
-      setPages(Math.max(1, byHeight, byBreaks));
+    const st = (editor.storage as unknown as { pagination: PaginationStorage }).pagination;
+    st.enabled = s.viewMode === "page";
+    st.config = {
+      pageHeight: pageH,
+      marginTop: mt,
+      marginBottom: mb,
+      gap: PAGE_GAP,
+      texts: (i, n) => pageTexts(layoutRef.current, i, n, titleRef.current, userName),
     };
-    const ro = new ResizeObserver(count);
-    ro.observe(el);
-    editor.on("update", count);
-    return () => {
-      ro.disconnect();
-      editor.off("update", count);
+    st.onLayout = (p, used) => {
+      setPages(p);
+      setLastUsed(used);
     };
-  }, [pageH, s.viewMode, editor]);
+    st.onEditHeaderFooter = (zone) => setHfZone(zone);
+    st.refresh();
+  }, [editor, s.viewMode, pageH, pageW, mt, mb, layout, title, userName]);
+
+  // Tamaño del papel al imprimir o guardar como PDF
+  useEffect(() => {
+    let el = document.getElementById("lumen-page-size") as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "lumen-page-size";
+      document.head.appendChild(el);
+    }
+    const w = landscape ? size.h : size.w;
+    const h = landscape ? size.w : size.h;
+    el.textContent = `@page { size: ${w}mm ${h}mm; margin: 0; }`;
+  }, [landscape, size.w, size.h]);
+
+  const firstTexts = pageTexts(layout, 0, pages, title, userName);
+  const lastTexts = pageTexts(layout, pages - 1, pages, title, userName);
 
   // Atajos de teclado globales
   useEffect(() => {
@@ -267,6 +352,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
     fontSize: `${s.fontSize}pt`,
     lineHeight: s.lineHeight,
     "--para-spacing": `${s.paraSpacing}em`,
+    "--doc-font": s.fontFamily,
     "--page-pad-x": s.viewMode === "page" ? `${margin.h * MM_TO_PX}px` : "0px",
   } as React.CSSProperties;
 
@@ -344,7 +430,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       </header>
 
       {!focus && (
-        <Ribbon editor={editor} files={files} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
+        <Ribbon editor={editor} files={files} layout={layoutActions} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
       )}
 
       <div className="flex min-h-0 flex-1">
@@ -359,17 +445,12 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
               }
             }}
           >
-            <div style={{ zoom: s.zoom / 100 }} className={cn(s.viewMode === "page" ? "py-8" : "py-10")}>
+            <div style={{ zoom: s.zoom / 100 }} className={cn("zoom-wrap", s.viewMode === "page" ? "py-8" : "py-10")}>
               {s.viewMode === "page" ? (
                 <div
                   ref={paperRef}
-                  className="paper relative mx-auto"
-                  style={{
-                    width: pageW,
-                    minHeight: pageH,
-                    padding: `${margin.v * MM_TO_PX}px ${margin.h * MM_TO_PX}px`,
-                    ...editorStyle,
-                  }}
+                  className="paged-doc relative isolate mx-auto"
+                  style={{ width: pageW, padding: `0 ${margin.h * MM_TO_PX}px`, ...editorStyle }}
                   onMouseDown={(e) => {
                     if (e.target === e.currentTarget) {
                       e.preventDefault();
@@ -377,12 +458,23 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
                     }
                   }}
                 >
-                  {Array.from({ length: pages - 1 }, (_, i) => (
-                    <div key={i} className="no-print pointer-events-none absolute inset-x-0 border-t border-dashed border-[color-mix(in_oklab,var(--paper-text)_14%,transparent)]" style={{ top: pageH * (i + 1) }}>
-                      <span className="absolute -top-2.5 right-2 bg-paper px-1.5 text-[10px] text-muted">Página {i + 2}</span>
-                    </div>
-                  ))}
+                  {/* Las hojas se dibujan detrás del texto */}
+                  <div className="page-sheets pointer-events-none absolute inset-x-0 top-0 -z-10" aria-hidden>
+                    {Array.from({ length: pages }, (_, i) => (
+                      <div key={i} className="paper absolute inset-x-0" style={{ top: i * (pageH + PAGE_GAP), height: pageH }} />
+                    ))}
+                  </div>
+                  <HfZone zone="header" height={mt} texts={firstTexts.header} onEdit={setHfZone} />
                   <EditorContent editor={editor} />
+                  <div
+                    className="last-page-filler"
+                    style={{ height: Math.max(0, contentH - lastUsed) }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      editor.commands.focus("end");
+                    }}
+                  />
+                  <HfZone zone="footer" height={mb} texts={lastTexts.footer} onEdit={setHfZone} />
                 </div>
               ) : (
                 <div ref={paperRef} className={cn("mx-auto px-8", focus ? "max-w-[720px] pt-[12vh]" : "max-w-[860px]")} style={editorStyle}>
@@ -410,6 +502,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       <LinkBubble editor={editor} />
       {!focus && <StatusBar editor={editor} pages={pages} saveState={saveState} onWordCount={() => setWordCount(true)} />}
       <WordCountDialog editor={editor} open={wordCount} onOpenChange={setWordCount} pages={pages} />
+      <HeaderFooterDialog open={!!hfZone} zone={hfZone ?? "header"} layout={doc.pageLayout} onOpenChange={(o) => !o && setHfZone(null)} onSave={saveLayout} />
     </div>
   );
 }

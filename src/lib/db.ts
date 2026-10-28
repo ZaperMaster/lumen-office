@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import type { JSONContent } from "@tiptap/react";
+import type { PageLayout } from "@/lib/pageLayout";
 
 export type DocKind = "document" | "note";
 
@@ -25,6 +26,8 @@ export interface DocRecord {
   fileFormat?: FileFormat | null;
   /** Momento del último guardado en ese archivo */
   savedAt?: number | null;
+  /** Encabezado, pie y numeración de páginas */
+  pageLayout?: PageLayout | null;
 }
 
 export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt";
@@ -48,7 +51,7 @@ export function newId(): string {
 
 export async function createDoc(
   kind: DocKind,
-  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat">> = {},
+  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat" | "pageLayout">> = {},
 ): Promise<DocRecord> {
   const now = Date.now();
   const doc: DocRecord = {
@@ -69,6 +72,7 @@ export async function createDoc(
     filePath: init.filePath ?? null,
     fileFormat: init.fileFormat ?? null,
     savedAt: init.filePath ? now : null,
+    pageLayout: init.pageLayout ?? null,
   };
   doc.text = plainText(doc.content);
   doc.words = countWords(doc.text);
