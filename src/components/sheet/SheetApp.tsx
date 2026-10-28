@@ -574,7 +574,9 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
 
   /* ---------------- Gráficos ---------------- */
   const newChart = (type: ChartSpec["type"] = "column") => {
-    const rg = n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n;
+    let rg = n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n;
+    // Desde una celda vacía se toman todos los datos de la hoja
+    if (rg.r1 === rg.r2 && rg.c1 === rg.c2 && !sheet.cells[key(rg.r1, rg.c1)]?.v) rg = usedRange(sheet) ?? rg;
     let x = 0;
     for (let c = 0; c <= rg.c2 + 1; c++) x += colWidth(sheet, c);
     let y = 0;
