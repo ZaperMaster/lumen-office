@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui";
 import { Toasts } from "@/components/Toasts";
 import { Launcher } from "@/components/launcher/Launcher";
 import { UnsavedDialog } from "@/components/UnsavedDialog";
+import { UpdateBanner } from "@/components/UpdateBanner";
 import { WindowControls, WINDOW_CONTROLS_WIDTH } from "@/components/WindowControls";
 import { installCloseGuard } from "@/lib/closeGuard";
 import { isDesktop } from "@/lib/files";
@@ -61,6 +62,7 @@ export default function App() {
       )}
       <Toasts />
       <UnsavedDialog />
+      <UpdateBanner />
       <CloseGuard />
       <WindowControls />
     </TooltipProvider>

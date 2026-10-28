@@ -41,5 +41,16 @@
     "android": {
       "debugApplicationIdSuffix": ".debug"
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJCMEIxOEUzRDVENzYzNTMKUldSVFk5ZlY0eGdMdS9Nck9vK1lqc3JPdldtNHZrV05RcDJ3NDJJRjJLOTlwNVdCRXAvM3JyQzIK",
+      "endpoints": [
+        "https://github.com/ZaperMaster/lumen-office/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

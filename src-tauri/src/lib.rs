@@ -8,6 +8,10 @@ pub fn run() {
     .plugin(tauri_plugin_fs::init())
     // Recuerda las carpetas elegidas para que «Guardar» funcione tras reiniciar la app
     .plugin(tauri_plugin_persisted_scope::init())
+    // Actualizaciones automáticas desde las Releases de GitHub (firmadas)
+    .plugin(tauri_plugin_updater::Builder::new().build())
+    // Reiniciar la app tras instalar una actualización
+    .plugin(tauri_plugin_process::init())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

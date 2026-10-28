@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
+import pkg from "./package.json" with { type: "json" };
 
 // https://v2.tauri.app/start/frontend/vite/
 const host = process.env.TAURI_DEV_HOST;
@@ -20,6 +21,7 @@ export default defineConfig({
     watch: { ignored: ["**/src-tauri/**"] },
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   // El worker de la IA local usa imports de módulo
   worker: { format: "es" },
   build: {

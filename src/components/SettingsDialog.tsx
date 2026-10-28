@@ -5,6 +5,8 @@ import { THEMES, ACCENT_PRESETS, getTheme } from "@/lib/themes";
 import { LANGUAGES } from "@/lib/ai";
 import { ANTHROPIC_MODEL_OPTIONS, LOCAL_MODELS, loadEngine, loadRemote, refreshCached, useLocalAI, webgpuAvailable } from "@/lib/localModels";
 import { ModelProgress } from "@/components/ai/LocalAIStatus";
+import { appVersion, useUpdater } from "@/lib/updater";
+import { isDesktop } from "@/lib/files";
 import { db, type DocRecord } from "@/lib/db";
 import { MARGINS, PAGE_SIZES, useSettings, type Margins, type PageSize } from "@/store/settings";
 import { useApp } from "@/store/app";
@@ -691,14 +693,63 @@ function Shortcuts() {
 }
 
 function About() {
+  const s = useSettings();
+  const { status, version: newVersion, error, check, install } = useUpdater();
+  const [version, setVersion] = useState("");
+  const desktop = isDesktop();
+  useEffect(() => {
+    void appVersion().then(setVersion);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center pt-10 text-center">
-      <Logo className="mb-4 size-16" />
-      <div className="text-[22px] font-bold">Lumen Office</div>
-      <div className="mb-4 text-muted">Versión 0.4.0</div>
-      <p className="max-w-md text-[13.5px] text-muted">
-        Suite ofimática con documentos, notas y asistente de IA local. Hecha con React, Tiptap, WebLLM y Tauri. Tus archivos y tus textos no salen de tu equipo.
-      </p>
-    </div>
+    <>
+      <div className="flex flex-col items-center pt-6 pb-6 text-center">
+        <Logo className="mb-4 size-16" />
+        <div className="text-[22px] font-bold">Lumen Office</div>
+        <div className="mb-4 text-muted">Versión {version}</div>
+        <p className="max-w-md text-[13.5px] text-muted">
+          Suite ofimática con documentos, notas y asistente de IA. Hecha con React, Tiptap, WebLLM y Tauri.
+        </p>
+      </div>
+      {desktop && (
+        <>
+          <Field
+            label="Actualizaciones"
+            desc={
+              status === "checking"
+                ? "Buscando…"
+                : status === "uptodate"
+                  ? "Tienes la última versión."
+                  : status === "available"
+                    ? `Hay una versión nueva: ${newVersion}.`
+                    : status === "downloading" || status === "installing"
+                      ? "Actualizando…"
+                      : status === "error"
+                        ? error
+                        : "Las versiones nuevas se descargan desde GitHub y están firmadas."
+            }
+          >
+            {status === "available" ? (
+              <Button variant="primary" icon={<Download className="size-4" />} onClick={() => void install()}>
+                Actualizar a {newVersion}
+              </Button>
+            ) : (
+              <Button variant="outline" disabled={status === "checking" || status === "downloading" || status === "installing"} onClick={() => void check()}>
+                Buscar actualizaciones
+              </Button>
+            )}
+          </Field>
+          <Field label="Buscar actualizaciones al abrir la app">
+            <Switch checked={s.autoCheckUpdates} onChange={(v) => s.set("autoCheckUpdates", v)} label="Buscar actualizaciones al abrir la app" />
+          </Field>
+        </>
+      )}
+      <Field
+        label="Licencia"
+        desc="PolyForm Noncommercial 1.0.0: se puede usar, copiar y modificar gratis para fines no comerciales. No se permite venderla ni usarla para ganar dinero."
+      >
+        <span className="text-[12.5px] text-muted">© Alejandro Zapata</span>
+      </Field>
+    </>
   );
 }

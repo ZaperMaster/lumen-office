@@ -1,78 +1,113 @@
 # Lumen Office
 
-Suite ofimática de escritorio con **Documentos** (procesador de textos tipo Word), **Notas** y **Asistente IA** local (sin APIs externas).
-Hecha con **TypeScript + React + Tiptap**, empaquetada como app de escritorio con **Tauri 2**.
+Suite ofimática de escritorio para Windows con **Documentos** (procesador de textos tipo Word), **Notas** y un
+**Asistente de IA** que puede funcionar por completo en tu equipo.
+Hecha con **TypeScript + React + Tiptap** y empaquetada como app de escritorio con **Tauri 2**.
 
-## Cómo ejecutarla
+**Descargar:** [última versión](https://github.com/ZaperMaster/lumen-office/releases/latest) → `Lumen.Office_x.y.z_x64-setup.exe`.
+Una vez instalada, la app se actualiza sola.
+
+## Qué incluye
+
+**Inicio tipo Office**
+- Elegir herramienta (Documento, Notas, Asistente IA), plantillas con miniatura, recientes, búsqueda y papelera.
+
+**Documentos**
+- Cinta de opciones: Archivo, Inicio, Insertar, Diseño, Revisar, Vista, IA y la pestaña contextual Tabla.
+- Hoja con tamaño, márgenes y orientación reales; saltos de página; vistas de impresión, web y enfoque; zoom.
+- Fuentes, tamaños, colores, resaltado, estilos, listas, tareas, tablas, citas y código.
+- **Imágenes editables**: tamaño con tiradores, texto alrededor (izquierda/derecha) o centradas, mover arrastrando,
+  recortar, girar, voltear y texto alternativo.
+- **Vínculos**: Ctrl+clic para abrirlos y menú para abrir, editar, copiar o quitar.
+- Buscar y reemplazar, contador de palabras y menú flotante sobre la selección.
+
+**Archivos, como en Word**
+- **Guardar** (Ctrl+S) reemplaza el archivo vinculado; **Guardar como** (F12) elige carpeta, nombre y formato.
+- **Exportar una copia** a Word (.docx), Lumen (.lumen, sin pérdidas), Markdown, HTML, texto o PDF (imprimir).
+- **Abrir archivo** (Ctrl+O): .docx, .lumen, .md, .html y .txt.
+- **Autoguardado en el archivo** y aviso **Guardar / No guardar / Cancelar** al salir o cerrar con cambios pendientes.
+
+**Notas**
+- Búsqueda, colores, etiquetas, fijadas, favoritas y guardado automático.
+
+**Personalización**
+- 10 temas (claro, oscuro, medianoche, grafito, sepia, bosque, océano, rosa, lavanda, alto contraste), color de acento,
+  18 fuentes incluidas más las del sistema, esquinas y hoja blanca u oscura.
+- Ventana con barra de título integrada en el diseño de la app.
+
+## IA
+
+Se elige en **Configuración → Inteligencia artificial**:
+
+| Motor | Dónde se ejecuta | Notas |
+|---|---|---|
+| **Integrado** (WebLLM + WebGPU) | En tu tarjeta gráfica | Sin conexión y sin enviar nada. El modelo se descarga una vez (Qwen 2.5 3B, ~1,7 GB). |
+| **Ollama** | En tu equipo | Usa los modelos instalados con [Ollama](https://ollama.com). |
+| **Tu propia API** | En el servicio que elijas | OpenAI, OpenRouter, Groq, DeepSeek, Mistral, LM Studio o Anthropic. El texto se envía a ese servicio. |
+
+Acciones sobre la selección (mejorar, corregir, acortar, ampliar, tono, traducir, lista, tabla, resumir, continuar) con
+vista previa antes de aplicar, y chat con el documento como contexto.
+
+**Memoria:** con la IA local en uso, el modelo ocupa unos 2,5–3 GB. Por defecto se libera solo tras 5 minutos sin
+usarlo; se puede desactivar para que responda más rápido. Sin el modelo cargado, la app ocupa unos 350 MB.
+
+## Desarrollo
 
 ```bash
 npm install
 npm run dev          # en el navegador: http://localhost:5173
-npm run tauri dev    # como app de escritorio (requiere Rust)
-npm run tauri build  # genera el instalador .exe / .msi
+npm run tauri dev    # como app de escritorio
+npm run tauri build  # instaladores en src-tauri/target/release/bundle
 ```
 
-Para la versión de escritorio hace falta instalar **Rust** (`winget install Rustlang.Rustup`) y las
-**Visual Studio Build Tools** con la carga de trabajo "Desarrollo de escritorio con C++".
+Requisitos: Node.js 20+, Rust (`winget install Rustlang.Rustup`) y Visual Studio Build Tools con
+«Desarrollo de escritorio con C++».
 
-## Fases
+### Publicar una versión
 
-| Fase | Contenido |
-|---|---|
-| 1. Base | Vite + React 19 + TypeScript estricto, Tailwind 4, Tauri 2, sistema de diseño con tokens de color |
-| 2. Inicio tipo Office | Lanzador de herramientas, plantillas con miniatura, recientes con filtros, búsqueda global, Abrir/Importar, Papelera |
-| 3. Documento | Cinta de opciones (Archivo, Inicio, Insertar, Diseño, Revisar, Vista, IA y Tabla contextual), hoja con tamaño y márgenes reales, saltos de página, buscar y reemplazar, menú flotante, contador de palabras, zoom, vistas de impresión/web/enfoque |
-| 4. Personalización | 10 temas (claro, oscuro, medianoche, grafito, sepia, bosque, océano, rosa, lavanda, alto contraste), color de acento, 18 fuentes incluidas + fuentes del sistema, radio de esquinas, hoja blanca u oscura |
-| 5. Notas | Lista con búsqueda, fijadas, favoritas, colores y etiquetas; autoguardado |
-| 6. IA local | Modelo en tu equipo (WebGPU u Ollama), sin APIs. Acciones sobre la selección (mejorar, corregir, acortar, ampliar, tono, traducir, lista, tabla, resumir, continuar) con vista previa antes de aplicar; chat con el documento como contexto; asistente independiente |
-| 7. Archivos | Exportar a Word (.docx), PDF (imprimir), Markdown, HTML y texto; importar .docx, .md, .html y .txt; copia de seguridad |
+1. Sube la versión en `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` (y «Acerca de»).
+2. Escribe las novedades en un archivo, por ejemplo `notas.md`.
+3. Ejecuta:
 
-## Estructura
+```bash
+npm run release -- --notes notas.md
+```
+
+El script compila los instaladores **firmados**, genera `latest.json` y crea la Release en GitHub. Las apps instaladas
+la detectan solas. Con `--dry-run` compila y genera `latest.json` sin publicar.
+
+La firma usa la clave privada de `%USERPROFILE%\.tauri\lumen-office.key` (y su contraseña en
+`lumen-office.key.password`). **No la subas nunca al repositorio y guarda una copia de seguridad**: sin ella no se
+pueden publicar actualizaciones que las apps instaladas acepten.
+
+### Estructura
 
 ```
 src/
-  App.tsx                     enrutado entre Inicio, Documento, Notas y Asistente
-  index.css                   tokens de diseño, estilos del editor e impresión
+  App.tsx                      enrutado, avisos, cierre seguro y actualizaciones
   lib/
-    ai.ts                     acciones de IA y streaming
-    localAI.ts / llm-worker.ts motor local (WebLLM en un worker) y Ollama
-    localModels.ts            catálogo de modelos y estado de carga
-    db.ts                     base de datos local (IndexedDB con Dexie)
-    io.ts                     importar/exportar DOCX, Markdown, HTML, TXT
-    fonts.ts / themes.ts      catálogo de fuentes y temas
-    templates.ts              plantillas (carta, CV, informe, acta, ensayo…)
-  store/                      estado global (configuración persistente y navegación)
+    files.ts / closeGuard.ts   guardar, abrir, exportar, autoguardado y aviso al cerrar
+    io.ts                      conversión DOCX, Markdown, HTML, TXT y .lumen
+    ai.ts                      acciones de IA y elección de motor
+    localAI.ts / llm-worker.ts motor local (WebLLM en un worker)
+    remoteAI.ts                Ollama y APIs (OpenAI-compatible y Anthropic)
+    updater.ts                 actualizaciones automáticas
+    db.ts                      base de datos local (IndexedDB con Dexie)
   components/
-    launcher/                 pantalla de inicio
-    editor/                   editor de documentos, cinta, extensiones Tiptap
-    notes/                    aplicación de notas
-    ai/                       panel de chat, tarjeta de resultados y menú de acciones
-    ui/                       componentes base (botones, menús, diálogos…)
-src-tauri/                    proyecto de escritorio (Rust)
+    launcher/  editor/  notes/  ai/  ui/
+scripts/release.mjs            publicación de versiones
+src-tauri/                     app de escritorio (Rust)
 ```
 
-## IA local
+## Datos y privacidad
 
-La IA funciona **en tu propio equipo**, sin cuentas, sin claves y sin enviar texto a ningún servicio:
+Documentos, notas y ajustes se guardan en tu equipo. La app solo puede escribir en las carpetas que elijas en la
+ventana de Windows. Desde **Configuración → General y datos** se puede exportar e importar una copia de seguridad.
 
-- **Motor integrado (WebLLM + WebGPU):** el modelo se ejecuta en la tarjeta gráfica dentro de la app.
-  La primera vez se descarga desde Hugging Face y queda guardado; después funciona sin conexión.
-  Modelos: Qwen 2.5 3B (recomendado), Qwen 2.5 1.5B, Llama 3.2 3B y Qwen 2.5 7B.
-- **Ollama (opcional):** si tienes [Ollama](https://ollama.com) instalado, la app puede usar sus modelos
-  (por ejemplo `ollama pull qwen2.5:7b`).
+## Licencia
 
-- **Tu propia API (opcional):** cualquier servicio compatible con OpenAI (OpenAI, OpenRouter, Groq, DeepSeek,
-  Mistral, LM Studio…) o Anthropic. En este modo el texto se envía a ese servicio y no se usa memoria local.
+[PolyForm Noncommercial 1.0.0](LICENSE) © 2026 Alejandro Zapata.
 
-Se configura en **Configuración → Inteligencia artificial**, donde también se pueden borrar los modelos descargados.
-Los modelos pequeños (3B) cometen algún error suelto; para mejor calidad usa Qwen 2.5 7B si tu gráfica tiene 6 GB o más.
-
-### Memoria
-
-Con la IA local en uso, el modelo ocupa unos 2,5–3 GB (en la gráfica). Se libera solo tras 5 minutos sin usarlo
-(configurable) o al pulsar **«IA en memoria · Liberar»**. Sin el modelo cargado, la app ocupa unos 350 MB.
-
-## Datos
-
-Todo se guarda localmente (IndexedDB). Desde **Configuración → General y datos** puedes exportar
-e importar una copia de seguridad completa.
+Puedes usar, copiar y modificar Lumen Office **gratis para fines no comerciales** (uso personal, estudio,
+organizaciones sin ánimo de lucro…). **No está permitido venderla ni usarla para obtener beneficio comercial.**
+Para un uso comercial hace falta un permiso del autor.

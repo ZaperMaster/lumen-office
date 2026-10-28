@@ -55,6 +55,8 @@ export interface Settings {
   userName: string;
   /** Guardar solo en el disco los documentos vinculados a un archivo */
   fileAutoSave: boolean;
+  /** Buscar actualizaciones al abrir la app */
+  autoCheckUpdates: boolean;
 }
 
 interface SettingsActions {
@@ -100,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notesSidebarWidth: 300,
   userName: "",
   fileAutoSave: true,
+  autoCheckUpdates: true,
 };
 
 export const useSettings = create<Settings & SettingsActions>()(
