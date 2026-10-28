@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { FontDef } from "@/lib/fonts";
-import { DEFAULT_LOCAL_MODEL } from "@/lib/localModels";
+import { DEFAULT_LOCAL_MODEL, LOCAL_MODELS } from "@/lib/localModels";
 
 export type PageSize = "A4" | "Letter" | "Legal" | "A5";
 export type Orientation = "portrait" | "landscape";
@@ -117,7 +117,7 @@ export const useSettings = create<Settings & SettingsActions>()(
     }),
     {
       name: "lumen.settings",
-      version: 3,
+      version: 4,
       migrate: (persisted, version) => {
         // v2: la IA pasa a ser local; se elimina la antigua clave de API guardada
         const { aiApiKey: _k, aiModel: _m, ...rest } = (persisted ?? {}) as Record<string, unknown>;
@@ -126,6 +126,8 @@ export const useSettings = create<Settings & SettingsActions>()(
           rest.aiAutoUnload = rest.aiUnloadMinutes !== 0;
           if (!rest.aiUnloadMinutes) rest.aiUnloadMinutes = 5;
         }
+        // v4: si el modelo elegido ya no se ofrece (licencia no comercial), se usa el predeterminado
+        if (!LOCAL_MODELS.some((m) => m.id === rest.localModel)) rest.localModel = DEFAULT_LOCAL_MODEL;
         return rest as unknown as Settings & SettingsActions;
       },
     },

@@ -41,7 +41,7 @@ Se elige en **Configuración → Inteligencia artificial**:
 
 | Motor | Dónde se ejecuta | Notas |
 |---|---|---|
-| **Integrado** (WebLLM + WebGPU) | En tu tarjeta gráfica | Sin conexión y sin enviar nada. El modelo se descarga una vez (por defecto Qwen 2.5 1.5B, ~0,9 GB, licencia Apache 2.0). Cada modelo tiene su propia licencia; se indica al elegirlo. |
+| **Integrado** (WebLLM + WebGPU) | En tu tarjeta gráfica | Sin conexión y sin enviar nada. El modelo se descarga una vez (por defecto Qwen 2.5 1.5B, ~0,9 GB, licencia Apache 2.0). Todos los modelos ofrecidos permiten el uso comercial (Apache 2.0 o Llama 3.2 Community License, «Built with Llama»); la licencia se indica al elegirlo. |
 | **Ollama** | En tu equipo | Usa los modelos instalados con [Ollama](https://ollama.com). |
 | **Tu propia API** | En el servicio que elijas | OpenAI, OpenRouter, Groq, DeepSeek, Mistral, LM Studio o Anthropic. El texto se envía a ese servicio. |
 

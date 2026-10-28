@@ -13,20 +13,34 @@ export interface LocalModel {
   /** Memoria de vídeo necesaria en GB */
   vramGB: number;
   hint: string;
-  /** Licencia del modelo y si permite usarlo en una app de pago */
+  /** Licencia del modelo (todos permiten el uso comercial) */
   license: string;
-  commercial: boolean;
 }
 
 export const LOCAL_MODELS: LocalModel[] = [
-  // El primero es el predeterminado: con licencia que permite el uso comercial
-  { id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 1.5B", sizeGB: 0.9, vramGB: 1.6, hint: "Recomendado: rápido y ligero, va bien en casi cualquier equipo", license: "Apache 2.0", commercial: true },
-  { id: "Qwen2.5-7B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 7B", sizeGB: 4.3, vramGB: 5.1, hint: "Máxima calidad; necesita una gráfica con 6 GB o más", license: "Apache 2.0", commercial: true },
-  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 · 3B", sizeGB: 1.8, vramGB: 2.3, hint: "Alternativa de Meta, buena redacción", license: "Llama 3.2 Community License", commercial: true },
-  { id: "Qwen2.5-3B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 3B", sizeGB: 1.7, vramGB: 2.5, hint: "Buen equilibrio entre calidad y velocidad, muy bueno en español", license: "Qwen Research License (solo uso no comercial)", commercial: false },
+  // El primero es el predeterminado. Solo modelos cuya licencia permite el uso comercial
+  { id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 1.5B", sizeGB: 0.9, vramGB: 1.6, hint: "Recomendado: rápido y ligero, va bien en casi cualquier equipo", license: "Apache 2.0" },
+  { id: "Qwen2.5-7B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 7B", sizeGB: 4.3, vramGB: 5.1, hint: "Máxima calidad; necesita una gráfica con 6 GB o más", license: "Apache 2.0" },
+  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 · 3B", sizeGB: 1.8, vramGB: 2.3, hint: "Alternativa de Meta, buena redacción", license: "Llama 3.2 Community License" },
 ];
 
 export const DEFAULT_LOCAL_MODEL = LOCAL_MODELS[0].id;
+
+/** Modelos que ya no se ofrecen (licencia no comercial): se borran si están descargados. */
+const RETIRED_MODELS = ["Qwen2.5-3B-Instruct"];
+
+/** Libera el disco que ocupen modelos retirados, sin cargar el motor. */
+export async function removeRetiredModels() {
+  try {
+    for (const name of await caches.keys()) {
+      if (!name.startsWith("webllm")) continue;
+      const cache = await caches.open(name);
+      for (const req of await cache.keys()) if (RETIRED_MODELS.some((id) => req.url.includes(id))) await cache.delete(req);
+    }
+  } catch {
+    // Sin caché disponible: nada que borrar
+  }
+}
 
 /** Modelos de Anthropic disponibles con la API propia. */
 export const ANTHROPIC_MODEL_OPTIONS = [

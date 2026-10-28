@@ -31,6 +31,10 @@ function ThemeSync() {
 /** Confirma antes de cerrar la ventana si hay cambios sin guardar en archivos. */
 function CloseGuard() {
   useEffect(() => installCloseGuard(), []);
+  useEffect(() => {
+    const t = setTimeout(() => void import("@/lib/localModels").then((m) => m.removeRetiredModels()), 5000);
+    return () => clearTimeout(t);
+  }, []);
   return null;
 }
 
