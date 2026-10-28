@@ -135,6 +135,18 @@ export function insertLines(wb: Workbook, si: number, axis: "row" | "col", at: n
       cells[key(r, c)] = nc;
     }
     if (i !== si) return { ...s, cells };
+    // Los comentarios se mueven con sus celdas
+    const notes: Record<string, string> = {};
+    for (const [k, text] of Object.entries(s.notes ?? {})) {
+      let [r, c] = parseKey(k);
+      const p = axis === "row" ? r : c;
+      if (p >= at) {
+        if (count < 0 && p < at - count) continue;
+        if (axis === "row") r += count;
+        else c += count;
+      }
+      notes[key(r, c)] = text;
+    }
     const merges = (s.merges ?? [])
       .map((m): Merge | null => {
         const [a, b] = axis === "row" ? [m.r1, m.r2] : [m.c1, m.c2];
@@ -156,6 +168,7 @@ export function insertLines(wb: Workbook, si: number, axis: "row" | "col", at: n
     return {
       ...s,
       cells,
+      notes,
       merges,
       rowH: axis === "row" ? shiftMap(s.rowH, at, count) : s.rowH,
       colW: axis === "col" ? shiftMap(s.colW, at, count) : s.colW,
@@ -462,5 +475,15 @@ export function setHidden(wb: Workbook, si: number, axis: "row" | "col", indexes
       else set.delete(i);
     }
     s[k] = [...set].sort((a, b) => a - b);
+  });
+}
+
+/** Comentario de una celda (null lo quita). */
+export function setNote(wb: Workbook, si: number, r: number, c: number, text: string | null): Workbook {
+  return editSheet(wb, si, (s) => {
+    const notes = { ...(s.notes ?? {}) };
+    if (text && text.trim()) notes[key(r, c)] = text.trim();
+    else delete notes[key(r, c)];
+    s.notes = notes;
   });
 }

@@ -1,6 +1,6 @@
 import { FErr, type Evaluator, type Scalar } from "@/lib/sheet/formula";
 import { formatValue, parseNumber } from "@/lib/sheet/format";
-import { key, parseRange, type CondRule, type Range, type Sheet, type SheetFilter } from "@/lib/sheet/model";
+import { key, parseRange, type CondRule, type Range, type Sheet, type SheetFilter, type Validation } from "@/lib/sheet/model";
 
 /*
  * Lo que cambia cómo se ve la hoja sin cambiar sus datos: filas ocultas por el
@@ -210,3 +210,29 @@ export const COND_LABELS: Record<CondRule["type"], string> = {
   bars: "Barras de datos",
   scale: "Escala de color",
 };
+
+/* ------------------------------------------------------------------ */
+/*  Listas desplegables                                                */
+/* ------------------------------------------------------------------ */
+
+export function validationAt(s: Sheet, r: number, c: number): Validation | undefined {
+  return s.validations?.find((v) => {
+    const g = parseRange(v.range);
+    return !!g && r >= g.r1 && r <= g.r2 && c >= g.c1 && c <= g.c2;
+  });
+}
+
+/** Opciones de una lista: las escritas o las de su rango de origen. */
+export function validationOptions(v: Validation, ev: Evaluator, si: number): string[] {
+  if (v.list?.length) return v.list;
+  if (!v.source) return [];
+  const val = ev.evaluate(v.source.replace(/^=/, ""), si);
+  const out: string[] = [];
+  const push = (x: Scalar) => {
+    const t = formatValue(x);
+    if (t !== "" && !out.includes(t)) out.push(t);
+  };
+  if (Array.isArray(val)) for (const row of val) for (const x of row) push(x);
+  else push(val);
+  return out;
+}

@@ -21,9 +21,9 @@ import { isDesktop, openFileFromDisk } from "@/lib/files";
 import { openDoc } from "@/lib/actions";
 import { useApp } from "@/store/app";
 import { Grid, type EditState, type GridApi, type GridView, type Sel } from "@/components/sheet/Grid";
-import { CondDialog, CondManager, FilterMenu } from "@/components/sheet/SheetExtras";
-import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows } from "@/lib/sheet/view";
-import { ListFilter, FilterX, Palette, EyeOff, LayoutList } from "lucide-react";
+import { CondDialog, CondManager, FilterMenu, NoteDialog, ValidationDialog } from "@/components/sheet/SheetExtras";
+import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows, validationAt, validationOptions } from "@/lib/sheet/view";
+import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
@@ -136,9 +136,14 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       hiddenCols: new Set(sheet.hiddenCols ?? []),
       cond: condFormatter(sheet, ev, si),
       filter: sheet.filter ? { r: sheet.filter.r1, c1: sheet.filter.c1, c2: sheet.filter.c2, active: new Set(Object.keys(sheet.filter.show).map(Number)) } : null,
+      dropdown: !!validationAt(sheet, sel.ar, sel.ac),
+      notes: sheet.notes,
     }),
-    [hidden, sheet, ev, si],
+    [hidden, sheet, ev, si, sel.ar, sel.ac],
   );
+  const [dropdown, setDropdown] = useState<null | { x: number; y: number }>(null);
+  const [valDialog, setValDialog] = useState(false);
+  const [noteDialog, setNoteDialog] = useState(false);
   const [filterMenu, setFilterMenu] = useState<null | { col: number; x: number; y: number }>(null);
   const [condDialog, setCondDialog] = useState<CondType | null>(null);
   const [condManager, setCondManager] = useState(false);
@@ -222,7 +227,18 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           return;
         }
       }
-      const cell = wbRef.current.sheets[wbRef.current.active].cells[key(e.r, e.c)];
+      const sh = wbRef.current.sheets[wbRef.current.active];
+      const val = validationAt(sh, e.r, e.c);
+      if (val?.strict && text.trim() && !text.startsWith("=")) {
+        const opts = validationOptions(val, ev, wbRef.current.active);
+        const hit = opts.find((o) => o.toLowerCase() === text.trim().toLowerCase());
+        if (!hit) {
+          toast("Ese valor no está en la lista de la celda", "error", { detail: `Valores permitidos: ${opts.slice(0, 8).join(", ")}${opts.length > 8 ? "…" : ""}` });
+          return;
+        }
+        text = hit;
+      }
+      const cell = sh.cells[key(e.r, e.c)];
       const original = editText(cell?.v ?? "", cell?.s);
       if (toRange) commit((w) => ops.inputRange(w, w.active, n, text));
       else if (text !== original) commit((w) => ops.inputCell(w, w.active, e.r, e.c, text));
@@ -234,7 +250,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       }
       focusGrid();
     },
-    [commit, toast, setSel, n],
+    [commit, toast, setSel, n, ev],
   );
 
   const cancelEdit = () => {
@@ -507,6 +523,12 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     }
     if (mod && k === "`") { e.preventDefault(); setShowFormulas((v) => !v); return; }
     if (mod && k === ";") { e.preventDefault(); commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, new Date().toLocaleDateString("es-ES"))); return; }
+    if (k === "ArrowDown" && e.altKey && validationAt(sheet, sel.ar, sel.ac)) {
+      e.preventDefault();
+      const r = gridEl.current?.getBoundingClientRect();
+      setDropdown({ x: (r?.left ?? 0) + 120, y: (r?.top ?? 0) + 60 });
+      return;
+    }
     if (k.startsWith("Arrow")) {
       e.preventDefault();
       const [dr, dc] = k === "ArrowUp" ? [-1, 0] : k === "ArrowDown" ? [1, 0] : k === "ArrowLeft" ? [0, -1] : [0, 1];
@@ -591,6 +613,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     },
     onContextMenu: (x, y, kind) => setMenu({ x, y, kind }),
     openFilter: (col, x, y) => setFilterMenu({ col, x, y }),
+    openDropdown: (x, y) => setDropdown({ x, y }),
   };
 
   /* ---------------- Filtros y formato condicional ---------------- */
@@ -984,6 +1007,8 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 </RGroup>
                 <RGroup label="Datos">
                   <RBig icon={<SquareFunction />} label="Función" onClick={() => setFnDialog(true)} />
+                  <RBig icon={<MessageSquarePlus />} label="Comentario" onClick={() => setNoteDialog(true)} title="Añade una nota a la celda" />
+                  <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} />
                   <RBig icon={<Calendar />} label="Fecha de hoy" onClick={() => commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, "=HOY()"))} title="Inserta =HOY() en la celda" />
                 </RGroup>
               </>
@@ -1035,6 +1060,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   />
                 </RGroup>
                 <RGroup label="Herramientas">
+                  <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} title="Validación de datos: las celdas solo aceptan valores de una lista" />
                   <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
                 </RGroup>
                 <RGroup label="Inmovilizar">
@@ -1266,6 +1292,16 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   <FSep />
                 </>
               )}
+              {menu.kind === "cell" && (
+                <>
+                  <FItem icon={<MessageSquarePlus />} onClick={() => setNoteDialog(true)}>{sheet.notes?.[key(sel.ar, sel.ac)] ? "Editar comentario" : "Insertar comentario"}</FItem>
+                  {sheet.notes?.[key(sel.ar, sel.ac)] && (
+                    <FItem icon={<MessageSquareX />} onClick={() => commit((w) => ops.setNote(w, w.active, sel.ar, sel.ac, null))}>Eliminar comentario</FItem>
+                  )}
+                  <FItem icon={<ListChecks />} onClick={() => setValDialog(true)}>Lista desplegable…</FItem>
+                  <FSep />
+                </>
+              )}
               <FItem icon={<Eraser />} onClick={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>Borrar contenido</FItem>
               <FItem icon={<ArrowDownAZ />} onClick={() => sort(true)}>Ordenar de A a Z</FItem>
               <FItem icon={<ArrowDownZA />} onClick={() => sort(false)}>Ordenar de Z a A</FItem>
@@ -1326,6 +1362,51 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           onSave={(rule) => {
             addRule(rule);
             setCondDialog(null);
+          }}
+        />
+      )}
+      {dropdown && (() => {
+        const v = validationAt(sheet, sel.ar, sel.ac);
+        if (!v) return null;
+        const opts = validationOptions(v, ev, si);
+        const current = formatValue(ev.value(si, sel.ar, sel.ac));
+        return (
+          <FloatingMenu x={dropdown.x} y={dropdown.y} onClose={() => { setDropdown(null); focusGrid(); }}>
+            <div className="max-h-[260px] overflow-y-auto">
+              {opts.map((o) => (
+                <FItem key={o} onClick={() => commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, o))} icon={o === current ? <span className="size-1.5 rounded-full bg-accent" /> : undefined}>
+                  {o}
+                </FItem>
+              ))}
+              {!opts.length && <div className="px-3 py-2 text-[12.5px] text-muted">La lista está vacía</div>}
+            </div>
+          </FloatingMenu>
+        );
+      })()}
+      {valDialog && (
+        <ValidationDialog
+          initial={validationAt(sheet, sel.ar, sel.ac)}
+          range={n}
+          onClose={() => setValDialog(false)}
+          onSave={(v) => {
+            commit((w) => ops.updateSheet(w, w.active, { validations: [...(w.sheets[w.active].validations ?? []).filter((x) => x.id !== v.id), v] }));
+            setValDialog(false);
+          }}
+          onRemove={() => {
+            const id = validationAt(sheet, sel.ar, sel.ac)?.id;
+            commit((w) => ops.updateSheet(w, w.active, { validations: (w.sheets[w.active].validations ?? []).filter((x) => x.id !== id) }));
+            setValDialog(false);
+          }}
+        />
+      )}
+      {noteDialog && (
+        <NoteDialog
+          cell={addr(sel.ar, sel.ac)}
+          initial={sheet.notes?.[key(sel.ar, sel.ac)] ?? ""}
+          onClose={() => setNoteDialog(false)}
+          onSave={(text) => {
+            commit((w) => ops.setNote(w, w.active, sel.ar, sel.ac, text));
+            setNoteDialog(false);
           }}
         />
       )}

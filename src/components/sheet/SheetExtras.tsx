@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDownAZ, ArrowDownZA, FilterX, Trash2 } from "lucide-react";
 import type { Evaluator } from "@/lib/sheet/formula";
-import { key, parseRange, rangeToA1, uid, type CondRule, type CondType, type Range, type Sheet } from "@/lib/sheet/model";
+import { key, parseRange, rangeToA1, uid, type CondRule, type CondType, type Range, type Sheet, type Validation } from "@/lib/sheet/model";
 import { COND_LABELS, COND_PRESETS, filterRange, filterText } from "@/lib/sheet/view";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
@@ -263,6 +263,132 @@ export function CondManager({ rules, onClose, onDelete, onClear }: { rules: Cond
           </div>
         ))}
       </div>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Lista desplegable (validación de datos)                            */
+/* ------------------------------------------------------------------ */
+
+export function ValidationDialog({
+  initial,
+  range,
+  onClose,
+  onSave,
+  onRemove,
+}: {
+  initial?: Validation;
+  range: Range;
+  onClose: () => void;
+  onSave: (v: Validation) => void;
+  onRemove: () => void;
+}) {
+  const [mode, setMode] = useState<"list" | "source">(initial?.source ? "source" : "list");
+  const [items, setItems] = useState((initial?.list ?? []).join("\n"));
+  const [source, setSource] = useState(initial?.source ?? "");
+  const [strict, setStrict] = useState(initial?.strict ?? true);
+  const [rg, setRg] = useState(initial?.range ?? rangeToA1(range));
+  const list = items.split(/[\n;]/).map((x) => x.trim()).filter(Boolean);
+  const valid = !!parseRange(rg) && (mode === "list" ? list.length > 0 : /^(.+!)?\$?[A-Za-z]+\$?\d+(:\$?[A-Za-z]+\$?\d+)?$/.test(source.replace(/^=/, "").trim()));
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title="Lista desplegable"
+      description="Las celdas mostrarán una flecha para elegir un valor de la lista."
+      footer={
+        <>
+          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={onRemove}>Quitar la lista</Button>}
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button
+            variant="primary"
+            disabled={!valid}
+            onClick={() =>
+              onSave({
+                id: initial?.id ?? uid(),
+                range: rg.toUpperCase(),
+                strict,
+                ...(mode === "list" ? { list } : { source: source.replace(/^=/, "").trim().toUpperCase() }),
+              })
+            }
+          >
+            Aplicar
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-1.5">
+          {(["list", "source"] as const).map((m) => (
+            <button key={m} onClick={() => setMode(m)} className={cn("flex-1 rounded-md border px-3 py-1.5 text-[12.5px]", mode === m ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}>
+              {m === "list" ? "Escribir los valores" : "Tomarlos de un rango"}
+            </button>
+          ))}
+        </div>
+        {mode === "list" ? (
+          <label className="text-[12.5px] font-medium">
+            Valores (uno por línea)
+            <textarea
+              autoFocus
+              value={items}
+              onChange={(e) => setItems(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              rows={5}
+              placeholder={"Pendiente\nEn curso\nTerminado"}
+              className="mt-1 w-full resize-none rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-[13px] outline-none focus:border-accent"
+            />
+          </label>
+        ) : (
+          <label className="text-[12.5px] font-medium">
+            Rango con los valores
+            <Input autoFocus value={source} onChange={(e) => setSource(e.target.value)} placeholder="Ej.: H2:H10 o Listas!A1:A20" className="mt-1 h-9 font-mono" />
+          </label>
+        )}
+        <label className="text-[12.5px] font-medium">
+          Celdas
+          <Input value={rg} onChange={(e) => setRg(e.target.value)} className={cn("mt-1 h-9 font-mono", !parseRange(rg) && "border-red-400")} />
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-[12.5px]">
+          <input type="checkbox" checked={strict} onChange={(e) => setStrict(e.target.checked)} />
+          No permitir valores que no estén en la lista
+        </label>
+      </div>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Comentario de una celda                                            */
+/* ------------------------------------------------------------------ */
+
+export function NoteDialog({ cell, initial, onClose, onSave }: { cell: string; initial: string; onClose: () => void; onSave: (text: string | null) => void }) {
+  const [text, setText] = useState(initial);
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title={initial ? `Comentario de ${cell}` : `Nuevo comentario en ${cell}`}
+      footer={
+        <>
+          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={() => onSave(null)}>Eliminar</Button>}
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" onClick={() => onSave(text)} disabled={!text.trim()}>Guardar</Button>
+        </>
+      }
+    >
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && text.trim()) onSave(text);
+        }}
+        rows={5}
+        placeholder="Escribe una nota para esta celda…"
+        className="w-full resize-none rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-accent"
+      />
     </Dialog>
   );
 }

@@ -155,6 +155,38 @@ function ruleFromExcel(ref: string, x: ExcelCfRule): CondRule | null {
   return null;
 }
 
+/**
+ * La librería devuelve una lista por celda: las celdas seguidas de una misma
+ * columna con la misma lista se vuelven a juntar en un rango.
+ */
+function mergeValidations(list: NonNullable<Sheet["validations"]>): NonNullable<Sheet["validations"]> {
+  const groups = new Map<string, { r: number; c: number; v: (typeof list)[number] }[]>();
+  for (const v of list) {
+    const g = parseRange(v.range)!;
+    const sig = JSON.stringify([v.list, v.source, v.strict]);
+    const arr = groups.get(sig) ?? [];
+    for (let r = g.r1; r <= g.r2; r++) for (let c = g.c1; c <= g.c2; c++) arr.push({ r, c, v });
+    groups.set(sig, arr);
+  }
+  const out: NonNullable<Sheet["validations"]> = [];
+  for (const cells of groups.values()) {
+    cells.sort((a, b) => a.c - b.c || a.r - b.r);
+    let start = cells[0];
+    let prev = cells[0];
+    const flush = (end: typeof prev) => out.push({ ...start.v, id: Math.random().toString(36).slice(2, 10), range: rangeToA1({ r1: start.r, c1: start.c, r2: end.r, c2: end.c }) });
+    for (const cell of cells.slice(1)) {
+      if (cell.c === prev.c && cell.r === prev.r + 1) {
+        prev = cell;
+        continue;
+      }
+      flush(prev);
+      start = prev = cell;
+    }
+    flush(prev);
+  }
+  return out;
+}
+
 const excelValue = (v: Scalar): ExcelJS.CellValue => (v instanceof FErr ? { error: v.code as ExcelJS.CellErrorValue["error"] } : v);
 
 export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
@@ -208,6 +240,23 @@ export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
       if (nf) xc.numFmt = nf;
     }
     for (const m of s.merges ?? []) ws.mergeCells(m.r1 + 1, m.c1 + 1, m.r2 + 1, m.c2 + 1);
+    // Comentarios y listas desplegables
+    for (const [k, text] of Object.entries(s.notes ?? {})) {
+      const [r, c] = parseKey(k);
+      ws.getCell(r + 1, c + 1).note = text;
+    }
+    for (const v of s.validations ?? []) {
+      const list = v.list?.length ? [`"${v.list.join(",").replace(/"/g, "")}"`] : v.source ? [v.source.replace(/^=/, "")] : null;
+      if (!list) continue;
+      (ws as unknown as { dataValidations: { add: (ref: string, dv: object) => void } }).dataValidations.add(v.range, {
+        type: "list",
+        allowBlank: true,
+        formulae: list,
+        showErrorMessage: !!v.strict,
+        errorTitle: "Valor no válido",
+        error: "Elige un valor de la lista.",
+      });
+    }
     // Filtro, filas y columnas ocultas
     if (s.filter) ws.autoFilter = rangeToA1(filterRange(s, s.filter));
     for (const r of hiddenRows(s, ev, si)) ws.getRow(r + 1).hidden = true;
@@ -314,6 +363,9 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
         if (date && !st.fmt) st.fmt = "date";
         const cell: Cell = { v };
         if (Object.keys(st).length) cell.s = st;
+        const note = xc.note as unknown as string | { texts?: { text: string }[] } | undefined;
+        const noteText = typeof note === "string" ? note : note?.texts?.map((t) => t.text).join("") ?? "";
+        if (noteText) s.notes = { ...(s.notes ?? {}), [key(rn - 1, cn - 1)]: noteText };
         if (v !== "" || cell.s) {
           s.cells[key(rn - 1, cn - 1)] = cell;
           maxR = Math.max(maxR, rn);
@@ -347,6 +399,20 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
       if (rule) rules.push({ rule, priority: x.priority ?? 0 });
     }
     if (rules.length) s.cond = rules.sort((a, b) => b.priority - a.priority).map((x) => x.rule);
+    // Listas desplegables
+    const dvs = (ws as unknown as { dataValidations?: { model?: Record<string, { type?: string; formulae?: string[]; showErrorMessage?: boolean }> } }).dataValidations?.model ?? {};
+    const validations: NonNullable<Sheet["validations"]> = [];
+    for (const [ref, dv] of Object.entries(dvs)) {
+      if (dv.type !== "list" || !dv.formulae?.[0]) continue;
+      const range = ref.replace(/^range:/, "").split(/\s+/)[0];
+      if (!parseRange(range)) continue;
+      const f = String(dv.formulae[0]);
+      const v = /^".*"$/.test(f)
+        ? { list: f.slice(1, -1).split(",").map((x) => x.trim()).filter(Boolean) }
+        : { source: f };
+      validations.push({ id: Math.random().toString(36).slice(2, 10), range, strict: !!dv.showErrorMessage, ...v });
+    }
+    if (validations.length) s.validations = mergeValidations(validations);
     s.rows = Math.max(200, maxR + 50);
     s.cols = Math.max(26, maxC + 5);
     sheets.push(s);

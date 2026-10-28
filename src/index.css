@@ -421,3 +421,16 @@ button:disabled {
 @media print {
   .sheet-print-chart { display: inline-block; margin: 12pt 12pt 0 0; break-inside: avoid; color: #222; --chart-bg: #fff; }
 }
+
+.sg-note { position: absolute; z-index: 1; }
+.sg-note-mark { position: absolute; right: 0; top: 0; width: 0; height: 0; border-top: 7px solid #e53935; border-left: 7px solid transparent; pointer-events: auto; }
+.sg-note-pop {
+  display: none; position: absolute; left: calc(100% + 6px); top: 0; z-index: 20; width: max-content; max-width: 240px; white-space: pre-wrap;
+  background: #fff8c5; color: #3b3200; border: 1px solid #e0cf6b; border-radius: 4px; padding: 5px 8px; font-size: 12px; box-shadow: 0 3px 10px rgb(0 0 0 / 0.15);
+}
+.sg-note:hover .sg-note-pop, .sg-note-mark:hover + .sg-note-pop { display: block; }
+.sg-dropdown-btn {
+  position: absolute; z-index: 4; width: 18px; display: grid; place-items: center; border-radius: 3px;
+  background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); cursor: pointer;
+}
+.sg-dropdown-btn:hover { color: var(--text); border-color: var(--accent); }

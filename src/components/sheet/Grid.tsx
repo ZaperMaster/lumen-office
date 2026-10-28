@@ -72,6 +72,7 @@ export interface GridApi {
   editChart: (id: string) => void;
   onContextMenu: (x: number, y: number, kind: "cell" | "row" | "col") => void;
   openFilter: (col: number, x: number, y: number) => void;
+  openDropdown: (x: number, y: number) => void;
 }
 
 /** Lo que el filtro y el formato condicional cambian al dibujar. */
@@ -81,6 +82,9 @@ export interface GridView {
   cond: ((r: number, c: number) => CondStyle | null) | null;
   /** Fila de encabezados del filtro, sus columnas y las que tienen criterio */
   filter: { r: number; c1: number; c2: number; active: Set<number> } | null;
+  /** La celda activa tiene lista desplegable */
+  dropdown: boolean;
+  notes?: Record<string, string>;
 }
 
 export function Grid({
@@ -455,6 +459,21 @@ export function Grid({
         );
       }
     }
+    // Comentarios: triángulo rojo y el texto al pasar el ratón
+    if (gv.notes) {
+      const rowSet = new Set(rows);
+      const colSet = new Set(cols);
+      for (const [k, text] of Object.entries(gv.notes)) {
+        const [r, c] = k.split(",").map(Number);
+        if (!rowSet.has(r) || !colSet.has(c) || gv.hiddenRows.has(r) || gv.hiddenCols.has(c)) continue;
+        out.push(
+          <div key={`n${k}`} className="sg-note" style={{ left: sxOf(c) - ox, top: syOf(r) - oy, width: cw(c), height: rh(r) }}>
+            <span className="sg-note-mark" />
+            <div className="sg-note-pop">{text}</div>
+          </div>,
+        );
+      }
+    }
     // Botones del filtro en la fila de encabezados
     const f = gv.filter;
     if (f && rows.includes(f.r)) {
@@ -544,6 +563,21 @@ export function Grid({
           />
         )}
         {fillPreview && <div className="sg-fill-preview" style={rectOf(fillPreview, ox, oy)} />}
+        {gv.dropdown && !edit && (
+          <button
+            className="sg-dropdown-btn"
+            style={{ left: activeRect.left + activeRect.width + 2, top: activeRect.top + activeRect.height - 20, height: 20 }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const b = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              api.openDropdown(b.left - activeRect.width - 2, b.bottom + 2);
+            }}
+            title="Elegir de la lista (Alt+↓)"
+          >
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor"><path d="M2 4h8L6 8.5z" /></svg>
+          </button>
+        )}
         {find && <div className="sg-find" style={rectOf({ r1: find[0], c1: find[1], r2: find[0], c2: find[1] }, ox, oy)} />}
         {editRefs.map((x, i) => (
           <div key={i} className="sg-ref" style={{ ...rectOf(x, ox, oy), borderColor: REF_COLORS[i % REF_COLORS.length], background: REF_COLORS[i % REF_COLORS.length] + "14" }} />

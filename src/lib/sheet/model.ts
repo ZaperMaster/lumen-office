@@ -83,6 +83,21 @@ export interface Sheet {
   /** Filas y columnas ocultas a mano */
   hiddenRows?: number[];
   hiddenCols?: number[];
+  /** Listas desplegables (validación de datos) */
+  validations?: Validation[];
+  /** Comentarios de las celdas, por clave «fila,columna» */
+  notes?: Record<string, string>;
+}
+
+export interface Validation {
+  id: string;
+  range: string;
+  /** Valores permitidos escritos a mano… */
+  list?: string[];
+  /** …o tomados de un rango (por ejemplo «A1:A10» u «Hoja2!B2:B20») */
+  source?: string;
+  /** Rechazar lo que no esté en la lista */
+  strict?: boolean;
 }
 
 export interface SheetFilter {
