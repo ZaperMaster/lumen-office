@@ -2,7 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type { JSONContent } from "@tiptap/react";
 import type { PageLayout } from "@/lib/pageLayout";
 
-export type DocKind = "document" | "note";
+export type DocKind = "document" | "note" | "sheet" | "slides";
 
 export interface DocRecord {
   id: string;
@@ -28,9 +28,11 @@ export interface DocRecord {
   savedAt?: number | null;
   /** Encabezado, pie y numeración de páginas */
   pageLayout?: PageLayout | null;
+  /** Contenido de las hojas de cálculo y presentaciones (libro o diapositivas) */
+  data?: unknown;
 }
 
-export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt";
+export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt" | "xlsx" | "csv";
 
 class LumenDB extends Dexie {
   docs!: EntityTable<DocRecord, "id">;
@@ -51,7 +53,7 @@ export function newId(): string {
 
 export async function createDoc(
   kind: DocKind,
-  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat" | "pageLayout">> = {},
+  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat" | "pageLayout" | "data" | "text">> = {},
 ): Promise<DocRecord> {
   const now = Date.now();
   const doc: DocRecord = {
@@ -73,8 +75,9 @@ export async function createDoc(
     fileFormat: init.fileFormat ?? null,
     savedAt: init.filePath ? now : null,
     pageLayout: init.pageLayout ?? null,
+    data: init.data,
   };
-  doc.text = plainText(doc.content);
+  doc.text = init.text ?? plainText(doc.content);
   doc.words = countWords(doc.text);
   await db.docs.add(doc);
   return doc;
@@ -108,6 +111,9 @@ export async function duplicateDoc(id: string): Promise<DocRecord | null> {
     content: structuredClone(src.content),
     color: src.color,
     tags: [...src.tags],
+    data: src.data === undefined ? undefined : structuredClone(src.data),
+    text: src.text,
+    pageLayout: src.pageLayout,
   });
 }
 
@@ -135,5 +141,23 @@ export function displayTitle(doc: Pick<DocRecord, "title" | "text" | "kind">): s
   if (doc.title.trim()) return doc.title.trim();
   const first = doc.text.split("\n").find((l) => l.trim());
   if (first) return first.slice(0, 60);
-  return doc.kind === "note" ? "Nota sin título" : "Documento sin título";
+  return KIND_UNTITLED[doc.kind];
+}
+
+const KIND_UNTITLED: Record<DocKind, string> = {
+  document: "Documento sin título",
+  note: "Nota sin título",
+  sheet: "Hoja de cálculo sin título",
+  slides: "Presentación sin título",
+};
+
+export const KIND_LABEL: Record<DocKind, string> = {
+  document: "Documento",
+  note: "Nota",
+  sheet: "Hoja de cálculo",
+  slides: "Presentación",
+};
+
+export function kindUntitled(kind: DocKind): string {
+  return KIND_UNTITLED[kind];
 }

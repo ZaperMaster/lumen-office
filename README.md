@@ -106,8 +106,8 @@ ventana de Windows. Desde **Configuración → General y datos** se puede export
 
 ## Licencia
 
-[PolyForm Noncommercial 1.0.0](LICENSE) © 2026 Alejandro Zapata.
+[PolyForm Strict 1.0.0](LICENSE) © 2026 Alejandro Zapata. Todos los demás derechos reservados.
 
-Puedes usar, copiar y modificar Lumen Office **gratis para fines no comerciales** (uso personal, estudio,
-organizaciones sin ánimo de lucro…). **No está permitido venderla ni usarla para obtener beneficio comercial.**
-Para un uso comercial hace falta un permiso del autor.
+Puedes **leer el código** y **usar Lumen Office gratis para fines no comerciales** (uso personal, estudio,
+organizaciones sin ánimo de lucro…). **No está permitido modificarla, crear obras derivadas, redistribuirla
+ni venderla.** Para cualquier otro uso (incluido el comercial) hace falta una licencia escrita del autor.

@@ -17,6 +17,7 @@ document.documentElement.style.setProperty("--wc", isDesktop() ? `${WINDOW_CONTR
 const DocumentApp = lazy(() => import("@/components/editor/DocumentApp"));
 const NotesApp = lazy(() => import("@/components/notes/NotesApp"));
 const AssistantApp = lazy(() => import("@/components/ai/AssistantApp"));
+const SheetApp = lazy(() => import("@/components/sheet/SheetApp"));
 // Configuración solo se descarga al abrirla (aligera el arranque)
 const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
 
@@ -58,6 +59,7 @@ export default function App() {
         {route.name === "document" && <DocumentApp key={route.id} id={route.id} />}
         {route.name === "notes" && <NotesApp />}
         {route.name === "assistant" && <AssistantApp />}
+        {route.name === "sheet" && <SheetApp key={route.id} id={route.id} />}
       </Suspense>
       {settingsOpen && (
         <Suspense fallback={null}>

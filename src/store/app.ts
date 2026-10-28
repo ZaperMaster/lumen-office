@@ -4,6 +4,7 @@ export type Route =
   | { name: "home"; section?: "home" | "new" | "open" | "trash" }
   | { name: "document"; id: string }
   | { name: "notes"; id?: string }
+  | { name: "sheet"; id: string }
   | { name: "assistant" };
 
 export interface ToastAction {

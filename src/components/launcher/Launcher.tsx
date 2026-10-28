@@ -4,11 +4,12 @@ import {
   Clock, Copy, FilePlus2, FileText, FolderOpen, Home, MoreHorizontal, Moon, Pin, PinOff, Presentation,
   RotateCcw, Search, Settings, Sheet, Sparkles, Star, StickyNote, Sun, Trash2, Upload,
 } from "lucide-react";
-import { db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
+import { KIND_LABEL, db, deleteForever, displayTitle, duplicateDoc, restoreDoc, trashDoc, updateDoc, type DocRecord } from "@/lib/db";
+import { SHEET_TEMPLATES, type SheetTemplate } from "@/lib/sheet/templates";
 import { TEMPLATES, type Template } from "@/lib/templates";
-import { createFromTemplate, newDocument, newNote, openDoc } from "@/lib/actions";
-// El módulo de importación (editor + docx) se carga solo al importar
-const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt";
+import { createFromTemplate, newDocument, newNote, newSheet, openDoc } from "@/lib/actions";
+// El módulo de importación (editor, docx, Excel) se carga solo al importar
+const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv";
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -144,10 +145,10 @@ function HomeSection() {
     {
       id: "sheets",
       name: "Hojas de cálculo",
-      description: "Tablas, fórmulas y gráficos.",
+      description: "Fórmulas, gráficos y libros de Excel.",
       icon: <Sheet className="size-6" />,
       gradient: "linear-gradient(135deg,#10b981,#059669)",
-      soon: true,
+      action: () => newSheet(),
     },
     {
       id: "slides",
@@ -190,6 +191,13 @@ function HomeSection() {
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {TEMPLATES.slice(0, 6).map((t) => (
           <TemplateCard key={t.id} tpl={t} />
+        ))}
+      </div>
+
+      <SectionTitle>Hojas de cálculo</SectionTitle>
+      <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
+        {SHEET_TEMPLATES.map((t) => (
+          <SheetTemplateCard key={t.id} tpl={t} />
         ))}
       </div>
 
@@ -246,6 +254,29 @@ function TemplateCard({ tpl }: { tpl: Template }) {
   );
 }
 
+function SheetTemplateCard({ tpl }: { tpl: SheetTemplate }) {
+  return (
+    <button onClick={() => newSheet(tpl.id)} className="group text-left">
+      <div
+        className="relative mb-2 aspect-[4/3] overflow-hidden rounded-[var(--radius)] border border-border shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:border-accent group-hover:shadow-soft"
+        style={{ background: tpl.tint }}
+      >
+        {tpl.id === "blank" ? (
+          <div className="grid h-full place-items-center text-[#9fd8b8]"><Sheet className="size-8" /></div>
+        ) : (
+          <div className="grid h-full grid-cols-4 grid-rows-6 gap-px p-2.5 opacity-80">
+            {Array.from({ length: 24 }, (_, i) => (
+              <div key={i} className={cn("rounded-[1px]", i < 4 ? "bg-[#0f9d58]/70" : i % 4 === 0 ? "bg-[#a9adb8]/70" : "bg-white/80")} />
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="truncate text-[13px] font-medium">{tpl.name}</div>
+      <div className="truncate text-[11.5px] text-muted">{tpl.description}</div>
+    </button>
+  );
+}
+
 /** Dibuja una miniatura esquemática del documento. */
 function TemplatePreview({ tpl }: { tpl: Template }) {
   const lines = useMemo(() => {
@@ -292,7 +323,7 @@ function QuickSearch() {
   return (
     <div className="relative w-[340px]">
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en documentos y notas…" className="h-10 pl-9" />
+      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en documentos, hojas y notas…" className="h-10 pl-9" />
       {q && results && (
         <div className="absolute top-12 right-0 left-0 z-20 animate-pop-in rounded-[var(--radius)] border border-border bg-surface p-1 shadow-soft">
           {results.length === 0 && <div className="px-3 py-2 text-[13px] text-muted">Sin resultados</div>}
@@ -313,7 +344,7 @@ function QuickSearch() {
 /*  Lista de recientes                                                 */
 /* ------------------------------------------------------------------ */
 
-type Filter = "all" | "document" | "note" | "favorite";
+type Filter = "all" | "document" | "sheet" | "note" | "favorite";
 
 function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: string }) {
   const [filter, setFilter] = useState<Filter>("all");
@@ -334,6 +365,7 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
             options={[
               { value: "all", label: "Todos" },
               { value: "document", label: "Documentos" },
+              { value: "sheet", label: "Hojas" },
               { value: "note", label: "Notas" },
               { value: "favorite", label: "Favoritos" },
             ]}
@@ -366,6 +398,9 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
 }
 
 function DocIcon({ doc }: { doc: DocRecord }) {
+  if (doc.kind === "sheet") {
+    return <span className="grid size-7 place-items-center rounded-md bg-emerald-500/15 text-emerald-600"><Sheet className="size-4" /></span>;
+  }
   return doc.kind === "note" ? (
     <span className="grid size-7 place-items-center rounded-md bg-amber-500/15 text-amber-600"><StickyNote className="size-4" /></span>
   ) : (
@@ -391,7 +426,7 @@ function DocRow({ doc }: { doc: DocRecord }) {
           <div className="truncate text-[12px] text-muted">{doc.text.slice(0, 90) || "Vacío"}</div>
         </div>
       </button>
-      <span className="text-[12.5px] text-muted">{doc.kind === "note" ? "Nota" : "Documento"}</span>
+      <span className="text-[12.5px] text-muted">{KIND_LABEL[doc.kind]}</span>
       <span className="text-[12.5px] text-muted">{relativeTime(doc.updatedAt)}</span>
       <Menu>
         <MenuTrigger asChild>
@@ -440,6 +475,10 @@ function NewSection() {
       <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         {TEMPLATES.filter((t) => t.kind === "document").map((t) => <TemplateCard key={t.id} tpl={t} />)}
       </div>
+      <SectionTitle>Hojas de cálculo</SectionTitle>
+      <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+        {SHEET_TEMPLATES.map((t) => <SheetTemplateCard key={t.id} tpl={t} />)}
+      </div>
       <SectionTitle>Notas</SectionTitle>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         <button onClick={() => newNote()} className="group text-left">
@@ -461,8 +500,8 @@ function OpenSection() {
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const { importFromFile } = await import("@/lib/io");
-      const doc = await importFromFile(file);
+      const { importAnyFile } = await import("@/lib/officeImport");
+      const doc = await importAnyFile(file);
       toast(`«${file.name}» importado`, "success");
       openDoc(doc);
     } catch (e) {
@@ -474,7 +513,7 @@ function OpenSection() {
       <div className="mb-7 flex items-end justify-between">
         <div>
           <h1 className="mb-1 text-[26px] font-bold tracking-tight">Abrir</h1>
-          <p className="text-muted">Todos tus documentos y notas guardados en este equipo.</p>
+          <p className="text-muted">Todos tus documentos, hojas de cálculo y notas guardados en este equipo.</p>
         </div>
         <Button
           variant="primary"
@@ -501,7 +540,7 @@ function OpenSection() {
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"
       >
         <Upload className="mb-2 size-6" />
-        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
+        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.xlsx</b>, <b>.csv</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
       </div>
       <RecentList title="Todos los archivos" />
     </>

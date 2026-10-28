@@ -747,7 +747,7 @@ function About() {
       )}
       <Field
         label="Licencia"
-        desc="PolyForm Noncommercial 1.0.0: se puede usar, copiar y modificar gratis para fines no comerciales. No se permite venderla ni usarla para ganar dinero."
+        desc="PolyForm Strict 1.0.0: se puede usar gratis para fines no comerciales y leer su código. No se permite modificarla, redistribuirla ni venderla. Para otros usos hace falta una licencia del autor."
       >
         <span className="text-[12.5px] text-muted">© Alejandro Zapata</span>
       </Field>

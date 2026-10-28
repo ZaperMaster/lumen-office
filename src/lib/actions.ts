@@ -6,6 +6,7 @@ export function openDoc(doc: Pick<DocRecord, "id" | "kind">) {
   touchDoc(doc.id);
   const { navigate } = useApp.getState();
   if (doc.kind === "note") navigate({ name: "notes", id: doc.id });
+  else if (doc.kind === "sheet") navigate({ name: "sheet", id: doc.id });
   else navigate({ name: "document", id: doc.id });
 }
 
@@ -23,6 +24,14 @@ export async function newDocument() {
 
 export async function newNote() {
   const doc = await createDoc("note");
+  openDoc(doc);
+  return doc;
+}
+
+export async function newSheet(templateId = "blank") {
+  const [{ sheetTemplate }, { workbookText }] = await Promise.all([import("@/lib/sheet/templates"), import("@/lib/sheet/model")]);
+  const { title, wb } = sheetTemplate(templateId).build();
+  const doc = await createDoc("sheet", { title, data: wb, text: workbookText(wb) });
   openDoc(doc);
   return doc;
 }

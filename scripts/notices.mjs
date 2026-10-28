@@ -91,7 +91,7 @@ const lines = [
   "# Avisos de licencias de terceros",
   "",
   "Lumen Office incluye software de terceros. A continuación se reproducen sus licencias y avisos de copyright,",
-  "tal como exigen. Lumen Office en sí se distribuye bajo la licencia PolyForm Noncommercial 1.0.0 (archivo LICENSE).",
+  "tal como exigen. Lumen Office en sí se distribuye bajo la licencia PolyForm Strict 1.0.0 (archivo LICENSE).",
   "",
   `Paquetes incluidos: ${packages.length} (${packages.filter((p) => p.source === "npm").length} de npm, ${packages.filter((p) => p.source === "crates.io").length} de crates.io).`,
   "",

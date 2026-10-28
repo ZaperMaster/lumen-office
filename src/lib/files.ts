@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import { saveAs } from "file-saver";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
-import { buildDocx, buildHtmlPage, buildLumen, buildMarkdown, importFromFile, safeFileName } from "@/lib/io";
+import { buildDocx, buildHtmlPage, buildLumen, buildMarkdown, safeFileName } from "@/lib/io";
 import { useApp } from "@/store/app";
 import type { PageLayout } from "@/lib/pageLayout";
 
@@ -19,6 +19,8 @@ export const FORMATS: Record<FileFormat, { label: string; ext: string; mime: str
   md: { label: "Markdown", ext: "md", mime: "text/markdown;charset=utf-8" },
   html: { label: "Página web", ext: "html", mime: "text/html;charset=utf-8" },
   txt: { label: "Texto sin formato", ext: "txt", mime: "text/plain;charset=utf-8" },
+  xlsx: { label: "Libro de Excel", ext: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+  csv: { label: "CSV (valores separados por punto y coma)", ext: "csv", mime: "text/csv;charset=utf-8" },
 };
 
 /** Formatos para «Guardar» y «Guardar como», en orden de preferencia. */
@@ -48,7 +50,16 @@ export interface DocSource {
   pageLayout?: PageLayout | null;
 }
 
-async function buildBytes(format: FileFormat, src: DocSource): Promise<Uint8Array> {
+/** Contenido que sabe convertirse a bytes en cada formato (hojas de cálculo y presentaciones). */
+export interface FileSource {
+  title: string;
+  build: (format: FileFormat) => Promise<Uint8Array>;
+}
+
+const isFileSource = (src: DocSource | FileSource): src is FileSource => "build" in src;
+
+async function buildBytes(format: FileFormat, src: DocSource | FileSource): Promise<Uint8Array> {
+  if (isFileSource(src)) return src.build(format);
   if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title, src.pageLayout)).arrayBuffer());
   const text =
     format === "lumen"
@@ -114,7 +125,7 @@ function errorToast(e: unknown) {
  * La hora se toma al empezar: lo que se escriba mientras tanto queda como pendiente.
  * Lanza el error si falla (lo usa también el autoguardado, que no muestra avisos).
  */
-export async function writeLinkedFile(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource): Promise<void> {
+export async function writeLinkedFile(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource | FileSource): Promise<void> {
   if (!doc.filePath || !doc.fileFormat) throw new Error("El documento no está vinculado a un archivo.");
   const startedAt = Date.now();
   await writeFile(doc.filePath, await buildBytes(doc.fileFormat, src));
@@ -126,9 +137,13 @@ export async function writeLinkedFile(doc: Pick<DocRecord, "id" | "filePath" | "
  * Guardar (Ctrl+S). Si el documento ya está vinculado a un archivo lo reemplaza;
  * si no, abre «Guardar como». Devuelve la ruta o null si se canceló.
  */
-export async function saveDocument(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource): Promise<string | null> {
-  if (!isDesktop()) return downloadCopy(doc.fileFormat ?? "docx", src);
-  if (!doc.filePath || !doc.fileFormat) return saveDocumentAs(doc, src);
+export async function saveDocument(
+  doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">,
+  src: DocSource | FileSource,
+  order: FileFormat[] = SAVE_ORDER,
+): Promise<string | null> {
+  if (!isDesktop()) return downloadCopy(doc.fileFormat ?? order[0], src);
+  if (!doc.filePath || !doc.fileFormat) return saveDocumentAs(doc, src, order);
   try {
     await writeLinkedFile(doc, src);
     savedToast(`Guardado en «${fileName(doc.filePath)}»`, doc.filePath);
@@ -174,10 +189,14 @@ export function dirtyOpenDocs(): OpenDocEntry[] {
 }
 
 /** Guardar como (Ctrl+Mayús+S): elige ubicación y formato, y vincula el documento a ese archivo. */
-export async function saveDocumentAs(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource): Promise<string | null> {
-  if (!isDesktop()) return downloadCopy(doc.fileFormat ?? "docx", src);
-  const preferred = doc.fileFormat ?? "docx";
-  const path = await chooseSavePath(src.title, [preferred, ...SAVE_ORDER.filter((f) => f !== preferred)], doc.filePath);
+export async function saveDocumentAs(
+  doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">,
+  src: DocSource | FileSource,
+  order: FileFormat[] = SAVE_ORDER,
+): Promise<string | null> {
+  const preferred = doc.fileFormat && order.includes(doc.fileFormat) ? doc.fileFormat : order[0];
+  if (!isDesktop()) return downloadCopy(preferred, src);
+  const path = await chooseSavePath(src.title, [preferred, ...order.filter((f) => f !== preferred)], doc.filePath);
   if (!path) return null;
   const format = formatFromPath(path) ?? preferred;
   try {
@@ -193,7 +212,7 @@ export async function saveDocumentAs(doc: Pick<DocRecord, "id" | "filePath" | "f
 }
 
 /** Exportar: guarda una copia en el formato elegido, preguntando dónde. No cambia el archivo vinculado. */
-export async function exportDocument(format: FileFormat, src: DocSource): Promise<string | null> {
+export async function exportDocument(format: FileFormat, src: DocSource | FileSource): Promise<string | null> {
   if (!isDesktop()) return downloadCopy(format, src);
   const path = await chooseSavePath(src.title, [format]);
   if (!path) return null;
@@ -208,7 +227,7 @@ export async function exportDocument(format: FileFormat, src: DocSource): Promis
 }
 
 /** En el navegador no se puede elegir carpeta: se descarga una copia. */
-async function downloadCopy(format: FileFormat, src: DocSource): Promise<null> {
+async function downloadCopy(format: FileFormat, src: DocSource | FileSource): Promise<null> {
   const name = `${safeFileName(src.title)}.${FORMATS[format].ext}`;
   saveAs(new Blob([(await buildBytes(format, src)) as BlobPart], { type: FORMATS[format].mime }), name);
   useApp.getState().toast(`Descargado «${name}»`, "success", { detail: "En tu carpeta de Descargas" });
@@ -223,8 +242,9 @@ export async function openFileFromDisk(): Promise<DocRecord | null> {
     multiple: false,
     directory: false,
     filters: [
-      { name: "Documentos compatibles", extensions: ["docx", "lumen", "md", "markdown", "html", "htm", "txt"] },
+      { name: "Archivos compatibles", extensions: ["docx", "lumen", "md", "markdown", "html", "htm", "txt", "xlsx", "csv"] },
       { name: "Documento de Word", extensions: ["docx"] },
+      { name: "Libro de Excel", extensions: ["xlsx", "csv"] },
       { name: "Documento de Lumen", extensions: ["lumen"] },
     ],
   });
@@ -232,5 +252,6 @@ export async function openFileFromDisk(): Promise<DocRecord | null> {
   const fs = await import("@tauri-apps/plugin-fs");
   const bytes = await fs.readFile(picked);
   const name = fileName(picked);
-  return importFromFile(new File([bytes as BlobPart], name), { filePath: picked, fileFormat: formatFromPath(picked) });
+  const { importAnyFile } = await import("@/lib/officeImport");
+  return importAnyFile(new File([bytes as BlobPart], name), { filePath: picked, fileFormat: formatFromPath(picked) });
 }
