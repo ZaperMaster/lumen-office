@@ -207,7 +207,7 @@ export function newWorkbook(): Workbook {
 }
 
 export function uniqueSheetName(wb: Workbook, base = "Hoja"): string {
-  for (let i = wb.sheets.length + 1; ; i++) {
+  for (let i = 1; ; i++) {
     const name = `${base}${i}`;
     if (!wb.sheets.some((s) => s.name.toLowerCase() === name.toLowerCase())) return name;
   }

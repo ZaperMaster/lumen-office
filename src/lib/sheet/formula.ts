@@ -56,7 +56,7 @@ const ES: Record<string, string> = {
   SUSTITUIR: "SUBSTITUTE", REEMPLAZAR: "REPLACE", REPETIR: "REPT", TEXTO: "TEXT", VALOR: "VALUE", IGUAL: "EXACT",
   HOY: "TODAY", AHORA: "NOW", FECHA: "DATE", "AÑO": "YEAR", ANO: "YEAR", MES: "MONTH", DIA: "DAY", DIASEM: "WEEKDAY",
   HORA: "HOUR", MINUTO: "MINUTE", DIAS: "DAYS", "FECHA.MES": "EDATE", "FIN.MES": "EOMONTH", "SUMAR.SI": "SUMIF",
-  "SUMAR.SI.CONJUNTO": "SUMIFS", "CONTAR.SI": "COUNTIF", "CONTAR.SI.CONJUNTO": "COUNTIFS", "PROMEDIO.SI": "AVERAGEIF",
+  "SUMAR.SI.CONJUNTO": "SUMIFS", "CONTAR.SI": "COUNTIF", "CONTAR.SI.CONJUNTO": "COUNTIFS", "PROMEDIO.SI": "AVERAGEIF", "PROMEDIO.SI.CONJUNTO": "AVERAGEIFS", "MAX.SI.CONJUNTO": "MAXIFS", "MIN.SI.CONJUNTO": "MINIFS",
   BUSCARV: "VLOOKUP", BUSCARH: "HLOOKUP", INDICE: "INDEX", COINCIDIR: "MATCH", BUSCARX: "XLOOKUP", ELEGIR: "CHOOSE",
   FILAS: "ROWS", COLUMNAS: "COLUMNS", "K.ESIMO.MAYOR": "LARGE", "K.ESIMO.MENOR": "SMALL", JERARQUIA: "RANK",
   "JERARQUIA.EQV": "RANK", SUMAPRODUCTO: "SUMPRODUCT", PAGO: "PMT", VF: "FV", VA: "PV", FILA: "ROW", COLUMNA: "COLUMN",
@@ -515,6 +515,21 @@ function lookupIndex(needle: Scalar, list: Scalar[], exact: boolean): number {
   return best;
 }
 
+/** Números del primer rango cuyas filas cumplen todos los criterios (…SI.CONJUNTO). */
+function ifsValues(a: Value[]): number[] | FErr {
+  const vals = isMatrix(a[0]) ? a[0] : [[a[0]]];
+  const out: number[] = [];
+  vals.forEach((row, r) => row.forEach((v, c) => {
+    for (let i = 1; i + 1 < a.length; i += 2) {
+      const rg = a[i];
+      const x = isMatrix(rg) ? rg[r]?.[c] : rg;
+      if (!criterion(scalar(a[i + 1]))(x ?? null)) return;
+    }
+    if (typeof v === "number") out.push(v);
+  }));
+  return out;
+}
+
 const FUNCS: Record<string, Fn> = {
   SUM: agg((ns) => ns.reduce((a, b) => a + b, 0)),
   AVERAGE: agg(mean),
@@ -769,6 +784,18 @@ const FUNCS: Record<string, Fn> = {
       if (typeof v === "number") s += v;
     }));
     return s;
+  }),
+  AVERAGEIFS: simple((a) => {
+    const v = ifsValues(a);
+    return v instanceof FErr ? v : mean(v);
+  }),
+  MAXIFS: simple((a) => {
+    const v = ifsValues(a);
+    return v instanceof FErr ? v : v.length ? Math.max(...v) : 0;
+  }),
+  MINIFS: simple((a) => {
+    const v = ifsValues(a);
+    return v instanceof FErr ? v : v.length ? Math.min(...v) : 0;
   }),
   COUNTIFS: simple((a) => {
     const first = isMatrix(a[0]) ? a[0] : [[a[0]]];

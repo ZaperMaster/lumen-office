@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowDownAZ, ArrowDownZA, FilterX, Trash2 } from "lucide-react";
 import type { Evaluator } from "@/lib/sheet/formula";
-import { key, parseRange, rangeToA1, uid, type CondRule, type CondType, type Range, type Sheet, type Validation } from "@/lib/sheet/model";
+import { colName, key, parseRange, rangeToA1, uid, type CondRule, type CondType, type Range, type Sheet, type Validation } from "@/lib/sheet/model";
 import { COND_LABELS, COND_PRESETS, filterRange, filterText } from "@/lib/sheet/view";
+import { formatValue } from "@/lib/sheet/format";
+import { PIVOT_FNS, type PivotFn, type PivotSpec } from "@/lib/sheet/pivot";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
 /* ------------------------------------------------------------------ */
@@ -389,6 +391,99 @@ export function NoteDialog({ cell, initial, onClose, onSave }: { cell: string; i
         placeholder="Escribe una nota para esta celda…"
         className="w-full resize-none rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-accent"
       />
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tabla dinámica                                                     */
+/* ------------------------------------------------------------------ */
+
+export function PivotDialog({
+  sheet,
+  ev,
+  si,
+  initial,
+  onClose,
+  onCreate,
+}: {
+  sheet: Sheet;
+  ev: Evaluator;
+  si: number;
+  initial: Range;
+  onClose: () => void;
+  onCreate: (spec: PivotSpec) => void;
+}) {
+  const [rgText, setRgText] = useState(rangeToA1(initial));
+  const rg = parseRange(rgText);
+  const headers = useMemo(() => {
+    if (!rg) return [];
+    const out: { c: number; label: string; numeric: boolean }[] = [];
+    for (let c = rg.c1; c <= rg.c2; c++) {
+      const label = formatValue(ev.value(si, rg.r1, c)) || `Columna ${colName(c)}`;
+      let numeric = false;
+      for (let r = rg.r1 + 1; r <= Math.min(rg.r2, rg.r1 + 20); r++) if (typeof ev.value(si, r, c) === "number") numeric = true;
+      out.push({ c, label, numeric });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rgText, ev, si, sheet]);
+  const firstText = headers.find((h) => !h.numeric) ?? headers[0];
+  const firstNum = headers.find((h) => h.numeric) ?? headers[headers.length - 1];
+  const [rows, setRows] = useState<number | null>(null);
+  const [cols, setCols] = useState<number | null>(null);
+  const [value, setValue] = useState<number | null>(null);
+  const [fn, setFn] = useState<PivotFn>("SUMA");
+  const rowsC = rows ?? firstText?.c ?? null;
+  const valueC = value ?? firstNum?.c ?? null;
+  const valid = !!rg && rg.r2 > rg.r1 && rowsC !== null && valueC !== null && cols !== rowsC;
+  const select = "mt-1 h-9 w-full rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px] outline-none focus:border-accent";
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title="Tabla dinámica"
+      description="Resume los datos agrupándolos por una columna. Se crea en una hoja nueva y se actualiza sola si cambian los datos."
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" disabled={!valid} onClick={() => onCreate({ sheet: si, range: rg!, rows: rowsC!, cols, value: valueC!, fn })}>
+            Crear
+          </Button>
+        </>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3">
+        <label className="col-span-2 text-[12.5px] font-medium">
+          Datos (con encabezados en la primera fila)
+          <Input value={rgText} onChange={(e) => setRgText(e.target.value.toUpperCase())} className={cn("mt-1 h-9 font-mono", !rg && "border-red-400")} />
+        </label>
+        <label className="text-[12.5px] font-medium">
+          Agrupar filas por
+          <select value={rowsC ?? ""} onChange={(e) => setRows(Number(e.target.value))} className={select}>
+            {headers.map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
+          </select>
+        </label>
+        <label className="text-[12.5px] font-medium">
+          Columnas <span className="font-normal text-muted">(opcional)</span>
+          <select value={cols ?? ""} onChange={(e) => setCols(e.target.value === "" ? null : Number(e.target.value))} className={select}>
+            <option value="">(ninguna)</option>
+            {headers.filter((h) => h.c !== rowsC).map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
+          </select>
+        </label>
+        <label className="text-[12.5px] font-medium">
+          Valores
+          <select value={valueC ?? ""} onChange={(e) => setValue(Number(e.target.value))} className={select}>
+            {headers.map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
+          </select>
+        </label>
+        <label className="text-[12.5px] font-medium">
+          Cálculo
+          <select value={fn} onChange={(e) => setFn(e.target.value as PivotFn)} className={select}>
+            {PIVOT_FNS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+          </select>
+        </label>
+      </div>
     </Dialog>
   );
 }

@@ -21,7 +21,8 @@ import { isDesktop, openFileFromDisk } from "@/lib/files";
 import { openDoc } from "@/lib/actions";
 import { useApp } from "@/store/app";
 import { Grid, type EditState, type GridApi, type GridView, type Sel } from "@/components/sheet/Grid";
-import { CondDialog, CondManager, FilterMenu, NoteDialog, ValidationDialog } from "@/components/sheet/SheetExtras";
+import { CondDialog, CondManager, FilterMenu, NoteDialog, PivotDialog, ValidationDialog } from "@/components/sheet/SheetExtras";
+import { buildPivot } from "@/lib/sheet/pivot";
 import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows, validationAt, validationOptions } from "@/lib/sheet/view";
 import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
@@ -144,6 +145,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   const [dropdown, setDropdown] = useState<null | { x: number; y: number }>(null);
   const [valDialog, setValDialog] = useState(false);
   const [noteDialog, setNoteDialog] = useState(false);
+  const [pivotDialog, setPivotDialog] = useState(false);
   const [filterMenu, setFilterMenu] = useState<null | { col: number; x: number; y: number }>(null);
   const [condDialog, setCondDialog] = useState<CondType | null>(null);
   const [condManager, setCondManager] = useState(false);
@@ -1000,6 +1002,9 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   ))}
                   <RBig icon={<BarChart3 />} label="Más…" onClick={() => newChart("doughnut")} />
                 </RGroup>
+                <RGroup label="Tablas">
+                  <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} title="Resume y agrupa los datos" />
+                </RGroup>
                 <RGroup label="Celdas">
                   <RBig icon={<Rows3 />} label="Fila" onClick={() => insertLines("row", "before")} title="Insertar filas encima" />
                   <RBig icon={<Columns3 />} label="Columna" onClick={() => insertLines("col", "before")} title="Insertar columnas a la izquierda" />
@@ -1062,6 +1067,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Herramientas">
                   <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} title="Validación de datos: las celdas solo aceptan valores de una lista" />
                   <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
+                  <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} />
                 </RGroup>
                 <RGroup label="Inmovilizar">
                   <RBig icon={<Lock />} label="Fila superior" active={sheet.freezeR === 1 && !sheet.freezeC} onClick={() => freeze(1, 0)} />
@@ -1396,6 +1402,21 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             const id = validationAt(sheet, sel.ar, sel.ac)?.id;
             commit((w) => ops.updateSheet(w, w.active, { validations: (w.sheets[w.active].validations ?? []).filter((x) => x.id !== id) }));
             setValDialog(false);
+          }}
+        />
+      )}
+      {pivotDialog && (
+        <PivotDialog
+          sheet={sheet}
+          ev={ev}
+          si={si}
+          initial={n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n}
+          onClose={() => setPivotDialog(false)}
+          onCreate={(spec) => {
+            commit((w) => buildPivot(w, new Evaluator(w), spec));
+            setPivotDialog(false);
+            setSel({ ar: 0, ac: 0, r1: 0, c1: 0, r2: 0, c2: 0 });
+            toast("Tabla dinámica creada en una hoja nueva", "success");
           }}
         />
       )}
