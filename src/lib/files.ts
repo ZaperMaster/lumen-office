@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import { saveAs } from "file-saver";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
-import { buildDocx, buildHtmlPage, buildLumen, buildMarkdown, safeFileName } from "@/lib/io";
+import { safeFileName } from "@/lib/fileName";
 import { useApp } from "@/store/app";
 import type { PageLayout } from "@/lib/pageLayout";
 
@@ -60,6 +60,8 @@ const isFileSource = (src: DocSource | FileSource): src is FileSource => "build"
 
 async function buildBytes(format: FileFormat, src: DocSource | FileSource): Promise<Uint8Array> {
   if (isFileSource(src)) return src.build(format);
+  // La conversión (editor, Word, Markdown) se carga solo al guardar
+  const { buildDocx, buildHtmlPage, buildLumen, buildMarkdown } = await import("@/lib/io");
   if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title, src.pageLayout)).arrayBuffer());
   const text =
     format === "lumen"
