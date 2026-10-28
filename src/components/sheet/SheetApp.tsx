@@ -12,7 +12,7 @@ import { Evaluator, checkFormula, type Scalar } from "@/lib/sheet/formula";
 import { NUM_FORMATS, editText, formatValue } from "@/lib/sheet/format";
 import {
   addr, colWidth, key, newWorkbook, normRange, parseRange, rangeToA1, rowHeight, uid, usedRange, workbookText,
-  type CellStyle, type ChartSpec, type NumFmt, type Range, type Sheet, type Workbook,
+  type CellStyle, type ChartSpec, type CondRule, type CondType, type NumFmt, type Range, type Sheet, type Workbook,
 } from "@/lib/sheet/model";
 import * as ops from "@/lib/sheet/ops";
 import { FN_INFO, suggestFunctions, type FnInfo } from "@/lib/sheet/functions";
@@ -20,7 +20,10 @@ import { streamText } from "@/lib/ai";
 import { isDesktop, openFileFromDisk } from "@/lib/files";
 import { openDoc } from "@/lib/actions";
 import { useApp } from "@/store/app";
-import { Grid, type EditState, type GridApi, type Sel } from "@/components/sheet/Grid";
+import { Grid, type EditState, type GridApi, type GridView, type Sel } from "@/components/sheet/Grid";
+import { CondDialog, CondManager, FilterMenu } from "@/components/sheet/SheetExtras";
+import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows } from "@/lib/sheet/view";
+import { ListFilter, FilterX, Palette, EyeOff, LayoutList } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
@@ -126,6 +129,20 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const ev = useMemo(() => new Evaluator(wb), [wb, recalc]);
   const n = normRange(sel);
+  const hidden = useMemo(() => hiddenRows(sheet, ev, si), [sheet, ev, si]);
+  const gridView: GridView = useMemo(
+    () => ({
+      hiddenRows: hidden,
+      hiddenCols: new Set(sheet.hiddenCols ?? []),
+      cond: condFormatter(sheet, ev, si),
+      filter: sheet.filter ? { r: sheet.filter.r1, c1: sheet.filter.c1, c2: sheet.filter.c2, active: new Set(Object.keys(sheet.filter.show).map(Number)) } : null,
+    }),
+    [hidden, sheet, ev, si],
+  );
+  const [filterMenu, setFilterMenu] = useState<null | { col: number; x: number; y: number }>(null);
+  const [condDialog, setCondDialog] = useState<CondType | null>(null);
+  const [condManager, setCondManager] = useState(false);
+  const [cfOpen, setCfOpen] = useState(false);
 
   const { saveState, files, diskState, unsavedFile } = useOfficeDoc({
     doc,
@@ -414,7 +431,10 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       const m = sheet.merges?.find((x) => sel.ar >= x.r1 && sel.ar <= x.r2 && sel.ac >= x.c1 && sel.ac <= x.c2);
       const fromR = m ? (dr > 0 ? m.r2 : dr < 0 ? m.r1 : sel.ar) : sel.ar;
       const fromC = m ? (dc > 0 ? m.c2 : dc < 0 ? m.c1 : sel.ac) : sel.ac;
-      const [r, c] = ctrl ? jump(fromR, fromC, dr, dc) : [fromR + dr, fromC + dc];
+      let [r, c] = ctrl ? jump(fromR, fromC, dr, dc) : [fromR + dr, fromC + dc];
+      const hc = gridView.hiddenCols;
+      while (dr && hidden.has(r) && r + dr >= 0 && r + dr < sheet.rows) r += dr;
+      while (dc && hc.has(c) && c + dc >= 0 && c + dc < sheet.cols) c += dc;
       setSel({ ar: r, ac: c, r1: r, c1: c, r2: r, c2: c });
     }
   };
@@ -570,6 +590,48 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       if (c) setChartDialog({ id: c.id, spec: { ...c } });
     },
     onContextMenu: (x, y, kind) => setMenu({ x, y, kind }),
+    openFilter: (col, x, y) => setFilterMenu({ col, x, y }),
+  };
+
+  /* ---------------- Filtros y formato condicional ---------------- */
+  const toggleFilter = () => {
+    if (sheet.filter) {
+      commit((w) => ops.updateSheet(w, w.active, { filter: null }));
+      return;
+    }
+    const rg = n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n;
+    if (rg.r1 === rg.r2) return toast("Selecciona una tabla con encabezados (al menos dos filas)", "error");
+    commit((w) => ops.updateSheet(w, w.active, { filter: { ...rg, show: {} } }));
+  };
+  const condTarget = (): Range => (n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n);
+  const addRule = (rule: CondRule) => commit((w) => ops.updateSheet(w, w.active, { cond: [...(w.sheets[w.active].cond ?? []), rule] }));
+  const quickRule = (type: CondType, colors: string[]) => addRule({ id: uid(), type, range: rangeToA1(condTarget()), colors });
+  const clearRules = (scope: "sel" | "sheet") =>
+    commit((w) => {
+      const rules = w.sheets[w.active].cond ?? [];
+      if (scope === "sheet") return ops.updateSheet(w, w.active, { cond: [] });
+      // Se quitan las reglas que tocan la selección
+      return ops.updateSheet(w, w.active, {
+        cond: rules.filter((r) => {
+          const g = parseRange(r.range);
+          return !g || g.r2 < n.r1 || g.r1 > n.r2 || g.c2 < n.c1 || g.c1 > n.c2;
+        }),
+      });
+    });
+  const hideSel = (axis: "row" | "col", hide: boolean) => {
+    const idx: number[] = [];
+    if (axis === "row") for (let r = n.r1; r <= Math.min(n.r2, n.r1 + 5000); r++) idx.push(r);
+    else for (let c = n.c1; c <= n.c2; c++) idx.push(c);
+    // Para mostrar, se incluyen las ocultas justo al lado de la selección
+    if (!hide) {
+      const list = axis === "row" ? (sheet.hiddenRows ?? []) : (sheet.hiddenCols ?? []);
+      const lo = axis === "row" ? n.r1 : n.c1;
+      const hi = axis === "row" ? n.r2 : n.c2;
+      for (const i of list) if (i >= lo - 1 && i <= hi + 1) idx.push(i);
+      for (let i = lo - 1; list.includes(i); i--) idx.push(i);
+      for (let i = hi + 1; list.includes(i); i++) idx.push(i);
+    }
+    commit((w) => ops.setHidden(w, w.active, axis, idx, hide));
   };
 
   /* ---------------- Gráficos ---------------- */
@@ -805,6 +867,61 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                     <IconButton size="sm" label="Menos decimales" onClick={() => style((s) => ({ ...s, dec: Math.max(0, (s.dec ?? defaultDec(s.fmt)) - 1) }))}><span className="text-[11px] font-semibold">←,0</span></IconButton>
                   </div>
                 </RGroup>
+                <RGroup label="Estilos">
+                  <Menu open={cfOpen} onOpenChange={setCfOpen}>
+                    <MenuTrigger asChild>
+                      <span><RBig icon={<Palette />} label="Formato condicional" /></span>
+                    </MenuTrigger>
+                    <MenuContent className="w-[260px]">
+                      <MenuLabel>Resaltar celdas</MenuLabel>
+                      {(["gt", "lt", "between", "eq", "text", "dup"] as CondType[]).map((t) => (
+                        <MenuItem key={t} onSelect={() => setCondDialog(t)}>{condMenuLabel[t]}</MenuItem>
+                      ))}
+                      <MenuSeparator />
+                      <MenuLabel>Superiores e inferiores</MenuLabel>
+                      {(["top", "bottom", "aboveAvg", "belowAvg"] as CondType[]).map((t) => (
+                        <MenuItem key={t} onSelect={() => setCondDialog(t)}>{condMenuLabel[t]}</MenuItem>
+                      ))}
+                      <MenuSeparator />
+                      <MenuLabel>Barras de datos</MenuLabel>
+                      <div className="flex gap-1.5 px-2.5 pb-1.5">
+                        {BAR_COLORS.map((c) => (
+                          <button key={c} onClick={() => { quickRule("bars", [c]); setCfOpen(false); }} title="Barras de datos" className="h-6 w-7 rounded-sm border border-border" style={{ background: `linear-gradient(90deg, ${c} 65%, transparent 65%)` }} />
+                        ))}
+                      </div>
+                      <MenuLabel>Escalas de color</MenuLabel>
+                      <div className="flex gap-1.5 px-2.5 pb-1.5">
+                        {SCALE_PRESETS.map((p) => (
+                          <button key={p.id} onClick={() => { quickRule("scale", p.colors); setCfOpen(false); }} title={p.label} className="h-6 w-10 rounded-sm border border-border" style={{ background: `linear-gradient(90deg, ${p.colors.join(",")})` }} />
+                        ))}
+                      </div>
+                      <MenuSeparator />
+                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sel")}>Borrar reglas de la selección</MenuItem>
+                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sheet")}>Borrar reglas de toda la hoja</MenuItem>
+                      <MenuItem icon={<LayoutList />} onSelect={() => setCondManager(true)}>Administrar reglas…</MenuItem>
+                    </MenuContent>
+                  </Menu>
+                  <Menu>
+                    <MenuTrigger asChild>
+                      <span><RBig icon={<Table2 />} label="Dar formato como tabla" /></span>
+                    </MenuTrigger>
+                    <MenuContent>
+                      <MenuLabel>Estilo de tabla (con filtro)</MenuLabel>
+                      {ops.TABLE_STYLES.map((t) => (
+                        <MenuItem
+                          key={t.id}
+                          icon={<span className="block h-3.5 w-4 rounded-sm" style={{ background: `linear-gradient(${t.head} 40%, ${t.band} 40%)` }} />}
+                          onSelect={() => {
+                            const rg = condTarget();
+                            commit((w) => ops.formatAsTable(w, w.active, rg, t.id));
+                          }}
+                        >
+                          {t.label}
+                        </MenuItem>
+                      ))}
+                    </MenuContent>
+                  </Menu>
+                </RGroup>
                 <RGroup label="Celdas">
                   <Menu>
                     <MenuTrigger asChild>
@@ -907,6 +1024,15 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Ordenar">
                   <RBig icon={<ArrowDownAZ />} label="De A a Z" onClick={() => sort(true)} />
                   <RBig icon={<ArrowDownZA />} label="De Z a A" onClick={() => sort(false)} />
+                </RGroup>
+                <RGroup label="Filtro">
+                  <RBig icon={<ListFilter />} label="Filtro" active={!!sheet.filter} onClick={toggleFilter} title="Botones para filtrar y ordenar en la fila de encabezados" />
+                  <RBig
+                    icon={<FilterX />}
+                    label="Borrar filtros"
+                    disabled={!sheet.filter || !Object.keys(sheet.filter.show).length}
+                    onClick={() => commit((w) => ops.updateSheet(w, w.active, { filter: w.sheets[w.active].filter ? { ...w.sheets[w.active].filter!, show: {} } : null }))}
+                  />
                 </RGroup>
                 <RGroup label="Herramientas">
                   <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
@@ -1016,6 +1142,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             onReady={onGridReady}
             editorRef={editorRef}
             find={findHit}
+            view={gridView}
           />
           {findOpen && (
             <FindPanel
@@ -1125,6 +1252,20 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 </>
               )}
               <FSep />
+              {menu.kind === "row" && (
+                <>
+                  <FItem icon={<EyeOff />} onClick={() => hideSel("row", true)}>Ocultar filas</FItem>
+                  <FItem icon={<Eye />} onClick={() => hideSel("row", false)}>Mostrar filas ocultas</FItem>
+                  <FSep />
+                </>
+              )}
+              {menu.kind === "col" && (
+                <>
+                  <FItem icon={<EyeOff />} onClick={() => hideSel("col", true)}>Ocultar columnas</FItem>
+                  <FItem icon={<Eye />} onClick={() => hideSel("col", false)}>Mostrar columnas ocultas</FItem>
+                  <FSep />
+                </>
+              )}
               <FItem icon={<Eraser />} onClick={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>Borrar contenido</FItem>
               <FItem icon={<ArrowDownAZ />} onClick={() => sort(true)}>Ordenar de A a Z</FItem>
               <FItem icon={<ArrowDownZA />} onClick={() => sort(false)}>Ordenar de Z a A</FItem>
@@ -1140,12 +1281,60 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           editing={!!chartDialog.id}
           ev={ev}
           si={si}
+          hidden={hidden}
           onClose={() => setChartDialog(null)}
           onSave={(spec) => saveChart(spec, chartDialog.id)}
           onDelete={() => {
             commit((w) => ops.updateSheet(w, w.active, { charts: (w.sheets[w.active].charts ?? []).filter((c) => c.id !== chartDialog.id) }));
             setChartDialog(null);
           }}
+        />
+      )}
+      {filterMenu && sheet.filter && (
+        <FilterMenu
+          sheet={sheet}
+          ev={ev}
+          si={si}
+          col={filterMenu.col}
+          x={filterMenu.x}
+          y={filterMenu.y}
+          onClose={() => setFilterMenu(null)}
+          onApply={(values) => {
+            const col = filterMenu.col;
+            commit((w) => {
+              const fl = w.sheets[w.active].filter;
+              if (!fl) return w;
+              const show = { ...fl.show };
+              if (values) show[col] = values;
+              else delete show[col];
+              return ops.updateSheet(w, w.active, { filter: { ...fl, show } });
+            });
+            setFilterMenu(null);
+          }}
+          onSort={(asc) => {
+            const rg = filterRange(sheet, sheet.filter!);
+            commit((w) => ops.sortRange(w, w.active, rg, filterMenu.col, asc, true));
+            setFilterMenu(null);
+          }}
+        />
+      )}
+      {condDialog && (
+        <CondDialog
+          type={condDialog}
+          range={condTarget()}
+          onClose={() => setCondDialog(null)}
+          onSave={(rule) => {
+            addRule(rule);
+            setCondDialog(null);
+          }}
+        />
+      )}
+      {condManager && (
+        <CondManager
+          rules={sheet.cond ?? []}
+          onClose={() => setCondManager(false)}
+          onDelete={(id) => commit((w) => ops.updateSheet(w, w.active, { cond: (w.sheets[w.active].cond ?? []).filter((r) => r.id !== id) }))}
+          onClear={() => clearRules("sheet")}
         />
       )}
       {fnDialog && (
@@ -1183,6 +1372,11 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             <section>
               <h2>{title || "Hoja de cálculo"} · {sheet.name}</h2>
               <div dangerouslySetInnerHTML={{ __html: printHtml }} />
+              {(sheet.charts ?? []).map((ch) => (
+                <div key={ch.id} className="sheet-print-chart">
+                  <ChartSvg type={ch.type} data={chartData(ch, ev, si, hidden)} width={ch.w} height={ch.h} title={ch.title} legend={ch.legend !== false} />
+                </div>
+              ))}
             </section>
           </div>,
           document.body,
@@ -1190,6 +1384,19 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     </>
   );
 }
+
+const condMenuLabel: Partial<Record<CondType, string>> = {
+  gt: "Mayor que…",
+  lt: "Menor que…",
+  between: "Entre…",
+  eq: "Igual a…",
+  text: "Texto que contiene…",
+  dup: "Valores duplicados…",
+  top: "Los 10 valores más altos…",
+  bottom: "Los 10 valores más bajos…",
+  aboveAvg: "Por encima del promedio…",
+  belowAvg: "Por debajo del promedio…",
+};
 
 const defaultDec = (fmt?: NumFmt) => (fmt === "number" || fmt === "thousands" || fmt === "currency" || fmt === "percent" ? 2 : 0);
 
@@ -1413,6 +1620,7 @@ function ChartDialog({
   editing,
   ev,
   si,
+  hidden,
   onClose,
   onSave,
   onDelete,
@@ -1421,13 +1629,14 @@ function ChartDialog({
   editing: boolean;
   ev: Evaluator;
   si: number;
+  hidden: Set<number>;
   onClose: () => void;
   onSave: (s: Omit<ChartSpec, "id">) => void;
   onDelete: () => void;
 }) {
   const [spec, setSpec] = useState(initial);
   const valid = !!parseRange(spec.range) && (!spec.labels || !!parseRange(spec.labels));
-  const data = useMemo(() => (valid ? chartData(spec, ev, si) : { categories: [], series: [] }), [spec, ev, si, valid]);
+  const data = useMemo(() => (valid ? chartData(spec, ev, si, hidden) : { categories: [], series: [] }), [spec, ev, si, valid]);
   return (
     <Dialog
       open

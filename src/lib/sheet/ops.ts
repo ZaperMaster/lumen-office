@@ -415,3 +415,52 @@ export function moveSheet(wb: Workbook, from: number, to: number): Workbook {
 export function updateSheet(wb: Workbook, si: number, patch: Partial<Sheet>): Workbook {
   return editSheet(wb, si, (s) => Object.assign(s, patch));
 }
+
+/* ------------------------------------------------------------------ */
+/*  Tablas, filtros y formato condicional                              */
+/* ------------------------------------------------------------------ */
+
+export const TABLE_STYLES: { id: string; label: string; head: string; band: string; text: string }[] = [
+  { id: "blue", label: "Azul", head: "#4472c4", band: "#d9e1f2", text: "#ffffff" },
+  { id: "green", label: "Verde", head: "#0f9d58", band: "#e2efda", text: "#ffffff" },
+  { id: "orange", label: "Naranja", head: "#ed7d31", band: "#fce4d6", text: "#ffffff" },
+  { id: "gray", label: "Gris", head: "#595959", band: "#ededed", text: "#ffffff" },
+  { id: "purple", label: "Morado", head: "#7030a0", band: "#e4dfec", text: "#ffffff" },
+];
+
+/** Encabezado en negrita y color, filas alternas, bordes y filtro. */
+export function formatAsTable(wb: Workbook, si: number, rg: Range, styleId: string): Workbook {
+  const t = TABLE_STYLES.find((x) => x.id === styleId) ?? TABLE_STYLES[0];
+  const n = normRange(rg);
+  return editSheet(wb, si, (s) => {
+    for (let r = n.r1; r <= n.r2; r++)
+      for (let c = n.c1; c <= n.c2; c++) {
+        const prev = s.cells[key(r, c)];
+        const head = r === n.r1;
+        const st: CellStyle = {
+          ...prev?.s,
+          bg: head ? t.head : (r - n.r1) % 2 === 0 ? t.band : undefined,
+          color: head ? t.text : prev?.s?.color,
+          b: head ? true : prev?.s?.b,
+          bb: true,
+          bt: head ? true : prev?.s?.bt,
+        };
+        if (!st.bg) delete st.bg;
+        putCell(s, r, c, { v: prev?.v ?? "", s: st });
+      }
+    s.filter = { ...n, show: {} };
+  });
+}
+
+/** Oculta o muestra filas o columnas a mano. */
+export function setHidden(wb: Workbook, si: number, axis: "row" | "col", indexes: number[], hide: boolean): Workbook {
+  return editSheet(wb, si, (s) => {
+    const k = axis === "row" ? "hiddenRows" : "hiddenCols";
+    const set = new Set(s[k] ?? []);
+    for (const i of indexes) {
+      if (hide) set.add(i);
+      else set.delete(i);
+    }
+    s[k] = [...set].sort((a, b) => a - b);
+  });
+}

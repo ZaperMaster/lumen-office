@@ -1,7 +1,8 @@
 import ExcelJS from "exceljs";
 import { Evaluator, FErr, dateToSerial, toExcelFormula, type Scalar } from "@/lib/sheet/formula";
 import { formatValue, parseInput } from "@/lib/sheet/format";
-import { DEFAULT_COL_W, DEFAULT_ROW_H, key, newSheet, parseKey, parseRange, usedRange, type Cell, type CellStyle, type Sheet, type Workbook } from "@/lib/sheet/model";
+import { DEFAULT_COL_W, DEFAULT_ROW_H, key, newSheet, parseKey, parseRange, rangeToA1, usedRange, type Cell, type CellStyle, type CondRule, type Sheet, type Workbook } from "@/lib/sheet/model";
+import { condFormatter, filterRange, hiddenRows } from "@/lib/sheet/view";
 
 /*
  * Libros de Excel (.xlsx) y CSV. Este módulo se carga solo al abrir o guardar.
@@ -38,6 +39,54 @@ function excelNumFmt(s: CellStyle): string | undefined {
     default:
       return s.dec !== undefined ? `0${zeros}` : undefined;
   }
+}
+
+/** Regla de formato condicional en el formato de Excel. */
+function excelRule(r: CondRule, priority: number): ExcelJS.ConditionalFormattingRule | null {
+  const style = { fill: r.bg ? { type: "pattern" as const, pattern: "solid" as const, bgColor: { argb: argb(r.bg) } } : undefined, font: r.color ? { color: { argb: argb(r.color) } } : undefined };
+  const num = (v?: string) => (v ?? "").replace(/\./g, "").replace(",", ".");
+  const rg = parseRange(r.range);
+  const first = rg ? rangeToA1({ r1: rg.r1, c1: rg.c1, r2: rg.r1, c2: rg.c1 }) : "A1";
+  const abs = rg ? rangeToA1(rg).replace(/([A-Z]+)(\d+)/g, "$$$1$$$2") : "A1";
+  let out: unknown = null;
+  switch (r.type) {
+    case "gt":
+    case "lt":
+    case "eq":
+      out = { type: "cellIs", operator: r.type === "gt" ? "greaterThan" : r.type === "lt" ? "lessThan" : "equal", formulae: [/^-?[\d.,]+$/.test(r.a ?? "") ? num(r.a) : `"${r.a}"`], style };
+      break;
+    case "between":
+      out = { type: "cellIs", operator: "between", formulae: [num(r.a), num(r.b)], style };
+      break;
+    case "text":
+      out = { type: "containsText", operator: "containsText", text: r.a ?? "", style };
+      break;
+    case "dup":
+    case "unique":
+      out = { type: "expression", formulae: [`COUNTIF(${abs},${first})${r.type === "dup" ? ">1" : "=1"}`], style };
+      break;
+    case "top":
+    case "bottom":
+      out = { type: "top10", rank: Number(r.a) || 10, bottom: r.type === "bottom", style };
+      break;
+    case "aboveAvg":
+    case "belowAvg":
+      out = { type: "aboveAverage", aboveAverage: r.type === "aboveAvg", style };
+      break;
+    case "scale": {
+      const cols = r.colors ?? [];
+      out = {
+        type: "colorScale",
+        cfvo: cols.length === 3 ? [{ type: "min" }, { type: "percentile", value: 50 }, { type: "max" }] : [{ type: "min" }, { type: "max" }],
+        color: cols.map((c) => ({ argb: argb(c) })),
+      };
+      break;
+    }
+    case "bars":
+      out = { type: "dataBar", cfvo: [{ type: "min" }, { type: "max" }], color: { argb: argb(r.colors?.[0] ?? "#638ec6") }, gradient: true };
+      break;
+  }
+  return out ? ({ ...(out as object), priority } as ExcelJS.ConditionalFormattingRule) : null;
 }
 
 const excelValue = (v: Scalar): ExcelJS.CellValue => (v instanceof FErr ? { error: v.code as ExcelJS.CellErrorValue["error"] } : v);
@@ -93,6 +142,15 @@ export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
       if (nf) xc.numFmt = nf;
     }
     for (const m of s.merges ?? []) ws.mergeCells(m.r1 + 1, m.c1 + 1, m.r2 + 1, m.c2 + 1);
+    // Filtro, filas y columnas ocultas
+    if (s.filter) ws.autoFilter = rangeToA1(filterRange(s, s.filter));
+    for (const r of hiddenRows(s, ev, si)) ws.getRow(r + 1).hidden = true;
+    for (const c of s.hiddenCols ?? []) ws.getColumn(c + 1).hidden = true;
+    // Formato condicional
+    (s.cond ?? []).forEach((rule, i) => {
+      const x = excelRule(rule, s.cond!.length - i);
+      if (x) ws.addConditionalFormatting({ ref: rule.range, rules: [x] });
+    });
   });
   return new Uint8Array(await book.xlsx.writeBuffer());
 }
@@ -209,6 +267,12 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
       if (view.xSplit) s.freezeC = view.xSplit;
     }
     if (view?.showGridLines === false) s.showGrid = false;
+    const af = ws.autoFilter as unknown;
+    const afRange = typeof af === "string" ? parseRange(af) : null;
+    if (afRange) s.filter = { ...afRange, show: {} };
+    const hc: number[] = [];
+    cols.forEach((col, i) => col?.hidden && hc.push(i));
+    if (hc.length) s.hiddenCols = hc;
     s.rows = Math.max(200, maxR + 50);
     s.cols = Math.max(26, maxC + 5);
     sheets.push(s);
@@ -312,15 +376,21 @@ export function sheetHtml(wb: Workbook, si: number): string {
   if (!used) return "<p></p>";
   const ev = new Evaluator(wb);
   const covered = new Set<string>();
+  // Como en pantalla: sin las filas filtradas u ocultas y con el formato condicional
+  const hRows = hiddenRows(s, ev, si);
+  const hCols = new Set(s.hiddenCols ?? []);
+  const cf = condFormatter(s, ev, si);
   let html = `<table class="sheet-print-table"><colgroup>`;
-  for (let c = 0; c <= used.c2; c++) html += `<col style="width:${s.colW[c] ?? DEFAULT_COL_W}px">`;
+  for (let c = 0; c <= used.c2; c++) if (!hCols.has(c)) html += `<col style="width:${s.colW[c] ?? DEFAULT_COL_W}px">`;
   html += "</colgroup>";
   for (let r = 0; r <= used.r2; r++) {
+    if (hRows.has(r)) continue;
     html += `<tr style="height:${s.rowH[r] ?? DEFAULT_ROW_H}px">`;
     for (let c = 0; c <= used.c2; c++) {
-      if (covered.has(key(r, c))) continue;
+      if (covered.has(key(r, c)) || hCols.has(c)) continue;
       const cell = s.cells[key(r, c)];
-      const st = cell?.s ?? {};
+      const cond = cf?.(r, c);
+      const st: CellStyle = cond ? { ...cell?.s, bg: cond.bg ?? cell?.s?.bg, color: cond.color ?? cell?.s?.color, b: cond.bold || cell?.s?.b } : (cell?.s ?? {});
       const v = ev.value(si, r, c);
       const m = s.merges?.find((x) => x.r1 === r && x.c1 === c);
       let span = "";
@@ -333,7 +403,9 @@ export function sheetHtml(wb: Workbook, si: number): string {
         st.i && "font-style:italic",
         (st.u || st.s) && `text-decoration:${[st.u && "underline", st.s && "line-through"].filter(Boolean).join(" ")}`,
         st.color && `color:${st.color}`,
-        st.bg && `background:${st.bg}`,
+        cond?.bar
+          ? `background:linear-gradient(90deg,${cond.bar.color} ${Math.round(cond.bar.pct * 100)}%,${st.bg ?? "transparent"} ${Math.round(cond.bar.pct * 100)}%)`
+          : st.bg && `background:${st.bg}`,
         st.fs && `font-size:${st.fs}pt`,
         st.font && `font-family:${st.font}`,
         `text-align:${st.align ?? (typeof v === "number" ? "right" : "left")}`,

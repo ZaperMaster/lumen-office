@@ -410,3 +410,14 @@ button:disabled {
   .sheet-print section { break-after: page; }
   .sheet-print section:last-child { break-after: auto; }
 }
+.sg-bar { position: absolute; left: 2px; top: 3px; bottom: 3px; border-radius: 2px; pointer-events: none; }
+.sg-filter-btn {
+  position: absolute; z-index: 2; display: grid; place-items: center; border-radius: 3px; cursor: pointer;
+  background: var(--surface); color: var(--text-muted); border: 1px solid color-mix(in oklab, var(--paper-text) 25%, transparent);
+}
+.sg-filter-btn:hover { color: var(--text); border-color: var(--accent); }
+.sg-filter-on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.sg-h-filtered { color: var(--accent); }
+@media print {
+  .sheet-print-chart { display: inline-block; margin: 12pt 12pt 0 0; break-inside: avoid; color: #222; --chart-bg: #fff; }
+}

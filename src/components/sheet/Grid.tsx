@@ -3,6 +3,7 @@ import { FErr, formulaRefs, type Evaluator } from "@/lib/sheet/formula";
 import { defaultAlign, formatValue } from "@/lib/sheet/format";
 import { colName, colWidth, key, mergeAt, normRange, rangeToA1, rowHeight, type ChartSpec, type Range, type Sheet } from "@/lib/sheet/model";
 import { ChartSvg, chartData } from "@/components/sheet/Chart";
+import type { CondStyle } from "@/lib/sheet/view";
 import { cn } from "@/components/ui";
 
 /*
@@ -70,6 +71,16 @@ export interface GridApi {
   selectChart: (id: string | null) => void;
   editChart: (id: string) => void;
   onContextMenu: (x: number, y: number, kind: "cell" | "row" | "col") => void;
+  openFilter: (col: number, x: number, y: number) => void;
+}
+
+/** Lo que el filtro y el formato condicional cambian al dibujar. */
+export interface GridView {
+  hiddenRows: Set<number>;
+  hiddenCols: Set<number>;
+  cond: ((r: number, c: number) => CondStyle | null) | null;
+  /** Fila de encabezados del filtro, sus columnas y las que tienen criterio */
+  filter: { r: number; c1: number; c2: number; active: Set<number> } | null;
 }
 
 export function Grid({
@@ -85,6 +96,7 @@ export function Grid({
   onReady,
   editorRef,
   find,
+  view: gv,
 }: {
   sheet: Sheet;
   si: number;
@@ -99,6 +111,7 @@ export function Grid({
   editorRef: React.RefObject<HTMLTextAreaElement | null>;
   /** Celda resaltada por la búsqueda */
   find: [number, number] | null;
+  view: GridView;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ w: 800, h: 500, sx: 0, sy: 0 });
@@ -108,12 +121,12 @@ export function Grid({
   const z = zoom;
 
   const cw = useCallback(
-    (c: number) => (drag?.axis === "col" && drag.index === c ? drag.size : colWidth(sheet, c)) * z,
-    [sheet, z, drag],
+    (c: number) => (gv.hiddenCols.has(c) ? 0 : (drag?.axis === "col" && drag.index === c ? drag.size : colWidth(sheet, c)) * z),
+    [sheet, z, drag, gv.hiddenCols],
   );
   const rh = useCallback(
-    (r: number) => (drag?.axis === "row" && drag.index === r ? drag.size : rowHeight(sheet, r)) * z,
-    [sheet, z, drag],
+    (r: number) => (gv.hiddenRows.has(r) ? 0 : (drag?.axis === "row" && drag.index === r ? drag.size : rowHeight(sheet, r)) * z),
+    [sheet, z, drag, gv.hiddenRows],
   );
   const colX = useMemo(() => prefix(sheet.cols, cw), [sheet.cols, cw]);
   const rowY = useMemo(() => prefix(sheet.rows, rh), [sheet.rows, rh]);
@@ -379,14 +392,16 @@ export function Grid({
     const out: ReactNode[] = [];
     const lastCol = cols[cols.length - 1] ?? 0;
     for (const r of rows) {
+      if (gv.hiddenRows.has(r)) continue;
       for (const c of cols) {
         const k = key(r, c);
-        if (covered.has(k)) continue;
+        if (covered.has(k) || gv.hiddenCols.has(c)) continue;
         const cell = sheet.cells[k];
         const m = sheet.merges?.length ? mergeAt(sheet, r, c) : undefined;
         if (!cell && !m) continue;
         if (edit && edit.r === r && edit.c === c && !edit.inBar) continue;
-        const st = cell?.s ?? {};
+        const cf = gv.cond?.(r, c) ?? null;
+        const st = cf ? { ...cell?.s, bg: cf.bg ?? cell?.s?.bg, color: cf.color ?? cell?.s?.color, b: cf.bold || cell?.s?.b } : (cell?.s ?? {});
         const v = ev.value(si, r, c);
         const text = showFormulas && cell?.v.startsWith("=") ? cell.v : formatValue(v, st);
         let w = cw(c);
@@ -430,12 +445,39 @@ export function Grid({
         };
         out.push(
           <div key={k} className="sg-cell" style={style}>
+            {cf?.bar && <div className="sg-bar" style={{ width: `calc(${cf.bar.pct * 100}% - 4px)`, background: `linear-gradient(90deg, ${cf.bar.color}, ${cf.bar.color}55)` }} />}
             {text && (
               <div className="sg-text" style={textStyle}>
                 {text}
               </div>
             )}
           </div>,
+        );
+      }
+    }
+    // Botones del filtro en la fila de encabezados
+    const f = gv.filter;
+    if (f && rows.includes(f.r)) {
+      for (const c of cols) {
+        if (c < f.c1 || c > f.c2 || gv.hiddenCols.has(c)) continue;
+        const size = Math.min(18, rh(f.r) - 4) ;
+        out.push(
+          <button
+            key={`flt${c}`}
+            className={cn("sg-filter-btn", f.active.has(c) && "sg-filter-on")}
+            style={{ left: sxOf(c) + cw(c) - size - 2 - ox, top: syOf(f.r) + rh(f.r) - size - 2 - oy, width: size, height: size }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const b = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              api.openFilter(c, b.left, b.bottom + 4);
+            }}
+            title={f.active.has(c) ? "Filtro aplicado: clic para cambiarlo" : "Filtrar u ordenar"}
+          >
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor">
+              {f.active.has(c) ? <path d="M1 2h10L7 6.5V10L5 11V6.5z" /> : <path d="M2 4h8L6 8.5z" />}
+            </svg>
+          </button>,
         );
       }
     }
@@ -446,10 +488,12 @@ export function Grid({
     if (sheet.showGrid === false) return null;
     const lines: ReactNode[] = [];
     for (const c of cols) {
+      if (gv.hiddenCols.has(c)) continue;
       const x = Math.round(sxOf(c) + cw(c) - ox) - 0.5;
       lines.push(<line key={`c${c}`} x1={x} x2={x} y1={0} y2={h} />);
     }
     for (const r of rows) {
+      if (gv.hiddenRows.has(r)) continue;
       const y = Math.round(syOf(r) + rh(r) - oy) - 0.5;
       lines.push(<line key={`r${r}`} x1={0} x2={w} y1={y} y2={y} />);
     }
@@ -525,7 +569,7 @@ export function Grid({
   const selRows = (r: number) => r >= n.r1 && r <= n.r2;
   const wholeCols = n.r1 === 0 && n.r2 === sheet.rows - 1;
   const wholeRows = n.c1 === 0 && n.c2 === sheet.cols - 1;
-  const colHeader = (c: number) => (
+  const colHeader = (c: number) => gv.hiddenCols.has(c) ? null : (
     <div
       key={c}
       className={cn("sg-colh", selCols(c) && "sg-h-sel", wholeCols && selCols(c) && "sg-h-full")}
@@ -542,10 +586,10 @@ export function Grid({
       />
     </div>
   );
-  const rowHeader = (r: number) => (
+  const rowHeader = (r: number) => gv.hiddenRows.has(r) ? null : (
     <div
       key={r}
-      className={cn("sg-rowh", selRows(r) && "sg-h-sel", wholeRows && selRows(r) && "sg-h-full")}
+      className={cn("sg-rowh", selRows(r) && "sg-h-sel", wholeRows && selRows(r) && "sg-h-full", gv.filter && r > gv.filter.r && gv.hiddenRows.size > 0 && "sg-h-filtered")}
       style={{ top: hh + syOf(r), height: rh(r), width: hw, fontSize: 11.5 * Math.min(z, 1.3) }}
     >
       {r + 1}
@@ -628,6 +672,7 @@ export function Grid({
                 selected={selChart === ch.id}
                 ev={ev}
                 si={si}
+                hidden={gv.hiddenRows}
                 api={api}
               />
             ))}
@@ -682,6 +727,7 @@ function ChartBox({
   selected,
   ev,
   si,
+  hidden,
   api,
 }: {
   spec: ChartSpec;
@@ -691,9 +737,10 @@ function ChartBox({
   selected: boolean;
   ev: Evaluator;
   si: number;
+  hidden: Set<number>;
   api: GridApi;
 }) {
-  const data = useMemo(() => chartData(spec, ev, si), [spec, ev, si]);
+  const data = useMemo(() => chartData(spec, ev, si, hidden), [spec, ev, si, hidden]);
   const [live, setLive] = useState<null | { x: number; y: number; w: number; h: number }>(null);
   const cur = live ?? { x: spec.x, y: spec.y, w: spec.w, h: spec.h };
 

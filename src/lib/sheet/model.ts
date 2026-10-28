@@ -76,6 +76,40 @@ export interface Sheet {
   charts?: ChartSpec[];
   showGrid?: boolean;
   tab?: string | null;
+  /** Autofiltro: la primera fila del rango son los encabezados */
+  filter?: SheetFilter | null;
+  /** Reglas de formato condicional */
+  cond?: CondRule[];
+  /** Filas y columnas ocultas a mano */
+  hiddenRows?: number[];
+  hiddenCols?: number[];
+}
+
+export interface SheetFilter {
+  r1: number;
+  c1: number;
+  r2: number;
+  c2: number;
+  /** Por columna, los valores (como se ven) que se muestran; sin entrada = todos */
+  show: Record<number, string[]>;
+}
+
+export type CondType =
+  | "gt" | "lt" | "between" | "eq" | "text" | "dup" | "unique" | "top" | "bottom" | "aboveAvg" | "belowAvg" | "bars" | "scale";
+
+export interface CondRule {
+  id: string;
+  range: string;
+  type: CondType;
+  /** Valores de la regla (número, texto o cantidad para «los 10 mejores») */
+  a?: string;
+  b?: string;
+  /** Formato al cumplirse */
+  bg?: string;
+  color?: string;
+  bold?: boolean;
+  /** Colores de las escalas (2 o 3) y de las barras */
+  colors?: string[];
 }
 
 export interface Workbook {

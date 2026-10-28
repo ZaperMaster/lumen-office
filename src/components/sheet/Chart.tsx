@@ -23,11 +23,13 @@ export interface ChartData {
 }
 
 /** Lee categorías y series de un rango: la primera columna de texto son las categorías y la primera fila, los nombres. */
-export function chartData(spec: Pick<ChartSpec, "range" | "labels">, ev: Evaluator, sheet: number): ChartData {
+/** Los datos de las filas ocultas (filtradas) no se dibujan, como en Excel. */
+export function chartData(spec: Pick<ChartSpec, "range" | "labels">, ev: Evaluator, sheet: number, hidden?: Set<number>): ChartData {
   const rg = parseRange(spec.range);
   if (!rg) return { categories: [], series: [] };
   const grid: (string | number | null)[][] = [];
   for (let r = rg.r1; r <= rg.r2; r++) {
+    if (r > rg.r1 && hidden?.has(r)) continue;
     const row: (string | number | null)[] = [];
     for (let c = rg.c1; c <= rg.c2; c++) {
       const v = ev.value(sheet, r, c);
@@ -45,7 +47,7 @@ export function chartData(spec: Pick<ChartSpec, "range" | "labels">, ev: Evaluat
   if (spec.labels) {
     const lr = parseRange(spec.labels);
     categories = [];
-    if (lr) for (let r = lr.r1; r <= lr.r2; r++) for (let c = lr.c1; c <= lr.c2; c++) categories.push(formatValue(ev.value(sheet, r, c)));
+    if (lr) for (let r = lr.r1; r <= lr.r2; r++) if (!hidden?.has(r)) for (let c = lr.c1; c <= lr.c2; c++) categories.push(formatValue(ev.value(sheet, r, c)));
   } else categories = body.map((r, i) => (labelCol ? String(r[0] ?? "") : String(i + 1)));
   const first = labelCol ? 1 : 0;
   const series = [];
