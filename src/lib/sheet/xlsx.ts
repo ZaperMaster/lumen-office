@@ -89,6 +89,72 @@ function excelRule(r: CondRule, priority: number): ExcelJS.ConditionalFormatting
   return out ? ({ ...(out as object), priority } as ExcelJS.ConditionalFormattingRule) : null;
 }
 
+interface ExcelCfRule {
+  type: string;
+  operator?: string;
+  formulae?: (string | number)[];
+  text?: string;
+  rank?: number;
+  bottom?: boolean;
+  aboveAverage?: boolean;
+  priority?: number;
+  color?: { argb?: string } | { argb?: string }[];
+  style?: { fill?: { bgColor?: { argb?: string }; fgColor?: { argb?: string } }; font?: { color?: { argb?: string }; bold?: boolean } };
+}
+
+const hexOf = (c?: { argb?: string }) => (c?.argb && c.argb.length >= 6 ? "#" + c.argb.slice(-6).toLowerCase() : undefined);
+
+/** Regla de Excel en el formato de Lumen (las que no se entienden se ignoran). */
+function ruleFromExcel(ref: string, x: ExcelCfRule): CondRule | null {
+  // Varios rangos separados por espacios: se toma el primero
+  const range = ref.split(/\s+/)[0];
+  if (!parseRange(range)) return null;
+  const base = {
+    id: Math.random().toString(36).slice(2, 10),
+    range,
+    bg: hexOf(x.style?.fill?.bgColor) ?? hexOf(x.style?.fill?.fgColor),
+    color: hexOf(x.style?.font?.color),
+    bold: x.style?.font?.bold || undefined,
+  };
+  const f = (i: number) => {
+    const v = x.formulae?.[i];
+    return v === undefined ? undefined : String(v).replace(/^"|"$/g, "");
+  };
+  switch (x.type) {
+    case "cellIs": {
+      const op: Record<string, CondRule["type"]> = { greaterThan: "gt", lessThan: "lt", between: "between", equal: "eq" };
+      const type = op[x.operator ?? ""];
+      return type ? { ...base, type, a: f(0), b: f(1) } : null;
+    }
+    case "containsText":
+      return { ...base, type: "text", a: x.text ?? "" };
+    case "top10":
+      return { ...base, type: x.bottom ? "bottom" : "top", a: String(x.rank ?? 10) };
+    case "aboveAverage":
+      return { ...base, type: x.aboveAverage === false ? "belowAvg" : "aboveAvg" };
+    case "duplicateValues":
+      return { ...base, type: "dup" };
+    case "uniqueValues":
+      return { ...base, type: "unique" };
+    case "expression": {
+      // La forma en que Lumen guarda «duplicados» y «únicos»
+      const e = f(0) ?? "";
+      if (/^COUNTIF\(.*\)>1$/i.test(e)) return { ...base, type: "dup" };
+      if (/^COUNTIF\(.*\)=1$/i.test(e)) return { ...base, type: "unique" };
+      return null;
+    }
+    case "colorScale": {
+      const colors = (Array.isArray(x.color) ? x.color : []).map(hexOf).filter((c): c is string => !!c);
+      return colors.length >= 2 ? { id: base.id, range, type: "scale", colors } : null;
+    }
+    case "dataBar": {
+      const c = hexOf(Array.isArray(x.color) ? x.color[0] : x.color);
+      return { id: base.id, range, type: "bars", colors: [c ?? "#638ec6"] };
+    }
+  }
+  return null;
+}
+
 const excelValue = (v: Scalar): ExcelJS.CellValue => (v instanceof FErr ? { error: v.code as ExcelJS.CellErrorValue["error"] } : v);
 
 export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
@@ -273,6 +339,14 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
     const hc: number[] = [];
     cols.forEach((col, i) => col?.hidden && hc.push(i));
     if (hc.length) s.hiddenCols = hc;
+    // Formato condicional: Excel da la prioridad al número más bajo; aquí manda la última regla
+    const cfs = (ws as unknown as { conditionalFormattings?: { ref: string; rules: ExcelCfRule[] }[] }).conditionalFormattings ?? [];
+    const rules: { rule: CondRule; priority: number }[] = [];
+    for (const cf of cfs) for (const x of cf.rules ?? []) {
+      const rule = ruleFromExcel(cf.ref, x);
+      if (rule) rules.push({ rule, priority: x.priority ?? 0 });
+    }
+    if (rules.length) s.cond = rules.sort((a, b) => b.priority - a.priority).map((x) => x.rule);
     s.rows = Math.max(200, maxR + 50);
     s.cols = Math.max(26, maxC + 5);
     sheets.push(s);
