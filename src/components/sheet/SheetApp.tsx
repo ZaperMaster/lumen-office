@@ -618,6 +618,32 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     openDropdown: (x, y) => setDropdown({ x, y }),
   };
 
+  /** Separa el texto de una columna en varias (por «;», «,», tabulador, «|» o espacio). */
+  const textToColumns = () => {
+    const rg = n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n;
+    const col = n.c1;
+    const texts: [number, string][] = [];
+    for (let r = rg.r1; r <= rg.r2; r++) {
+      const v = sheet.cells[key(r, col)]?.v ?? "";
+      if (v && !v.startsWith("=")) texts.push([r, v]);
+    }
+    const seps = [";", "\t", ",", "|", " "];
+    const sep = seps.map((x) => [x, texts.filter(([, t]) => t.includes(x)).length] as const).sort((a, b) => b[1] - a[1])[0];
+    if (!sep || !sep[1]) return toast("No hay texto que separar en esa columna (se busca «;», «,», tabulador, «|» o espacio)");
+    commit((w) => {
+      let out = w;
+      for (const [r, t] of texts) t.split(sep[0]).map((x) => x.trim()).forEach((part, j) => (out = ops.inputCell(out, w.active, r, col + j, part)));
+      return out;
+    });
+    toast(`Texto separado por «${sep[0] === "\t" ? "tabulador" : sep[0] === " " ? "espacio" : sep[0]}» en ${texts.length} filas`, "success");
+  };
+
+  /** Ancho justo para el contenido en todas las columnas seleccionadas. */
+  const autofitCols = () => {
+    const last = Math.min(n.c2, usedRange(sheet)?.c2 ?? n.c1);
+    for (let c = n.c1; c <= last; c++) api.autofit("col", c);
+  };
+
   /* ---------------- Filtros y formato condicional ---------------- */
   const toggleFilter = () => {
     if (sheet.filter) {
@@ -961,6 +987,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                       <MenuItem icon={<Rows3 />} onSelect={() => insertLines("row", "after")}>Insertar filas debajo</MenuItem>
                       <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "before")}>Insertar columnas a la izquierda</MenuItem>
                       <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "after")}>Insertar columnas a la derecha</MenuItem>
+                      <MenuItem icon={<Columns3 />} onSelect={autofitCols}>Autoajustar ancho de columnas</MenuItem>
                       <MenuSeparator />
                       <MenuItem icon={<Plus />} onSelect={() => commit((w) => ops.addSheet(w))}>Insertar hoja</MenuItem>
                     </MenuContent>
@@ -1070,6 +1097,8 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 </RGroup>
                 <RGroup label="Herramientas">
                   <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} title="Validación de datos: las celdas solo aceptan valores de una lista" />
+                  <RBig icon={<Columns3 />} label="Texto en columnas" onClick={textToColumns} title="Separa «Nombre;Apellido;Ciudad» en varias columnas" />
+                  <RBig icon={<Columns3 />} label="Autoajustar columnas" onClick={autofitCols} title="Ancho justo para el contenido de las columnas seleccionadas" />
                   <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
                   <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} />
                 </RGroup>

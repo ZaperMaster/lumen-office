@@ -5,7 +5,7 @@ import DOMPurify from "dompurify";
 import {
   AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, ChevronDown, Circle, Copy, Diamond, FileText, Image as ImageIcon,
   Italic, List, ListOrdered, Loader2, Minus, MoveRight, Palette, Play, Plus, Presentation, Printer, Redo2, Square, Star, StickyNote,
-  Sparkles, Trash2, Triangle, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket,
+  Smile, Sparkles, Trash2, Triangle, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket,
 } from "lucide-react";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import {
@@ -21,7 +21,7 @@ import { ElementView, SlideBackground, SlideView, elBoxStyle, textStyle } from "
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
-import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Tooltip, cn } from "@/components/ui";
+import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Popover, PopoverClose, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
 /* ------------------------------------------------------------------ */
 /*  Carga                                                              */
@@ -79,6 +79,8 @@ const SHAPES: { id: ShapeKind; label: string; icon: ReactNode }[] = [
   { id: "star", label: "Estrella", icon: <Star /> },
   { id: "line", label: "Línea", icon: <Minus /> },
 ];
+
+const ICONS = ["⭐", "✅", "❌", "💡", "🚀", "📈", "📉", "🎯", "💰", "👥", "📅", "⏱️", "🔒", "🌍", "❤️", "⚠️", "📌", "🏆", "📊", "🛠️", "💬", "📦", "🎓", "🌱", "📱", "💻", "✉️", "📞", "🏠", "🚗", "✈️", "🎉"];
 
 const TRANSITIONS: { id: Transition; label: string }[] = [
   { id: "none", label: "Ninguna" },
@@ -756,6 +758,28 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Elementos">
                   <RBig icon={<Type />} label="Cuadro de texto" onClick={addText} />
                   <RBig icon={<ImageIcon />} label="Imagen" onClick={() => fileRef.current?.click()} title="También puedes pegarla con Ctrl+V o arrastrarla" />
+                </RGroup>
+                <RGroup label="Iconos">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <span><RBig icon={<Smile />} label="Icono" /></span>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[272px]">
+                      <div className="mb-2 text-[12.5px] font-medium">Insertar un icono</div>
+                      <div className="grid grid-cols-8 gap-1">
+                        {ICONS.map((ic) => (
+                          <PopoverClose asChild key={ic}>
+                            <button
+                              onClick={() => addEl({ type: "text", x: 580, y: 300, w: 120, h: 120, html: `<p>${ic}</p>`, fontSize: 80, align: "center", valign: "middle" })}
+                              className="grid size-8 place-items-center rounded-md text-[20px] hover:bg-surface-2"
+                            >
+                              {ic}
+                            </button>
+                          </PopoverClose>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </RGroup>
                 <RGroup label="Formas">
                   <div className="grid grid-cols-4 gap-0.5">

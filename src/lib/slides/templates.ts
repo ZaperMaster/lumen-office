@@ -91,6 +91,87 @@ export const SLIDES_TEMPLATES: SlidesTemplate[] = [
   },
 ];
 
+SLIDES_TEMPLATES.push(
+  {
+    id: "results",
+    name: "Informe de resultados",
+    description: "Cifras clave y conclusiones",
+    theme: "ocean",
+    build: () => ({
+      title: "Informe de resultados",
+      deck: {
+        theme: "ocean",
+        slides: [
+          makeSlide("title", "Resultados del trimestre", "Departamento · Fecha"),
+          makeSlide("content", "Resumen", ["Ventas: +12 % respecto al trimestre anterior", "Nuevos clientes: 1.450", "Satisfacción: 4,6 sobre 5"]),
+          makeSlide("two", "Qué ha ido bien y qué no", ["Lanzamiento del producto nuevo", "Campaña de verano"], ["Retrasos en logística", "Costes por encima de lo previsto"]),
+          makeSlide("content", "Objetivos para el próximo trimestre", ["Reducir los plazos de entrega", "Abrir un nuevo mercado", "Mejorar la atención al cliente"]),
+          makeSlide("section", "Preguntas"),
+        ],
+      },
+    }),
+  },
+  {
+    id: "training",
+    name: "Formación",
+    description: "Módulos, ejercicios y evaluación",
+    theme: "paper",
+    build: () => ({
+      title: "Formación",
+      deck: {
+        theme: "paper",
+        slides: [
+          makeSlide("title", "Nombre del curso", "Formador · Duración"),
+          makeSlide("content", "Al terminar sabrás…", ["Objetivo de aprendizaje 1", "Objetivo de aprendizaje 2", "Objetivo de aprendizaje 3"]),
+          makeSlide("section", "Módulo 1", "Introducción"),
+          makeSlide("content", "Conceptos clave", ["Concepto y definición", "Ejemplo práctico", "Errores frecuentes"]),
+          makeSlide("content", "Ejercicio", ["Enunciado del ejercicio", "Tiempo: 10 minutos", "Puesta en común"]),
+          makeSlide("content", "Resumen y evaluación", ["Tres ideas para recordar", "Cuestionario final"]),
+        ],
+      },
+    }),
+  },
+  {
+    id: "portfolio",
+    name: "Portfolio",
+    description: "Presenta tus proyectos",
+    theme: "violet",
+    build: () => ({
+      title: "Portfolio",
+      deck: {
+        theme: "violet",
+        slides: [
+          makeSlide("title", "Tu nombre", "Diseño · Desarrollo · Fotografía"),
+          makeSlide("content", "Sobre mí", ["Quién eres en una frase", "Tu especialidad", "Con quién has trabajado"]),
+          makeSlide("image", "Proyecto 1"),
+          makeSlide("two", "Proyecto 1: el reto y la solución", ["Qué necesitaba el cliente"], ["Qué hiciste y qué resultado tuvo"]),
+          makeSlide("image", "Proyecto 2"),
+          makeSlide("section", "¿Trabajamos juntos?", "correo@ejemplo.com"),
+        ],
+      },
+    }),
+  },
+  {
+    id: "event",
+    name: "Evento o celebración",
+    description: "Programa, lugar y detalles",
+    theme: "sunset",
+    build: () => ({
+      title: "Evento",
+      deck: {
+        theme: "sunset",
+        slides: [
+          makeSlide("title", "Nombre del evento", "Fecha · Lugar"),
+          makeSlide("content", "Programa", ["18:00 Bienvenida", "19:00 Presentación", "20:30 Cena", "22:00 Música"]),
+          makeSlide("image", "El lugar"),
+          makeSlide("content", "Información práctica", ["Cómo llegar", "Aparcamiento", "Código de vestimenta"]),
+          makeSlide("section", "¡Te esperamos!"),
+        ],
+      },
+    }),
+  },
+);
+
 export function slidesTemplate(id: string): SlidesTemplate {
   return SLIDES_TEMPLATES.find((t) => t.id === id) ?? SLIDES_TEMPLATES[0];
 }

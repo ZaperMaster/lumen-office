@@ -198,14 +198,14 @@ function HomeSection() {
 
       <SectionTitle>Hojas de cálculo</SectionTitle>
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
-        {SHEET_TEMPLATES.map((t) => (
+        {SHEET_TEMPLATES.slice(0, 6).map((t) => (
           <SheetTemplateCard key={t.id} tpl={t} />
         ))}
       </div>
 
       <SectionTitle>Presentaciones</SectionTitle>
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
-        {SLIDES_TEMPLATES.map((t) => (
+        {SLIDES_TEMPLATES.slice(0, 6).map((t) => (
           <SlidesTemplateCard key={t.id} tpl={t} />
         ))}
       </div>

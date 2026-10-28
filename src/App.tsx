@@ -33,6 +33,24 @@ function ThemeSync() {
 /** Confirma antes de cerrar la ventana si hay cambios sin guardar en archivos. */
 function CloseGuard() {
   useEffect(() => installCloseGuard(), []);
+  // F11: pantalla completa (sin la barra de tareas de Windows)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "F11") return;
+      e.preventDefault();
+      if (!isDesktop()) {
+        if (document.fullscreenElement) void document.exitFullscreen();
+        else void document.documentElement.requestFullscreen().catch(() => {});
+        return;
+      }
+      void import("@tauri-apps/api/window").then(async ({ getCurrentWindow }) => {
+        const win = getCurrentWindow();
+        await win.setFullscreen(!(await win.isFullscreen()));
+      });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   useEffect(() => {
     const t = setTimeout(() => void import("@/lib/localModels").then((m) => m.removeRetiredModels()), 5000);
     return () => clearTimeout(t);

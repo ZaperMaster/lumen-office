@@ -8,7 +8,7 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
+  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, ListTree, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
 } from "lucide-react";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
@@ -406,10 +406,57 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
   const fileRef = useRef<HTMLInputElement>(null);
   const c = () => editor.chain().focus();
   const [imgUrl, setImgUrl] = useState("");
+  const toast = useApp((s) => s.toast);
   const now = new Date();
+
+  /** Índice con los títulos del documento, en el sitio del cursor. */
+  const insertToc = () => {
+    const items: { level: number; text: string }[] = [];
+    editor.state.doc.descendants((n) => {
+      if (n.type.name === "heading" && n.textContent.trim()) items.push({ level: n.attrs.level as number, text: n.textContent.trim() });
+    });
+    if (!items.length) return toast("Primero pon títulos en el documento (estilos Título 1, 2 y 3) para crear el índice");
+    const min = Math.min(...items.map((i) => i.level));
+    c()
+      .insertContent([
+        { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Índice" }] },
+        ...items.map((i) => {
+          const depth = i.level - min;
+          const prefix = depth === 0 ? "" : depth === 1 ? "    " : "        ";
+          return { type: "paragraph", content: [{ type: "text", text: prefix + i.text, ...(depth === 0 ? { marks: [{ type: "bold" }] } : {}) }] };
+        }),
+        { type: "horizontalRule" },
+      ])
+      .run();
+    toast("Índice insertado. Si cambias los títulos, vuelve a insertarlo.", "success");
+  };
+
+  /** Portada al principio del documento, seguida de un salto de página. */
+  const insertCover = () => {
+    const userName = useSettings.getState().userName;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(0, [
+        { type: "paragraph" },
+        { type: "paragraph" },
+        { type: "paragraph" },
+        { type: "heading", attrs: { level: 1, textAlign: "center" }, content: [{ type: "text", text: "Título del documento" }] },
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "Subtítulo", marks: [{ type: "italic" }] }] },
+        { type: "paragraph" },
+        { type: "paragraph" },
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: userName || "Autor" }] },
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: now.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) }] },
+        { type: "pageBreak" },
+      ])
+      .run();
+  };
+
   return (
     <>
       <Group label="Páginas">
+        <Big icon={<BookOpen />} label="Portada" onClick={insertCover} title="Añade una portada al principio del documento" />
+        <Big icon={<ListTree />} label="Índice" onClick={insertToc} title="Tabla de contenido con los títulos del documento" />
         <Big icon={<SeparatorHorizontal />} label="Salto de página" onClick={() => c().setPageBreak().run()} title="Salto de página (Ctrl+Enter)" />
         <Big icon={<Minus />} label="Línea horizontal" onClick={() => c().setHorizontalRule().run()} />
       </Group>

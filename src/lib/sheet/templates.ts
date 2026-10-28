@@ -195,6 +195,167 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
       return { title: "Notas de clase", wb };
     },
   },
+  {
+    id: "tasks",
+    name: "Seguimiento de tareas",
+    description: "Estados con lista desplegable y colores",
+    tint: "#eef1ff",
+    build: () => {
+      const wb = newWorkbook();
+      const s = wb.sheets[0];
+      s.name = "Tareas";
+      s.colW = { 0: 260, 1: 140, 2: 110, 3: 120, 4: 110 };
+      const head = { ...HEAD, bg: "#4f5bd5" };
+      rows(s, [["Tarea", "Responsable", "Prioridad", "Fecha límite", "Estado"]], 0, () => head);
+      const today = Math.floor((Date.now() - Date.UTC(1899, 11, 30)) / 86400000);
+      const data: [string, string, string, number, string][] = [
+        ["Preparar presupuesto", "Ana", "Alta", today + 2, "En curso"],
+        ["Revisar contrato", "Luis", "Media", today + 5, "Pendiente"],
+        ["Enviar facturas", "Marta", "Alta", today - 1, "Hecho"],
+        ["Actualizar web", "Jorge", "Baja", today + 10, "Pendiente"],
+      ];
+      data.forEach((d, i) => {
+        s.cells[key(i + 1, 0)] = { v: d[0] };
+        s.cells[key(i + 1, 1)] = { v: d[1] };
+        s.cells[key(i + 1, 2)] = { v: d[2], s: { align: "center" } };
+        s.cells[key(i + 1, 3)] = { v: String(d[3]), s: { fmt: "date" } };
+        s.cells[key(i + 1, 4)] = { v: d[4], s: { align: "center" } };
+      });
+      s.validations = [
+        { id: "v1", range: "C2:C200", list: ["Alta", "Media", "Baja"], strict: true },
+        { id: "v2", range: "E2:E200", list: ["Pendiente", "En curso", "Hecho"], strict: true },
+      ];
+      s.cond = [
+        { id: "c1", type: "text", range: "E2:E200", a: "Hecho", bg: "#c6efce", color: "#006100" },
+        { id: "c2", type: "text", range: "E2:E200", a: "En curso", bg: "#ffeb9c", color: "#9c5700" },
+        { id: "c3", type: "text", range: "C2:C200", a: "Alta", bg: "#ffc7ce", color: "#9c0006" },
+      ];
+      s.filter = { r1: 0, c1: 0, r2: 4, c2: 4, show: {} };
+      s.freezeR = 1;
+      return { title: "Seguimiento de tareas", wb };
+    },
+  },
+  {
+    id: "loan",
+    name: "Calculadora de préstamo",
+    description: "Cuota mensual y total de intereses",
+    tint: "#e8f7f7",
+    build: () => {
+      const wb = newWorkbook();
+      const s = wb.sheets[0];
+      s.name = "Préstamo";
+      s.colW = { 0: 220, 1: 140 };
+      s.showGrid = false;
+      rows(s, [["Calculadora de préstamo"]]);
+      setStyle(s, 0, 0, { b: true, fs: 16, color: "#0b7a75" });
+      const input = { bg: "#fff8dc", bb: true };
+      const lines: [string, string, CellStyle][] = [
+        ["Importe del préstamo", "150000", { ...input, fmt: "currency" }],
+        ["Interés anual", "0.035", { ...input, fmt: "percent", dec: 2 }],
+        ["Años", "25", { ...input, align: "right" }],
+        ["", "", {}],
+        ["Cuota mensual", "=-PAGO(B3/12;B4*12;B2)", { fmt: "currency", b: true, bg: "#d9f2f1" }],
+        ["Total pagado", "=B6*B4*12", { fmt: "currency" }],
+        ["Total de intereses", "=B7-B2", { fmt: "currency", color: "#b42318" }],
+      ];
+      lines.forEach(([label, v, st], i) => {
+        if (label) s.cells[key(i + 1, 0)] = { v: label, s: i >= 4 ? { b: true } : undefined };
+        if (v) s.cells[key(i + 1, 1)] = { v, s: st };
+      });
+      s.notes = { [key(1, 1)]: "Cambia las celdas amarillas y el resto se calcula solo." };
+      return { title: "Calculadora de préstamo", wb };
+    },
+  },
+  {
+    id: "inventory",
+    name: "Inventario",
+    description: "Existencias, valor y avisos de stock",
+    tint: "#fdf0e6",
+    build: () => {
+      const wb = newWorkbook();
+      const s = wb.sheets[0];
+      s.name = "Inventario";
+      s.colW = { 0: 90, 1: 220, 2: 100, 3: 110, 4: 120, 5: 110 };
+      const head = { ...HEAD, bg: "#c2410c" };
+      rows(s, [["Código", "Producto", "Unidades", "Precio", "Valor", "Mínimo"]], 0, () => head);
+      const data: [string, string, number, number, number][] = [
+        ["P-001", "Cuaderno A4", 120, 2.5, 50],
+        ["P-002", "Bolígrafo azul", 35, 0.8, 100],
+        ["P-003", "Carpeta", 60, 3.2, 20],
+        ["P-004", "Grapadora", 8, 9.9, 10],
+      ];
+      data.forEach((d, i) => {
+        const r = i + 1;
+        s.cells[key(r, 0)] = { v: d[0] };
+        s.cells[key(r, 1)] = { v: d[1] };
+        s.cells[key(r, 2)] = { v: String(d[2]) };
+        s.cells[key(r, 3)] = { v: String(d[3]), s: EUR };
+        s.cells[key(r, 4)] = { v: `=C${r + 1}*D${r + 1}`, s: EUR };
+        s.cells[key(r, 5)] = { v: String(d[4]) };
+      });
+      s.cells[key(5, 3)] = { v: "Total", s: { ...TOTAL, align: "right" } };
+      s.cells[key(5, 4)] = { v: "=SUMA(E2:E5)", s: { ...TOTAL, ...EUR } };
+      s.cond = [{ id: "c1", type: "lt", range: "C2:C5", a: "20", bg: "#ffc7ce", color: "#9c0006" }];
+      s.notes = { [key(0, 2)]: "Las unidades por debajo de 20 se marcan en rojo." };
+      s.freezeR = 1;
+      return { title: "Inventario", wb };
+    },
+  },
+  {
+    id: "schedule",
+    name: "Horario semanal",
+    description: "Clases o turnos de lunes a viernes",
+    tint: "#f1f8ff",
+    build: () => {
+      const wb = newWorkbook();
+      const s = wb.sheets[0];
+      s.name = "Horario";
+      s.colW = { 0: 80, 1: 130, 2: 130, 3: 130, 4: 130, 5: 130 };
+      const head = { ...HEAD, bg: "#2563eb" };
+      rows(s, [["Hora", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]], 0, () => head);
+      ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "16:00", "17:00"].forEach((h, i) => {
+        s.cells[key(i + 1, 0)] = { v: String((Number(h.slice(0, 2)) * 60) / 1440), s: { fmt: "time", b: true, bg: "#eff6ff", align: "center" } };
+        for (let c = 1; c <= 5; c++) s.cells[key(i + 1, c)] = { v: "", s: { bb: true, br: true, align: "center" } };
+      });
+      s.cells[key(1, 1)].v = "Matemáticas";
+      s.cells[key(2, 2)].v = "Lengua";
+      s.cells[key(3, 3)].v = "Inglés";
+      s.cells[key(4, 4)].v = "Reunión";
+      s.freezeR = 1;
+      return { title: "Horario semanal", wb };
+    },
+  },
+  {
+    id: "hours",
+    name: "Registro de horas",
+    description: "Horas trabajadas y total a cobrar",
+    tint: "#f5f0ff",
+    build: () => {
+      const wb = newWorkbook();
+      const s = wb.sheets[0];
+      s.name = "Horas";
+      s.colW = { 0: 110, 1: 90, 2: 90, 3: 90, 4: 220 };
+      const head = { ...HEAD, bg: "#7c3aed" };
+      rows(s, [["Fecha", "Entrada", "Salida", "Horas", "Tarea"]], 0, () => head);
+      const today = Math.floor((Date.now() - Date.UTC(1899, 11, 30)) / 86400000);
+      [[9, 14, "Diseño"], [9, 17, "Reuniones y desarrollo"], [10, 13, "Revisión"]].forEach(([a, b, task], i) => {
+        const r = i + 1;
+        s.cells[key(r, 0)] = { v: String(today - 2 + i), s: { fmt: "date" } };
+        s.cells[key(r, 1)] = { v: String((Number(a) * 60) / 1440), s: { fmt: "time" } };
+        s.cells[key(r, 2)] = { v: String((Number(b) * 60) / 1440), s: { fmt: "time" } };
+        s.cells[key(r, 3)] = { v: `=(C${r + 1}-B${r + 1})*24`, s: { fmt: "number", dec: 2 } };
+        s.cells[key(r, 4)] = { v: String(task) };
+      });
+      s.cells[key(5, 2)] = { v: "Total horas", s: { ...TOTAL, align: "right" } };
+      s.cells[key(5, 3)] = { v: "=SUMA(D2:D5)", s: { ...TOTAL, fmt: "number", dec: 2 } };
+      s.cells[key(6, 2)] = { v: "Precio/hora", s: { align: "right" } };
+      s.cells[key(6, 3)] = { v: "35", s: { ...EUR, bg: "#fff8dc" } };
+      s.cells[key(7, 2)] = { v: "A cobrar", s: { b: true, align: "right" } };
+      s.cells[key(7, 3)] = { v: "=D6*D7", s: { ...EUR, b: true, bg: "#ede9fe" } };
+      s.freezeR = 1;
+      return { title: "Registro de horas", wb };
+    },
+  },
 ];
 
 export function sheetTemplate(id: string): SheetTemplate {
