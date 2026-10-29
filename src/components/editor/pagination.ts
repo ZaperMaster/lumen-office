@@ -32,7 +32,7 @@ export interface PaginationStorage {
   /** Se llama con el número de páginas y lo que ocupa el contenido de la última */
   onLayout: ((pages: number, lastUsed: number) => void) | null;
   /** Doble clic en un encabezado o pie */
-  onEditHeaderFooter: ((zone: "header" | "footer") => void) | null;
+  onEditHeaderFooter: ((zone: "header" | "footer", el: HTMLElement) => void) | null;
   /** Fuerza un nuevo cálculo (al cambiar la página, el zoom, el encabezado…) */
   refresh: () => void;
 }
@@ -201,10 +201,12 @@ export const Pagination = Extension.create<object, PaginationStorage>({
         props: {
           decorations: (state: EditorState) => key.getState(state),
           handleDOMEvents: {
-            dblclick: (_view, event) => {
+            // Un clic en el margen de arriba o de abajo edita el encabezado o el pie
+            mousedown: (_view, event) => {
               const zone = (event.target as HTMLElement).closest?.(".hf-zone") as HTMLElement | null;
               if (!zone || !storage.onEditHeaderFooter) return false;
-              storage.onEditHeaderFooter(zone.dataset.zone === "footer" ? "footer" : "header");
+              event.preventDefault();
+              storage.onEditHeaderFooter(zone.dataset.zone === "footer" ? "footer" : "header", zone);
               return true;
             },
           },

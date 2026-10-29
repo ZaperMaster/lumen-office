@@ -14,7 +14,7 @@ import { getTheme } from "@/lib/themes";
 import { MARGINS, MM_TO_PX, PAGE_SIZES, useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
 import { Ribbon, type FileActions, type LayoutActions } from "@/components/editor/Ribbon";
-import { HeaderFooterDialog } from "@/components/editor/HeaderFooterDialog";
+import { HeaderFooterBar } from "@/components/editor/HeaderFooterBar";
 import type { PaginationStorage } from "@/components/editor/pagination";
 import { pageTexts, withDefaults, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
 import { FindBar } from "@/components/editor/FindBar";
@@ -34,16 +34,24 @@ import { Logo } from "@/components/Logo";
 const PAGE_GAP = 24;
 
 /** Encabezado de la primera página o pie de la última (los demás van entre páginas). */
-function HfZone({ zone, height, texts, onEdit }: { zone: "header" | "footer"; height: number; texts: HeaderFooter; onEdit: (z: "header" | "footer") => void }) {
+function HfZone({ zone, height, texts, onEdit }: { zone: "header" | "footer"; height: number; texts: HeaderFooter; onEdit: (z: "header" | "footer", el: HTMLElement) => void }) {
   return (
-    <div className="hf-zone relative" data-zone={zone} style={{ height }} onDoubleClick={() => onEdit(zone)} title="Doble clic para editar">
-      {zone === "footer" && <span className="hf-hint">Doble clic para editar el pie de página</span>}
+    <div
+      className="hf-zone relative"
+      data-zone={zone}
+      style={{ height }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onEdit(zone, e.currentTarget);
+      }}
+    >
+      {zone === "footer" && <span className="hf-hint">Haz clic para escribir el pie de página</span>}
       <span className="hf-row">
         <span className="hf-cell hf-left">{texts.left}</span>
         <span className="hf-cell hf-center">{texts.center}</span>
         <span className="hf-cell hf-right">{texts.right}</span>
       </span>
-      {zone === "header" && <span className="hf-hint">Doble clic para editar el encabezado</span>}
+      {zone === "header" && <span className="hf-hint">Haz clic para escribir el encabezado</span>}
     </div>
   );
 }
@@ -237,9 +245,30 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const [lastUsed, setLastUsed] = useState(0);
-  const [hfZone, setHfZone] = useState<"header" | "footer" | null>(null);
+  // Encabezado o pie que se está editando y su posición en la página (px sin zoom)
+  const mbRef = useRef(0);
+  const [hfEdit, setHfEdit] = useState<{ zone: "header" | "footer"; top: number } | null>(null);
+  const openHf = useCallback(
+    (zone: "header" | "footer", el?: HTMLElement) => {
+      const paged = paperRef.current;
+      if (!paged || !paged.classList.contains("paged-doc")) {
+        // En las otras vistas se pasa a la de páginas para editarlo
+        useSettings.getState().set("viewMode", "page");
+        return;
+      }
+      const z = paged.offsetWidth ? paged.getBoundingClientRect().width / paged.offsetWidth : 1;
+      let top: number;
+      if (el) top = (el.getBoundingClientRect().top - paged.getBoundingClientRect().top) / z;
+      else top = zone === "header" ? 0 : paged.offsetHeight - mbRef.current;
+      setHfEdit({ zone, top });
+      if (!el) setTimeout(() => paged.querySelector(".hf-editing")?.scrollIntoView({ block: "center", behavior: "smooth" }), 30);
+    },
+    [],
+  );
+  
   const mt = margin.v * MM_TO_PX;
   const mb = margin.v * MM_TO_PX;
+  mbRef.current = mb;
   const contentH = pageH - mt - mb;
 
   const saveLayout = useCallback(
@@ -252,7 +281,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
 
   const layoutActions: LayoutActions = useMemo(
     () => ({
-      edit: (zone) => setHfZone(zone),
+      edit: (zone) => openHf(zone),
       setPageNumber: (zone, slot, text) => {
         // Un solo número de página: se quita de donde estuviera antes
         const strip = (hf: HeaderFooter): HeaderFooter => ({
@@ -293,7 +322,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       setPages(p);
       setLastUsed(used);
     };
-    st.onEditHeaderFooter = (zone) => setHfZone(zone);
+    st.onEditHeaderFooter = (zone, el) => openHf(zone, el);
     st.refresh();
   }, [editor, s.viewMode, pageH, pageW, mt, mb, layout, title, userName]);
 
@@ -464,7 +493,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
                       <div key={i} className="paper absolute inset-x-0" style={{ top: i * (pageH + PAGE_GAP), height: pageH }} />
                     ))}
                   </div>
-                  <HfZone zone="header" height={mt} texts={firstTexts.header} onEdit={setHfZone} />
+                  <HfZone zone="header" height={mt} texts={firstTexts.header} onEdit={openHf} />
                   <EditorContent editor={editor} />
                   <div
                     className="last-page-filler"
@@ -474,7 +503,19 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
                       editor.commands.focus("end");
                     }}
                   />
-                  <HfZone zone="footer" height={mb} texts={lastTexts.footer} onEdit={setHfZone} />
+                  <HfZone zone="footer" height={mb} texts={lastTexts.footer} onEdit={openHf} />
+                  {hfEdit && (
+                    <HeaderFooterBar
+                      key={`${hfEdit.zone}-${hfEdit.top}`}
+                      zone={hfEdit.zone}
+                      top={hfEdit.top}
+                      height={hfEdit.zone === "header" ? mt : mb}
+                      paddingX={margin.h * MM_TO_PX}
+                      layout={doc.pageLayout}
+                      onChange={saveLayout}
+                      onClose={() => setHfEdit(null)}
+                    />
+                  )}
                 </div>
               ) : (
                 <div ref={paperRef} className={cn("mx-auto px-8", focus ? "max-w-[720px] pt-[12vh]" : "max-w-[860px]")} style={editorStyle}>
@@ -502,7 +543,6 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       <LinkBubble editor={editor} />
       {!focus && <StatusBar editor={editor} pages={pages} saveState={saveState} onWordCount={() => setWordCount(true)} />}
       <WordCountDialog editor={editor} open={wordCount} onOpenChange={setWordCount} pages={pages} />
-      <HeaderFooterDialog open={!!hfZone} zone={hfZone ?? "header"} layout={doc.pageLayout} onOpenChange={(o) => !o && setHfZone(null)} onSave={saveLayout} />
     </div>
   );
 }
