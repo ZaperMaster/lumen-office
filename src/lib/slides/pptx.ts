@@ -92,12 +92,22 @@ export async function buildPptx(deck: Deck, title: string): Promise<Uint8Array> 
   const t = getTheme(deck.theme);
   for (const s of deck.slides) {
     const slide = pres.addSlide();
-    slide.background = { color: hex(s.bg ?? t.bg) ?? "FFFFFF" };
+    slide.background = s.bgImage ? { data: s.bgImage } : { color: hex(s.bg ?? t.bg) ?? "FFFFFF" };
     if (t.band) slide.addShape("rect" as PptxGenJS.ShapeType, { x: 0, y: inch(SLIDE_H - 10), w: inch(SLIDE_W), h: inch(10), fill: { color: hex(t.band)! }, line: { type: "none" } });
     for (const el of s.els) {
       const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h), rotate: el.rot || undefined };
+      const shadow = el.shadow ? ({ type: "outer", blur: 8, offset: 4, angle: 90, color: "000000", opacity: 0.3 } as PptxGenJS.ShadowProps) : undefined;
       if (el.type === "image" && el.src) {
-        slide.addImage({ data: el.src, ...pos, transparency: el.opacity !== undefined ? Math.round((1 - el.opacity) * 100) : undefined });
+        slide.addImage({
+          data: el.src,
+          ...pos,
+          transparency: el.opacity !== undefined ? Math.round((1 - el.opacity) * 100) : undefined,
+          rounding: el.circle || undefined,
+          flipH: el.flipH || undefined,
+          flipV: el.flipV || undefined,
+          shadow,
+          sizing: el.fit && el.fit !== "fill" ? { type: el.fit, w: pos.w, h: pos.h } : undefined,
+        });
         continue;
       }
       const fontColor = el.color ?? (el.role === "title" ? t.title : el.type === "shape" && !(el.fill === "transparent" || el.fill?.length === 9) ? "#ffffff" : t.text);
@@ -113,6 +123,8 @@ export async function buildPptx(deck: Deck, title: string): Promise<Uint8Array> 
         valign: el.valign === "middle" ? "middle" : el.valign === "bottom" ? "bottom" : "top",
         margin: [6, 10, 6, 10],
         fit: "none",
+        lineSpacingMultiple: el.lineHeight,
+        shadow,
       };
       const runs = el.html ? htmlToRuns(el.html, base) : [];
       if (el.type === "shape") {
@@ -120,11 +132,18 @@ export async function buildPptx(deck: Deck, title: string): Promise<Uint8Array> 
           fill: el.fill === "transparent" ? { type: "none" as const } : { color: hex(el.fill ?? t.accent) ?? "4F7CFF", transparency: alphaOf(el.fill) },
           line: el.strokeW || el.shape === "line" ? { color: hex(el.stroke ?? t.accent) ?? "000000", width: Math.max(0.75, (el.strokeW || 3) * 0.75) } : { type: "none" as const },
         };
-        if (runs.some((r) => r.text.trim())) slide.addText(runs, { ...textOpts, shape: SHAPE_MAP[el.shape ?? "rect"], ...shapeOpts });
-        else slide.addShape(SHAPE_MAP[el.shape ?? "rect"], { ...pos, ...shapeOpts });
+        const radius = el.radius ? { rectRadius: Math.min(0.5, el.radius / Math.min(el.w, el.h)) } : {};
+        if (runs.some((r) => r.text.trim())) slide.addText(runs, { ...textOpts, shape: SHAPE_MAP[el.shape ?? "rect"], ...shapeOpts, ...radius });
+        else slide.addShape(SHAPE_MAP[el.shape ?? "rect"], { ...pos, ...shapeOpts, ...radius, shadow });
         continue;
       }
-      if (runs.some((r) => r.text.trim())) slide.addText(runs, textOpts);
+      // Cuadro de texto con relleno o contorno
+      const box = {
+        ...(el.fill && el.fill !== "transparent" ? { fill: { color: hex(el.fill) ?? "FFFFFF", transparency: alphaOf(el.fill) } } : {}),
+        ...(el.strokeW ? { line: { color: hex(el.stroke ?? t.accent) ?? "000000", width: el.strokeW * 0.75 } } : {}),
+        ...(el.radius && (el.fill || el.strokeW) ? { shape: "roundRect" as PptxGenJS.ShapeType, rectRadius: Math.min(0.5, el.radius / Math.min(el.w, el.h)) } : {}),
+      };
+      if (runs.some((r) => r.text.trim())) slide.addText(runs, { ...textOpts, ...box });
     }
     if (s.notes) slide.addNotes(s.notes);
   }

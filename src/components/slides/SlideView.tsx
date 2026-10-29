@@ -29,7 +29,7 @@ export function ShapeSvg({ el, accent }: { el: SlideEl; accent: string }) {
       shape = <ellipse cx={w / 2} cy={h / 2} rx={Math.max(0, w / 2 - p)} ry={Math.max(0, h / 2 - p)} />;
       break;
     case "roundRect":
-      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} rx={Math.min(w, h) * 0.12} />;
+      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} rx={el.radius ?? Math.min(w, h) * 0.12} />;
       break;
     case "triangle":
       shape = <polygon points={`${w / 2},${p} ${w - p},${h - p} ${p},${h - p}`} />;
@@ -59,7 +59,7 @@ export function ShapeSvg({ el, accent }: { el: SlideEl; accent: string }) {
         </svg>
       );
     default:
-      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} />;
+      shape = <rect x={p} y={p} width={Math.max(0, w - sw)} height={Math.max(0, h - sw)} rx={el.radius ?? 0} />;
   }
   return (
     <svg width={w} height={h} className="absolute inset-0 overflow-visible" fill={fill} stroke={stroke} strokeWidth={sw}>
@@ -86,9 +86,32 @@ export function ElementView({ el, t, showPlaceholder }: { el: SlideEl; t: Theme;
   return (
     <>
       {el.type === "shape" && <ShapeSvg el={el} accent={t.accent} />}
-      {el.type === "image" && el.src && <img src={el.src} alt="" draggable={false} className="absolute inset-0 size-full object-fill" />}
+      {el.type === "image" && el.src && (
+        <img
+          src={el.src}
+          alt=""
+          draggable={false}
+          className="absolute inset-0 size-full"
+          style={{
+            objectFit: el.fit ?? "fill",
+            borderRadius: el.circle ? "50%" : el.radius,
+            transform: el.flipH || el.flipV ? `scale(${el.flipH ? -1 : 1}, ${el.flipV ? -1 : 1})` : undefined,
+            border: el.strokeW ? `${el.strokeW}px solid ${el.stroke ?? t.accent}` : undefined,
+          }}
+        />
+      )}
+      {el.type === "text" && (el.fill || el.strokeW) && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: el.fill && el.fill !== "transparent" ? el.fill : undefined,
+            border: el.strokeW ? `${el.strokeW}px solid ${el.stroke ?? t.accent}` : undefined,
+            borderRadius: el.radius,
+          }}
+        />
+      )}
       {(el.type === "text" || el.type === "shape") && (
-        <div className="slide-text-box" style={textStyle(el, t)}>
+        <div className="slide-text-box" style={{ ...textStyle(el, t), lineHeight: el.lineHeight }}>
           {empty && showPlaceholder && el.placeholder ? (
             <div className="slide-placeholder">{el.placeholder}</div>
           ) : (
@@ -108,6 +131,7 @@ export function elBoxStyle(el: SlideEl): CSSProperties {
     height: el.h,
     transform: el.rot ? `rotate(${el.rot}deg)` : undefined,
     opacity: el.opacity,
+    filter: el.shadow ? "drop-shadow(0 8px 16px rgb(0 0 0 / 0.28))" : undefined,
   };
 }
 
@@ -116,6 +140,7 @@ export function SlideBackground({ slide, t }: { slide: Slide; t: Theme }) {
   return (
     <>
       <div className="absolute inset-0" style={{ background: slide.bg ?? t.bg }} />
+      {slide.bgImage && <img src={slide.bgImage} alt="" draggable={false} className="absolute inset-0 size-full object-cover" />}
       {t.band && <div className="absolute bottom-0 left-0 h-[10px] w-full" style={{ background: t.band }} />}
     </>
   );

@@ -250,6 +250,7 @@ export async function openFileFromDisk(): Promise<DocRecord | null> {
       { name: "Libro de Excel", extensions: ["xlsx", "csv"] },
       { name: "Presentación de PowerPoint", extensions: ["pptx"] },
       { name: "Documento de Lumen", extensions: ["lumen"] },
+      { name: "Todos los archivos", extensions: ["*"] },
     ],
   });
   if (!picked || Array.isArray(picked)) return null;

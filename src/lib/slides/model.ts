@@ -38,6 +38,17 @@ export interface SlideEl {
   src?: string;
   opacity?: number;
   anim?: Anim;
+  /** Esquinas redondeadas (px) de imágenes y cuadros de texto */
+  radius?: number;
+  shadow?: boolean;
+  flipH?: boolean;
+  flipV?: boolean;
+  /** Imágenes: estirar, recortar para llenar o encajar entera */
+  fit?: "fill" | "cover" | "contain";
+  /** Imágenes recortadas en círculo */
+  circle?: boolean;
+  /** Interlineado del texto */
+  lineHeight?: number;
 }
 
 export interface Slide {
@@ -47,6 +58,8 @@ export interface Slide {
   bg?: string;
   notes?: string;
   transition?: Transition;
+  /** Imagen de fondo (data URL) */
+  bgImage?: string;
 }
 
 export interface Deck {

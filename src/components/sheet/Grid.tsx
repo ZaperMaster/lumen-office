@@ -390,11 +390,11 @@ export function Grid({
     return set;
   }, [sheet.merges]);
 
+  const measureCtx = useMemo(() => document.createElement("canvas").getContext("2d")!, []);
   const editRefs = useMemo(() => (edit ? formulaRefs(edit.text).filter((x) => !x.sheet || x.sheet.toLowerCase() === sheet.name.toLowerCase()) : []), [edit, sheet.name]);
 
   const renderCells = (rows: number[], cols: number[], ox: number, oy: number): ReactNode[] => {
     const out: ReactNode[] = [];
-    const lastCol = cols[cols.length - 1] ?? 0;
     for (const r of rows) {
       if (gv.hiddenRows.has(r)) continue;
       for (const c of cols) {
@@ -415,12 +415,19 @@ export function Grid({
           h = rowY[m.r2 + 1] - rowY[m.r1];
         }
         const align = st.align ?? (showFormulas && cell?.v.startsWith("=") ? "left" : defaultAlign(v));
-        // El texto largo invade las celdas vacías de la derecha
+        // Como en Excel, el texto largo se extiende por las celdas vacías de al lado:
+        // a la derecha si va alineado a la izquierda, a la izquierda si va a la derecha y a los dos lados si va centrado
         let textW = w;
-        if (!m && !st.wrap && align === "left" && text && typeof v === "string") {
-          let cc = c + 1;
-          while (cc <= Math.min(lastCol + 8, sheet.cols - 1) && !sheet.cells[key(r, cc)]?.v && cc - c < 12) cc++;
-          textW = colX[cc] - colX[c];
+        let textLeft = 0;
+        if (!m && !st.wrap && text && typeof v === "string") {
+          const empty = (cc: number) => cc >= 0 && cc < sheet.cols && !sheet.cells[key(r, cc)]?.v && !covered.has(key(r, cc)) && !mergeAt(sheet, r, cc);
+          let right = 0;
+          let left = 0;
+          if (align !== "right") for (let cc = c + 1; cc - c <= 20 && empty(cc); cc++) right += cw(cc);
+          if (align !== "left") for (let cc = c - 1; c - cc <= 20 && empty(cc); cc--) left += cw(cc);
+          if (align === "center") left = right = Math.min(left, right);
+          textW = w + left + right;
+          textLeft = -left;
         }
         const shadows = [st.bt && "inset 0 1px 0 #7a7a7a", st.bb && "inset 0 -1px 0 #7a7a7a", st.bl && "inset 1px 0 0 #7a7a7a", st.br && "inset -1px 0 0 #7a7a7a"].filter(Boolean);
         const style: CSSProperties = {
@@ -434,6 +441,7 @@ export function Grid({
         };
         const textStyle: CSSProperties = {
           width: textW,
+          left: textLeft,
           justifyContent: align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start",
           alignItems: st.valign === "top" ? "flex-start" : st.valign === "middle" ? "center" : "flex-end",
           textAlign: align,
@@ -644,12 +652,21 @@ export function Grid({
     const rg = m ?? { r1: edit.r, c1: edit.c, r2: edit.r, c2: edit.c };
     const r = rectOf(rg, 0, 0);
     const st = sheet.cells[key(edit.r, edit.c)]?.s ?? {};
+    // El cuadro crece con el texto (no se esconde lo que no cabe)
+    const fs = (st.fs ?? 11) * 1.333 * z;
+    measureCtx.font = `${st.i ? "italic " : ""}${st.b ? "700 " : ""}${fs}px ${st.font ?? "Inter Variable, sans-serif"}`;
+    const lines = edit.text.split("\n");
+    const textW = Math.max(...lines.map((l) => measureCtx.measureText(l).width)) + 14;
+    const maxW = Math.max(r.width, vw - hw - r.left - 8);
     return {
       left: hw + r.left,
       top: hh + r.top,
+      width: Math.min(maxW, Math.max(r.width, textW)),
+      height: Math.max(r.height, lines.length * fs * 1.25 + 6),
       minWidth: r.width,
       minHeight: r.height,
-      maxWidth: Math.max(r.width, vw - hw - r.left - 8),
+      maxWidth: maxW,
+      whiteSpace: textW > maxW ? "pre-wrap" : "pre",
       fontSize: (st.fs ?? 11) * 1.333 * z,
       fontWeight: st.b ? 700 : undefined,
       fontStyle: st.i ? "italic" : undefined,

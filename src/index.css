@@ -470,3 +470,6 @@ button:disabled {
   .slides-print .slide-page { break-after: page; width: 1280px; height: 720px; position: relative; overflow: hidden; }
   .slides-print .slide-page:last-child { break-after: auto; }
 }
+
+/* Las hojas de cálculo siempre se ven como papel blanco (como Excel), aunque la app esté en modo oscuro */
+.sheet-grid, .sheet-paper { --paper: #ffffff; --paper-text: #1c1e24; }

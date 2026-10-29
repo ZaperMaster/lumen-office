@@ -571,7 +571,6 @@ function OpenSection() {
     try {
       const { importAnyFile } = await import("@/lib/officeImport");
       const doc = await importAnyFile(file);
-      toast(`«${file.name}» importado`, "success");
       openDoc(doc);
     } catch (e) {
       toast(e instanceof Error ? e.message : "No se pudo importar el archivo", "error");
@@ -604,6 +603,7 @@ function OpenSection() {
         <input ref={fileRef} type="file" accept={ACCEPTED_IMPORTS} hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
       <div
+        data-drop
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files[0]); }}
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"

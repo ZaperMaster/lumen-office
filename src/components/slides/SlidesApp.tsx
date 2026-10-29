@@ -5,7 +5,7 @@ import DOMPurify from "dompurify";
 import {
   AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, ChevronDown, Circle, Copy, Diamond, FileText, Image as ImageIcon,
   Italic, List, ListOrdered, Loader2, Minus, MoveRight, Palette, Play, Plus, Presentation, Printer, Redo2, Square, Star, StickyNote,
-  Smile, Sparkles, Trash2, Triangle, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket,
+  Smile, Sparkles, Trash2, Triangle, SlidersHorizontal, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket,
 } from "lucide-react";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import {
@@ -18,6 +18,7 @@ import { isDesktop, openFileFromDisk } from "@/lib/files";
 import { openDoc } from "@/lib/actions";
 import { useApp } from "@/store/app";
 import { ElementView, SlideBackground, SlideView, elBoxStyle, textStyle } from "@/components/slides/SlideView";
+import { ANIM_LABEL, SlidesPanel } from "@/components/slides/SlidesPanel";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
@@ -116,6 +117,18 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
   const [aiOpen, setAiOpen] = useState(false);
   const [printing, setPrinting] = useState(false);
   const clip = useRef<SlideEl[] | null>(null);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [preview, setPreview] = useState(0);
+  /** Qué hacer con la próxima imagen elegida: añadirla, cambiar la de un elemento o ponerla de fondo */
+  const imageTarget = useRef<{ kind: "add" } | { kind: "replace"; id: string } | { kind: "bg" }>({ kind: "add" });
+  const pickImage = (target: typeof imageTarget.current) => {
+    imageTarget.current = target;
+    fileRef.current?.click();
+  };
+  const playPreview = () => {
+    setPreview(Date.now());
+    setTimeout(() => setPreview(0), 2600);
+  };
   const fileRef = useRef<HTMLInputElement>(null);
   const stageWrap = useRef<HTMLDivElement>(null);
 
@@ -237,11 +250,20 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
   };
   const addShape = (shape: ShapeKind) =>
     addEl({ type: "shape", shape, x: 490, y: 235, w: shape === "line" ? 400 : 300, h: shape === "line" ? 20 : 250, html: "", align: "center", valign: "middle", fontSize: 26, strokeW: shape === "line" ? 4 : 0 });
-  const addImage = (file: File) => {
+  const addImage = (file: File, index = 0) => {
     if (!file.type.startsWith("image/")) return toast("Ese archivo no es una imagen", "error");
+    const target = imageTarget.current;
     const reader = new FileReader();
     reader.onload = () => {
       const src = String(reader.result);
+      if (target.kind === "bg") {
+        editSlide((s) => ({ ...s, bgImage: src }));
+        return;
+      }
+      if (target.kind === "replace") {
+        editEls([target.id], { src });
+        return;
+      }
       const img = new Image();
       img.onload = () => {
         // Cabe en la diapositiva conservando la proporción
@@ -249,7 +271,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
         const w = Math.round(img.width * k);
         const h = Math.round(img.height * k);
         // Si hay un marcador de imagen seleccionado o en la diapositiva, se usa su sitio
-        const ph = slide.els.find((e) => sel.includes(e.id) && e.placeholder?.includes("imagen")) ?? slide.els.find((e) => e.placeholder?.includes("imagen") && !htmlText(e.html));
+        const ph = index > 0 ? undefined : (slide.els.find((e) => sel.includes(e.id) && e.placeholder?.includes("imagen")) ?? slide.els.find((e) => e.placeholder?.includes("imagen") && !htmlText(e.html)));
         if (ph) {
           const kk = Math.min(ph.w / img.width, ph.h / img.height);
           const ww = Math.round(img.width * kk);
@@ -259,7 +281,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
             els: s.els.map((e) => (e.id === ph.id ? { id: e.id, type: "image", src, x: ph.x + (ph.w - ww) / 2, y: ph.y + (ph.h - hh) / 2, w: ww, h: hh } : e)),
           }));
           setSel([ph.id]);
-        } else addEl({ type: "image", src, x: (SLIDE_W - w) / 2, y: (SLIDE_H - h) / 2, w, h });
+        } else addEl({ type: "image", src, x: (SLIDE_W - w) / 2 + index * 30, y: (SLIDE_H - h) / 2 + index * 30, w, h });
       };
       img.src = src;
     };
@@ -614,6 +636,9 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
           files={files}
           icon={<Presentation />}
         >
+          <Button size="sm" variant={panelOpen ? "secondary" : "outline"} icon={<SlidersHorizontal className="size-3.5" />} onClick={() => setPanelOpen((v) => !v)}>
+            Formato
+          </Button>
           <Button size="sm" variant="outline" icon={<Play className="size-3.5" />} onClick={() => { finishEditing(); setPresenting(0); }}>
             Presentar
           </Button>
@@ -757,7 +782,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 </RGroup>
                 <RGroup label="Elementos">
                   <RBig icon={<Type />} label="Cuadro de texto" onClick={addText} />
-                  <RBig icon={<ImageIcon />} label="Imagen" onClick={() => fileRef.current?.click()} title="También puedes pegarla con Ctrl+V o arrastrarla" />
+                  <RBig icon={<ImageIcon />} label="Imágenes" onClick={() => pickImage({ kind: "add" })} title="Puedes elegir varias a la vez, pegarlas con Ctrl+V o arrastrarlas" />
                 </RGroup>
                 <RGroup label="Iconos">
                   <Popover>
@@ -827,6 +852,9 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                   ))}
                   <RBig icon={<Copy />} label="Aplicar a todas" onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, transition: slide.transition })) }))} />
                 </RGroup>
+                <RGroup label="Ver">
+                  <RBig icon={<Play />} label="Vista previa" onClick={playPreview} title="Reproduce las animaciones de esta diapositiva" />
+                </RGroup>
                 <RGroup label="Animación del elemento seleccionado">
                   {ANIMS.map((a) => (
                     <RBig key={a.id} icon={<Sparkles />} label={a.label} disabled={!sel.length} active={!!one && (one.anim ?? "none") === a.id} onClick={() => editEls(sel, { anim: a.id })} />
@@ -870,6 +898,16 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 <span className={cn("w-4 pt-1 text-right text-[11px] tabular-nums", i === cur ? "font-semibold text-accent" : "text-muted")}>{i + 1}</span>
                 <div className={cn("relative overflow-hidden rounded-md border-2 transition-colors", i === cur ? "border-accent" : "border-border group-hover:border-accent/40")}>
                   <SlideView slide={s} themeId={deck.theme} scale={150 / SLIDE_W} />
+                  {(s.els.some((e) => e.anim && e.anim !== "none") || (s.transition && s.transition !== "none")) && (
+                    <div className="absolute bottom-1 left-1 flex gap-0.5">
+                      {s.els.some((e) => e.anim && e.anim !== "none") && (
+                        <span className="grid size-4 place-items-center rounded bg-amber-400 text-[9px] text-black" title={`${s.els.filter((e) => e.anim && e.anim !== "none").length} animaciones`}>★</span>
+                      )}
+                      {s.transition && s.transition !== "none" && (
+                        <span className="grid size-4 place-items-center rounded bg-sky-500 text-[9px] text-white" title="Tiene transición">⇄</span>
+                      )}
+                    </div>
+                  )}
                   <div className="absolute top-1 right-1 hidden gap-0.5 group-hover:flex">
                     <button onClick={(e) => { e.stopPropagation(); duplicateSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title="Duplicar"><Copy className="size-3" /></button>
                     <button onClick={(e) => { e.stopPropagation(); deleteSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title="Eliminar"><X className="size-3" /></button>
@@ -899,8 +937,8 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
-                const f = e.dataTransfer.files[0];
-                if (f) addImage(f);
+                imageTarget.current = { kind: "add" };
+                [...e.dataTransfer.files].filter((f) => f.type.startsWith("image/")).forEach((f, i) => addImage(f, i));
               }}
             >
               <div className="stage relative shadow-lg" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>
@@ -910,9 +948,13 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     const isEditing = editing === el.id;
                     return (
                       <div
-                        key={el.id}
-                        className="slide-el"
-                        style={{ ...elBoxStyle(el), cursor: isEditing ? "text" : "move" }}
+                        key={preview && el.anim && el.anim !== "none" ? `${el.id}-${preview}` : el.id}
+                        className={preview && el.anim && el.anim !== "none" ? `slide-el slide-anim-${el.anim}` : "slide-el"}
+                        style={{
+                          ...elBoxStyle(el),
+                          cursor: isEditing ? "text" : "move",
+                          animationDelay: preview ? `${0.1 + slide.els.filter((x) => x.anim && x.anim !== "none").findIndex((x) => x.id === el.id) * 0.35}s` : undefined,
+                        }}
                         onMouseDown={(e) => {
                           if (isEditing) {
                             e.stopPropagation();
@@ -928,7 +970,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                           if (el.type === "text" || el.type === "shape") {
                             setSel([el.id]);
                             setEditing(el.id);
-                          } else if (el.type === "image") fileRef.current?.click();
+                          } else if (el.type === "image") pickImage({ kind: "replace", id: el.id });
                         }}
                       >
                         {isEditing ? (
@@ -984,6 +1026,19 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                       </div>
                     );
                   })}
+                {!editing &&
+                  slide.els
+                    .filter((e) => e.anim && e.anim !== "none")
+                    .map((el, i) => (
+                      <div
+                        key={`a${el.id}`}
+                        className="pointer-events-none absolute z-[4] grid size-5 place-items-center rounded-full bg-accent text-[10.5px] font-bold text-accent-fg shadow"
+                        style={{ left: el.x * scale - 8, top: el.y * scale - 8 }}
+                        title={`Animación ${i + 1}: ${ANIM_LABEL[el.anim!]}`}
+                      >
+                        {i + 1}
+                      </div>
+                    ))}
                 {guides.v.map((x, i) => <div key={`v${i}`} className="stage-guide" style={{ left: x * scale, top: 0, width: 1, height: SLIDE_H * scale }} />)}
                 {guides.h.map((y, i) => <div key={`h${i}`} className="stage-guide" style={{ top: y * scale, left: 0, height: 1, width: SLIDE_W * scale }} />)}
               </div>
@@ -999,16 +1054,36 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
               className="no-print h-[84px] shrink-0 resize-none border-t border-border bg-surface px-4 py-2.5 text-[13px] outline-none"
             />
           </div>
+          {panelOpen && (
+            <SlidesPanel
+              slide={slide}
+              index={cur}
+              t={t}
+              selected={selected}
+              onEl={(patch) => editEls(sel, patch)}
+              onSlide={(fn) => editSlide(fn)}
+              onSelect={(id) => setSel([id])}
+              onReplaceImage={() => one && pickImage({ kind: "replace", id: one.id })}
+              onBgImage={() => pickImage({ kind: "bg" })}
+              onPreview={playPreview}
+              onClose={() => setPanelOpen(false)}
+              onApplyTransitionAll={() => commit((d) => ({ ...d, slides: d.slides.map((x) => ({ ...x, transition: slide.transition })) }))}
+            />
+          )}
         </div>
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
+          multiple
           hidden
           onChange={(e) => {
-            const f = e.target.files?.[0];
+            const list = [...(e.target.files ?? [])];
             e.target.value = "";
-            if (f) addImage(f);
+            // Cambiar una imagen o el fondo solo usa la primera
+            const many = imageTarget.current.kind === "add" ? list : list.slice(0, 1);
+            many.forEach((f, i) => addImage(f, i));
+            setTimeout(() => (imageTarget.current = { kind: "add" }), 0);
           }}
         />
       </div>

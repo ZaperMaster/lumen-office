@@ -23,8 +23,9 @@ import { useApp } from "@/store/app";
 import { Grid, type EditState, type GridApi, type GridView, type Sel } from "@/components/sheet/Grid";
 import { CondDialog, CondManager, FilterMenu, NoteDialog, PivotDialog, ValidationDialog } from "@/components/sheet/SheetExtras";
 import { buildPivot } from "@/lib/sheet/pivot";
+import { FormatCellsDialog } from "@/components/sheet/FormatCellsDialog";
 import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows, validationAt, validationOptions } from "@/lib/sheet/view";
-import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX } from "lucide-react";
+import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX, Settings2 } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
@@ -146,6 +147,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   const [valDialog, setValDialog] = useState(false);
   const [noteDialog, setNoteDialog] = useState(false);
   const [pivotDialog, setPivotDialog] = useState(false);
+  const [fmtDialog, setFmtDialog] = useState(false);
   const [filterMenu, setFilterMenu] = useState<null | { col: number; x: number; y: number }>(null);
   const [condDialog, setCondDialog] = useState<CondType | null>(null);
   const [condManager, setCondManager] = useState(false);
@@ -512,6 +514,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     const lower = k.toLowerCase();
     if (mod && lower === "z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
     if (mod && lower === "y") { e.preventDefault(); redo(); return; }
+    if (mod && k === "1") { e.preventDefault(); setFmtDialog(true); return; }
     if (mod && lower === "b") { e.preventDefault(); toggle("b"); return; }
     if (mod && lower === "i") { e.preventDefault(); toggle("i"); return; }
     if (mod && lower === "u") { e.preventDefault(); toggle("u"); return; }
@@ -921,6 +924,9 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                     <IconButton size="sm" label="Más decimales" onClick={() => style((s) => ({ ...s, dec: Math.min(10, (s.dec ?? defaultDec(s.fmt)) + 1) }))}><span className="text-[11px] font-semibold">,0→</span></IconButton>
                     <IconButton size="sm" label="Menos decimales" onClick={() => style((s) => ({ ...s, dec: Math.max(0, (s.dec ?? defaultDec(s.fmt)) - 1) }))}><span className="text-[11px] font-semibold">←,0</span></IconButton>
                   </div>
+                </RGroup>
+                <RGroup label="Formato">
+                  <RBig icon={<Settings2 />} label="Formato de celdas" onClick={() => setFmtDialog(true)} title="Número, alineación, fuente, bordes y relleno (Ctrl+1)" />
                 </RGroup>
                 <RGroup label="Estilos">
                   <Menu open={cfOpen} onOpenChange={setCfOpen}>
@@ -1341,6 +1347,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   <FSep />
                 </>
               )}
+              <FItem icon={<Settings2 />} shortcut="Ctrl+1" onClick={() => setFmtDialog(true)}>Formato de celdas…</FItem>
               <FItem icon={<Eraser />} onClick={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>Borrar contenido</FItem>
               <FItem icon={<ArrowDownAZ />} onClick={() => sort(true)}>Ordenar de A a Z</FItem>
               <FItem icon={<ArrowDownZA />} onClick={() => sort(false)}>Ordenar de Z a A</FItem>
@@ -1435,6 +1442,26 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             const id = validationAt(sheet, sel.ar, sel.ac)?.id;
             commit((w) => ops.updateSheet(w, w.active, { validations: (w.sheets[w.active].validations ?? []).filter((x) => x.id !== id) }));
             setValDialog(false);
+          }}
+        />
+      )}
+      {fmtDialog && (
+        <FormatCellsDialog
+          initial={activeCell?.s ?? {}}
+          merged={!!sheet.merges?.some((m) => !(m.r2 < n.r1 || m.r1 > n.r2 || m.c2 < n.c1 || m.c1 > n.c2))}
+          preview={(st) => formatValue(ev.value(si, sel.ar, sel.ac) ?? 1234.5, st)}
+          onClose={() => { setFmtDialog(false); focusGrid(); }}
+          onApply={(st, border, merge) => {
+            const isMerged = !!sheet.merges?.some((m) => !(m.r2 < n.r1 || m.r1 > n.r2 || m.c2 < n.c1 || m.c1 > n.c2));
+            commit((w) => {
+              // Todo menos los bordes, que se cambian aparte (o se dejan como estaban)
+              let out = ops.styleRange(w, w.active, n, (old) => ({ ...st, bt: old.bt, br: old.br, bb: old.bb, bl: old.bl }));
+              if (border !== "keep") out = ops.borderRange(out, w.active, n, border);
+              if (merge !== isMerged) out = ops.toggleMerge(out, w.active, n);
+              return out;
+            });
+            setFmtDialog(false);
+            focusGrid();
           }}
         />
       )}
@@ -1818,7 +1845,7 @@ function ChartDialog({
             <Switch checked={spec.legend !== false} onChange={(v) => setSpec({ ...spec, legend: v })} />
           </label>
         </div>
-        <div className="grid place-items-center rounded-[var(--radius)] border border-border bg-paper p-2 text-paper-text">
+        <div className="sheet-paper grid place-items-center rounded-[var(--radius)] border border-border bg-paper p-2 text-paper-text">
           <ChartSvg type={spec.type} data={data} width={460} height={300} title={spec.title} legend={spec.legend !== false} />
         </div>
       </div>

@@ -35,6 +35,30 @@ function ThemeSync() {
 /** Confirma antes de cerrar la ventana si hay cambios sin guardar en archivos. */
 function CloseGuard() {
   useEffect(() => installCloseGuard(), []);
+  // Arrastrar un archivo a la ventana lo abre con la herramienta que le corresponde
+  useEffect(() => {
+    const handled = (t: EventTarget | null) => t instanceof Element && !!t.closest(".ProseMirror, .stage, .sheet-grid, input, textarea, [data-drop]");
+    const isFiles = (e: DragEvent) => !!e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+    const onOver = (e: DragEvent) => {
+      if (isFiles(e) && !handled(e.target)) e.preventDefault();
+    };
+    const onDrop = (e: DragEvent) => {
+      if (!isFiles(e) || handled(e.target)) return;
+      e.preventDefault();
+      const file = e.dataTransfer!.files[0];
+      if (!file || file.type.startsWith("image/")) return;
+      void import("@/lib/officeImport")
+        .then(({ importAnyFile }) => importAnyFile(file))
+        .then((d) => import("@/lib/actions").then(({ openDoc }) => openDoc(d)))
+        .catch((err) => useApp.getState().toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error"));
+    };
+    window.addEventListener("dragover", onOver);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragover", onOver);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, []);
   // F11: pantalla completa (sin la barra de tareas de Windows)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

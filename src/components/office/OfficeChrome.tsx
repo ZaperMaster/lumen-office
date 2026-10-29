@@ -185,7 +185,6 @@ export function OfficeFileMenu({
           try {
             const { importAnyFile } = await import("@/lib/officeImport");
             openDoc(await importAnyFile(f));
-            toast(`«${f.name}» abierto`, "success");
           } catch (err) {
             toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error");
           }
