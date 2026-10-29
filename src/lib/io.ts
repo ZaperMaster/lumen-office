@@ -88,9 +88,17 @@ export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, 
     return createDoc("document", { title: data.title || title, content: data.content, pageLayout: data.pageLayout ?? null, ...extra });
   }
   if (ext === "docx") {
-    const mammoth = await import("mammoth");
-    const res = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
-    html = res.value;
+    const buf = await file.arrayBuffer();
+    try {
+      // Lector propio: conserva alineación, colores, tamaños, listas, encabezado y pie…
+      const { readDocx } = await import("@/lib/docxImport");
+      const res = await readDocx(buf);
+      return createDoc("document", { title, content: htmlToJSON(res.html), pageLayout: res.pageLayout, ...extra });
+    } catch (e) {
+      console.warn("Lector de Word propio falló; se usa el alternativo", e);
+      const mammoth = await import("mammoth");
+      html = (await mammoth.convertToHtml({ arrayBuffer: buf })).value;
+    }
   } else if (ext === "md" || ext === "markdown") {
     html = markdownToHtml(await file.text());
   } else if (ext === "html" || ext === "htm") {
