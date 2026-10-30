@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import {
-  LAYOUTS, SLIDE_H, SLIDE_W, THEMES, deckText, esc, htmlText, newDeck, newSlide, sid, theme as getTheme,
-  type Anim, type Deck, type LayoutId, type ShapeKind, type Slide, type SlideEl, type Transition,
+  ANIMS, LAYOUTS, SLIDE_H, SLIDE_W, THEMES, TRANSITIONS, TRIGGERS, animLabel, animTimeline, deckText, esc, htmlText, newDeck, newSlide, sid, theme as getTheme,
+  type Anim, type AnimTrigger, type Deck, type LayoutId, type ShapeKind, type Slide, type SlideEl,
 } from "@/lib/slides/model";
 import { makeSlide } from "@/lib/slides/templates";
 import { streamText } from "@/lib/ai";
@@ -18,7 +18,7 @@ import { isDesktop, openFileFromDisk } from "@/lib/files";
 import { openDoc } from "@/lib/actions";
 import { useApp } from "@/store/app";
 import { ElementView, SlideBackground, SlideView, elBoxStyle, textStyle } from "@/components/slides/SlideView";
-import { ANIM_LABEL, SlidesPanel } from "@/components/slides/SlidesPanel";
+import { SlidesPanel } from "@/components/slides/SlidesPanel";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
@@ -67,7 +67,24 @@ function cleanHtml(html: string): string {
   return DOMPurify.sanitize(html, { ALLOWED_TAGS: ["p", "div", "br", "ul", "ol", "li", "b", "strong", "i", "em", "u", "span", "font"], ALLOWED_ATTR: ["style", "color"] });
 }
 
-type Tab = "home" | "insert" | "design" | "transitions" | "show" | "ai";
+type Tab = "home" | "insert" | "design" | "animations" | "transitions" | "show" | "ai";
+/** Botón de la galería de animaciones y transiciones. */
+function AnimButton({ icon, label, active, disabled, onClick }: { icon: string; label: string; active?: boolean; disabled?: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex h-[34px] w-[104px] items-center gap-1.5 rounded-md border px-1.5 text-left text-[11.5px] leading-tight transition-colors disabled:opacity-40",
+        active ? "border-accent bg-accent-soft text-accent" : "border-transparent hover:border-border hover:bg-surface-2",
+      )}
+    >
+      <span className="grid size-6 shrink-0 place-items-center rounded bg-surface-2 text-[13px]">{icon}</span>
+      <span className="line-clamp-2">{label}</span>
+    </button>
+  );
+}
+
 type DragState = { kind: "move" | "resize" | "rotate"; handle?: string; ids: string[]; start: { x: number; y: number }; orig: Record<string, SlideEl> };
 
 const SHAPES: { id: ShapeKind; label: string; icon: ReactNode }[] = [
@@ -83,18 +100,6 @@ const SHAPES: { id: ShapeKind; label: string; icon: ReactNode }[] = [
 
 const ICONS = ["⭐", "✅", "❌", "💡", "🚀", "📈", "📉", "🎯", "💰", "👥", "📅", "⏱️", "🔒", "🌍", "❤️", "⚠️", "📌", "🏆", "📊", "🛠️", "💬", "📦", "🎓", "🌱", "📱", "💻", "✉️", "📞", "🏠", "🚗", "✈️", "🎉"];
 
-const TRANSITIONS: { id: Transition; label: string }[] = [
-  { id: "none", label: "Ninguna" },
-  { id: "fade", label: "Desvanecer" },
-  { id: "slide", label: "Deslizar" },
-  { id: "zoom", label: "Zoom" },
-];
-const ANIMS: { id: Anim; label: string }[] = [
-  { id: "none", label: "Ninguna" },
-  { id: "fade", label: "Aparecer" },
-  { id: "fly", label: "Desde abajo" },
-  { id: "zoom", label: "Zoom" },
-];
 
 /* ------------------------------------------------------------------ */
 /*  Editor                                                             */
@@ -125,9 +130,26 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
     imageTarget.current = target;
     fileRef.current?.click();
   };
+  /** En la vista previa, los pasos se reproducen seguidos */
+  const previewTimes = useMemo(() => {
+    const { items, steps } = animTimeline(deck.slides[Math.min(cur, deck.slides.length - 1)]);
+    const out = new Map<string, { start: number; dur: number }>();
+    let offset = 0;
+    for (let st = 0; st <= steps; st++) {
+      let end = offset;
+      for (const it of items.values()) {
+        if (it.step !== st) continue;
+        out.set(it.id, { start: offset + it.start, dur: it.dur });
+        end = Math.max(end, offset + it.start + it.dur);
+      }
+      offset = end + (st > 0 || end > 0 ? 0.35 : 0);
+    }
+    return out;
+  }, [deck, cur]);
   const playPreview = () => {
     setPreview(Date.now());
-    setTimeout(() => setPreview(0), 2600);
+    const total = Math.max(0, ...[...previewTimes.values()].map((x) => x.start + x.dur));
+    setTimeout(() => setPreview(0), (total + 0.6) * 1000);
   };
   const fileRef = useRef<HTMLInputElement>(null);
   const stageWrap = useRef<HTMLDivElement>(null);
@@ -380,6 +402,20 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
     editEls(sel, { color: c });
   };
 
+  /** Pone una animación a los elementos seleccionados y la reproduce */
+  const applyAnim = (a: Anim) => {
+    if (!sel.length) return;
+    editEls(sel, (e) => ({ ...e, anim: a, animTrigger: a === "none" ? undefined : (e.animTrigger ?? (e.anim && e.anim !== "none" ? "after" : "click")) }));
+    if (a !== "none") {
+      setTimeout(() => {
+        setPreview(Date.now());
+        setTimeout(() => setPreview(0), 2000);
+      }, 30);
+      toast(`Animación «${animLabel(a)}» aplicada`, "success");
+    }
+  };
+  const [trPreview, setTrPreview] = useState(0);
+
   /* ---------------- Escenario: tamaño ---------------- */
   const [scale, setScale] = useState(0.5);
   useLayoutEffect(() => {
@@ -602,6 +638,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
     { id: "home", label: "Inicio" },
     { id: "insert", label: "Insertar" },
     { id: "design", label: "Diseño" },
+    { id: "animations", label: "Animaciones" },
     { id: "transitions", label: "Transiciones" },
     { id: "show", label: "Presentación" },
     { id: "ai", label: "IA" },
@@ -844,21 +881,65 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
               </>
             )}
 
+            {tab === "animations" && (
+              <>
+                <RGroup label="Vista previa">
+                  <RBig icon={<Play />} label="Reproducir" onClick={playPreview} title="Reproduce las animaciones de esta diapositiva" />
+                </RGroup>
+                <RGroup label={sel.length ? "Elige cómo aparece el elemento seleccionado" : "Selecciona un elemento de la diapositiva para animarlo"}>
+                  <div className="grid grid-flow-col grid-rows-2 gap-1">
+                    <AnimButton icon="✕" label="Ninguna" active={!!one && (one.anim ?? "none") === "none"} disabled={!sel.length} onClick={() => applyAnim("none")} />
+                    {ANIMS.map((a) => (
+                      <AnimButton key={a.id} icon={a.icon} label={a.label} active={!!one && one.anim === a.id} disabled={!sel.length} onClick={() => applyAnim(a.id)} />
+                    ))}
+                  </div>
+                </RGroup>
+                <RGroup label="Intervalos" className="flex-col items-start justify-center gap-1">
+                  <label className="flex items-center gap-2 text-[12px]">
+                    <span className="w-[62px] text-muted">Inicio</span>
+                    <select
+                      disabled={!one?.anim || one.anim === "none"}
+                      value={one?.animTrigger ?? "after"}
+                      onChange={(e) => editEls(sel, { animTrigger: e.target.value as AnimTrigger })}
+                      className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12px] disabled:opacity-40"
+                    >
+                      {TRIGGERS.map((x) => <option key={x.id} value={x.id} title={x.hint}>{x.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-2 text-[12px]">
+                    <span className="w-[62px] text-muted">Duración</span>
+                    <input type="number" min={0.1} max={10} step={0.1} disabled={!one?.anim || one.anim === "none"} value={one?.animDur ?? 0.6} onChange={(e) => editEls(sel, { animDur: Math.max(0.1, Number(e.target.value) || 0.6) })} onKeyDown={(e) => e.stopPropagation()} className="h-7 w-16 rounded-md border border-border bg-surface px-1.5 text-right text-[12px] disabled:opacity-40" />
+                    s
+                  </label>
+                  <label className="flex items-center gap-2 text-[12px]">
+                    <span className="w-[62px] text-muted">Retraso</span>
+                    <input type="number" min={0} max={30} step={0.1} disabled={!one?.anim || one.anim === "none"} value={one?.animDelay ?? 0} onChange={(e) => editEls(sel, { animDelay: Math.max(0, Number(e.target.value) || 0) })} onKeyDown={(e) => e.stopPropagation()} className="h-7 w-16 rounded-md border border-border bg-surface px-1.5 text-right text-[12px] disabled:opacity-40" />
+                    s
+                  </label>
+                </RGroup>
+              </>
+            )}
+
             {tab === "transitions" && (
               <>
-                <RGroup label="Transición al entrar en la diapositiva">
-                  {TRANSITIONS.map((tr) => (
-                    <RBig key={tr.id} icon={<MonitorPlay />} label={tr.label} active={(slide.transition ?? "none") === tr.id} onClick={() => editSlide((s) => ({ ...s, transition: tr.id }))} />
-                  ))}
+                <RGroup label="Transición al entrar en esta diapositiva">
+                  <div className="grid grid-flow-col grid-rows-2 gap-1">
+                    {TRANSITIONS.map((tr) => (
+                      <AnimButton
+                        key={tr.id}
+                        icon={tr.icon}
+                        label={tr.label}
+                        active={(slide.transition ?? "none") === tr.id}
+                        onClick={() => {
+                          editSlide((s) => ({ ...s, transition: tr.id }));
+                          if (tr.id !== "none") setTrPreview(Date.now());
+                        }}
+                      />
+                    ))}
+                  </div>
+                </RGroup>
+                <RGroup label="Todas">
                   <RBig icon={<Copy />} label="Aplicar a todas" onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, transition: slide.transition })) }))} />
-                </RGroup>
-                <RGroup label="Ver">
-                  <RBig icon={<Play />} label="Vista previa" onClick={playPreview} title="Reproduce las animaciones de esta diapositiva" />
-                </RGroup>
-                <RGroup label="Animación del elemento seleccionado">
-                  {ANIMS.map((a) => (
-                    <RBig key={a.id} icon={<Sparkles />} label={a.label} disabled={!sel.length} active={!!one && (one.anim ?? "none") === a.id} onClick={() => editEls(sel, { anim: a.id })} />
-                  ))}
                 </RGroup>
               </>
             )}
@@ -941,19 +1022,23 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 [...e.dataTransfer.files].filter((f) => f.type.startsWith("image/")).forEach((f, i) => addImage(f, i));
               }}
             >
-              <div className="stage relative shadow-lg" style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}>
+              <div
+                key={trPreview ? `tr${trPreview}` : "stage"}
+                className={cn("stage relative shadow-lg", trPreview && slide.transition && slide.transition !== "none" && `slide-tr-${slide.transition}`)}
+                style={{ width: SLIDE_W * scale, height: SLIDE_H * scale }}
+              >
                 <div className="slide-canvas" style={{ width: SLIDE_W, height: SLIDE_H, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
                   <SlideBackground slide={slide} t={t} />
                   {els.map((el) => {
                     const isEditing = editing === el.id;
                     return (
                       <div
-                        key={preview && el.anim && el.anim !== "none" ? `${el.id}-${preview}` : el.id}
-                        className={preview && el.anim && el.anim !== "none" ? `slide-el slide-anim-${el.anim}` : "slide-el"}
+                        key={preview && previewTimes.has(el.id) ? `${el.id}-${preview}` : el.id}
+                        className={preview && previewTimes.has(el.id) ? `slide-el anim anim-${el.anim}` : "slide-el"}
                         style={{
                           ...elBoxStyle(el),
                           cursor: isEditing ? "text" : "move",
-                          animationDelay: preview ? `${0.1 + slide.els.filter((x) => x.anim && x.anim !== "none").findIndex((x) => x.id === el.id) * 0.35}s` : undefined,
+                          ...(preview && previewTimes.has(el.id) ? { ["--delay" as string]: `${previewTimes.get(el.id)!.start}s`, ["--dur" as string]: `${previewTimes.get(el.id)!.dur}s` } : {}),
                         }}
                         onMouseDown={(e) => {
                           if (isEditing) {
@@ -1027,16 +1112,14 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     );
                   })}
                 {!editing &&
+                  !preview &&
                   slide.els
                     .filter((e) => e.anim && e.anim !== "none")
                     .map((el, i) => (
-                      <div
-                        key={`a${el.id}`}
-                        className="pointer-events-none absolute z-[4] grid size-5 place-items-center rounded-full bg-accent text-[10.5px] font-bold text-accent-fg shadow"
-                        style={{ left: el.x * scale - 8, top: el.y * scale - 8 }}
-                        title={`Animación ${i + 1}: ${ANIM_LABEL[el.anim!]}`}
-                      >
-                        {i + 1}
+                      <div key={`a${el.id}`} className="anim-tag" style={{ left: el.x * scale - 6, top: el.y * scale - 10 }} title={`Animación ${i + 1}`}>
+                        <b>{i + 1}</b>
+                        {ANIMS.find((a) => a.id === el.anim)?.icon} {animLabel(el.anim)}
+                        {(el.animTrigger ?? "after") === "click" ? " · 🖱" : ""}
                       </div>
                     ))}
                 {guides.v.map((x, i) => <div key={`v${i}`} className="stage-guide" style={{ left: x * scale, top: 0, width: 1, height: SLIDE_H * scale }} />)}
@@ -1143,7 +1226,23 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 /* ------------------------------------------------------------------ */
 
 function Presenter({ deck, start, onExit }: { deck: Deck; start: number; onExit: (i: number) => void }) {
-  const [i, setI] = useState(start);
+  // Diapositiva y paso dentro de ella (cada clic muestra la siguiente animación «al hacer clic»)
+  const [pos, setPos] = useState({ i: start, step: 0 });
+  const i = pos.i;
+  const setI = (fn: (x: number) => number) => setPos((p) => ({ i: fn(p.i), step: 0 }));
+  const next = () =>
+    setPos((p) => {
+      const steps = animTimeline(deck.slides[p.i]).steps;
+      if (p.step < steps) return { i: p.i, step: p.step + 1 };
+      return p.i < deck.slides.length - 1 ? { i: p.i + 1, step: 0 } : p;
+    });
+  // Al volver atrás, la diapositiva anterior se ve completa
+  const prev = () =>
+    setPos((p) => {
+      if (p.step > 0) return { i: p.i, step: p.step - 1 };
+      if (p.i === 0) return p;
+      return { i: p.i - 1, step: animTimeline(deck.slides[p.i - 1]).steps };
+    });
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   const [notes, setNotes] = useState(false);
   const [black, setBlack] = useState(false);
@@ -1172,37 +1271,40 @@ function Presenter({ deck, start, onExit }: { deck: Deck; start: number; onExit:
       e.preventDefault();
       e.stopPropagation();
       const k = e.key;
-      if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(k)) setI((x) => Math.min(deck.slides.length - 1, x + 1));
-      else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(k)) setI((x) => Math.max(0, x - 1));
-      else if (k === "Home") setI(0);
-      else if (k === "End") setI(deck.slides.length - 1);
+      if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(k)) next();
+      else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(k)) prev();
+      else if (k === "Home") setI(() => 0);
+      else if (k === "End") setI(() => deck.slides.length - 1);
       else if (k.toLowerCase() === "n") setNotes((v) => !v);
       else if (k.toLowerCase() === "b" || k === ".") setBlack((v) => !v);
       else if (k === "Escape") onExit(iRef.current);
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck.slides.length, onExit]);
 
   const slide = deck.slides[i];
+  const totalSteps = animTimeline(slide).steps;
   const scale = Math.min(size.w / SLIDE_W, size.h / SLIDE_H);
   return createPortal(
     <div
       ref={ref}
       className="fixed inset-0 z-[200] grid cursor-pointer place-items-center bg-black"
-      onClick={(e) => (e.button === 0 ? setI((x) => Math.min(deck.slides.length - 1, x + 1)) : undefined)}
+      onClick={(e) => (e.button === 0 ? next() : undefined)}
       onContextMenu={(e) => {
         e.preventDefault();
-        setI((x) => Math.max(0, x - 1));
+        prev();
       }}
     >
       {!black && (
         <div key={slide.id} className={slide.transition && slide.transition !== "none" ? `slide-tr-${slide.transition}` : undefined}>
-          <SlideView slide={slide} themeId={deck.theme} scale={scale} animate />
+          <SlideView slide={slide} themeId={deck.theme} scale={scale} step={pos.step} />
         </div>
       )}
       <div className="absolute right-4 bottom-3 rounded-full bg-black/50 px-3 py-1 text-[12px] text-white/80">
-        {i + 1} / {deck.slides.length} · Esc para salir · N notas
+        {i + 1} / {deck.slides.length}
+        {pos.step < totalSteps && ` · ${totalSteps - pos.step} clic${totalSteps - pos.step === 1 ? "" : "s"} para las animaciones`} · Esc para salir · N notas
       </div>
       {notes && slide.notes && (
         <div className="absolute bottom-12 left-1/2 max-w-[70vw] -translate-x-1/2 rounded-lg bg-black/80 px-4 py-3 text-[15px] whitespace-pre-wrap text-white">{slide.notes}</div>

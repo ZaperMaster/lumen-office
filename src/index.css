@@ -475,3 +475,52 @@ button:disabled {
 .sheet-grid, .sheet-paper { --paper: #ffffff; --paper-text: #1c1e24; }
 
 .hf-zone { cursor: text; }
+
+/* Animaciones de entrada y de énfasis de las presentaciones */
+.slide-el.anim { animation-duration: var(--dur, 0.6s); animation-delay: var(--delay, 0s); animation-fill-mode: both; animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); }
+.slide-el.anim-hidden { visibility: hidden; }
+.anim-fade { animation-name: a-fade; animation-timing-function: ease; }
+.anim-fly { animation-name: a-fly-up; }
+.anim-flyDown { animation-name: a-fly-down; }
+.anim-flyLeft { animation-name: a-fly-left; }
+.anim-flyRight { animation-name: a-fly-right; }
+.anim-zoom { animation-name: a-zoom; }
+.anim-grow { animation-name: a-grow; animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+.anim-pop { animation-name: a-pop; animation-timing-function: ease-out; }
+.anim-bounce { animation-name: a-bounce; animation-timing-function: ease-out; }
+.anim-spin { animation-name: a-spin; }
+.anim-flip { animation-name: a-flip; }
+.anim-wipe { animation-name: a-wipe; animation-timing-function: ease-in-out; }
+.anim-blur { animation-name: a-blur; animation-timing-function: ease-out; }
+.anim-swing { animation-name: a-swing; animation-timing-function: ease-out; transform-origin: top center; }
+.anim-typewriter { animation-name: a-wipe; animation-timing-function: steps(18, end); }
+.anim-pulse { animation-name: a-pulse; animation-timing-function: ease-in-out; }
+.anim-shake { animation-name: a-shake; animation-timing-function: linear; }
+@keyframes a-fade { from { opacity: 0; } }
+@keyframes a-fly-up { from { opacity: 0; translate: 0 120px; } }
+@keyframes a-fly-down { from { opacity: 0; translate: 0 -120px; } }
+@keyframes a-fly-left { from { opacity: 0; translate: -200px 0; } }
+@keyframes a-fly-right { from { opacity: 0; translate: 200px 0; } }
+@keyframes a-zoom { from { opacity: 0; scale: 0.5; } }
+@keyframes a-grow { from { opacity: 0; scale: 0; } }
+@keyframes a-pop { 0% { opacity: 0; scale: 0.3; } 60% { opacity: 1; scale: 1.12; } 80% { scale: 0.96; } 100% { scale: 1; } }
+@keyframes a-bounce { 0% { opacity: 0; translate: 0 -260px; } 55% { opacity: 1; translate: 0 0; } 70% { translate: 0 -40px; } 85% { translate: 0 0; } 93% { translate: 0 -10px; } 100% { translate: 0 0; } }
+@keyframes a-spin { from { opacity: 0; rotate: -360deg; scale: 0.4; } }
+@keyframes a-flip { from { opacity: 0; transform: perspective(800px) rotateY(90deg); } }
+@keyframes a-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes a-blur { from { opacity: 0; filter: blur(20px); scale: 1.08; } }
+@keyframes a-swing { 0% { opacity: 0; rotate: -25deg; } 40% { opacity: 1; rotate: 12deg; } 65% { rotate: -6deg; } 85% { rotate: 3deg; } 100% { rotate: 0deg; } }
+@keyframes a-pulse { 0%, 100% { scale: 1; } 25%, 75% { scale: 1.1; } 50% { scale: 0.97; } }
+@keyframes a-shake { 0%, 100% { translate: 0 0; } 15%, 45%, 75% { translate: -14px 0; } 30%, 60%, 90% { translate: 14px 0; } }
+
+/* Transiciones entre diapositivas */
+.slide-tr-push { animation: tr-push 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.slide-tr-flip { animation: tr-flip 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.slide-tr-wipe { animation: a-wipe 0.6s ease-in-out both; }
+.slide-tr-blur { animation: a-blur 0.6s ease-out both; }
+@keyframes tr-push { from { transform: translateY(100%); } }
+@keyframes tr-flip { from { opacity: 0; transform: perspective(1400px) rotateY(-80deg); } }
+
+/* Etiqueta de la animación sobre el elemento en el editor */
+.anim-tag { position: absolute; z-index: 4; display: flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 999px; background: var(--accent); color: var(--accent-fg); font: 600 10.5px var(--ui-font); white-space: nowrap; box-shadow: 0 2px 6px rgb(0 0 0 / 0.2); pointer-events: none; }
+.anim-tag b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: rgb(255 255 255 / 0.25); font-size: 10px; }

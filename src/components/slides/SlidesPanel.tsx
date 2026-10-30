@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ArrowDown, ArrowUp, Circle, FlipHorizontal, FlipVertical, ImagePlus, Play, Sparkles, Trash2, X } from "lucide-react";
-import { htmlText, type Anim, type Slide, type SlideEl, type Theme, type Transition } from "@/lib/slides/model";
+import { ANIMS, TRANSITIONS, TRIGGERS, animLabel, htmlText, type Anim, type AnimTrigger, type Slide, type SlideEl, type Theme, type Transition } from "@/lib/slides/model";
 import { Button, Slider, Switch, cn } from "@/components/ui";
 
 /*
@@ -8,8 +8,6 @@ import { Button, Slider, Switch, cn } from "@/components/ui";
  * contorno, esquinas, sombra, imagen, animaciones y fondo de la diapositiva.
  */
 
-export const ANIM_LABEL: Record<Anim, string> = { none: "Ninguna", fade: "Aparecer", fly: "Desde abajo", zoom: "Zoom" };
-export const TRANSITION_LABEL: Record<Transition, string> = { none: "Ninguna", fade: "Desvanecer", slide: "Deslizar", zoom: "Zoom" };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -184,21 +182,37 @@ export function SlidesPanel({
       )}
 
       {one && (
-        <Section title="Animación al aparecer">
-          <div className="grid grid-cols-2 gap-1">
-            {(Object.keys(ANIM_LABEL) as Anim[]).map((a) => (
-              <button
-                key={a}
-                onClick={() => {
-                  onEl({ anim: a });
-                  if (a !== "none") setTimeout(onPreview, 50);
-                }}
-                className={cn("rounded-md border px-2 py-1 text-[12px]", (one.anim ?? "none") === a ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}
-              >
-                {ANIM_LABEL[a]}
-              </button>
-            ))}
-          </div>
+        <Section title="Animación">
+          <Row label="Efecto">
+            <select
+              value={one.anim ?? "none"}
+              onChange={(e) => {
+                const a = e.target.value as Anim;
+                onEl((x) => ({ ...x, anim: a, animTrigger: a === "none" ? undefined : (x.animTrigger ?? "click") }));
+                if (a !== "none") setTimeout(onPreview, 50);
+              }}
+              className="h-7 max-w-[150px] rounded-md border border-border bg-surface px-1.5 text-[12px]"
+            >
+              <option value="none">Ninguna</option>
+              <optgroup label="Entrada">
+                {ANIMS.filter((a) => a.group === "Entrada").map((a) => <option key={a.id} value={a.id}>{a.icon} {a.label}</option>)}
+              </optgroup>
+              <optgroup label="Énfasis">
+                {ANIMS.filter((a) => a.group === "Énfasis").map((a) => <option key={a.id} value={a.id}>{a.icon} {a.label}</option>)}
+              </optgroup>
+            </select>
+          </Row>
+          {one.anim && one.anim !== "none" && (
+            <>
+              <Row label="Inicio">
+                <select value={one.animTrigger ?? "after"} onChange={(e) => onEl({ animTrigger: e.target.value as AnimTrigger })} className="h-7 max-w-[150px] rounded-md border border-border bg-surface px-1.5 text-[12px]">
+                  {TRIGGERS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+                </select>
+              </Row>
+              <Row label="Duración"><Num value={one.animDur ?? 0.6} min={0.1} max={10} step={0.1} onChange={(v) => onEl({ animDur: Math.max(0.1, v) })} suffix="s" /></Row>
+              <Row label="Retraso"><Num value={one.animDelay ?? 0} min={0} max={30} step={0.1} onChange={(v) => onEl({ animDelay: Math.max(0, v) })} suffix="s" /></Row>
+            </>
+          )}
         </Section>
       )}
 
@@ -208,7 +222,10 @@ export function SlidesPanel({
           <div key={e.id} className={cn("flex items-center gap-2 rounded-md border px-2 py-1.5", one?.id === e.id ? "border-accent bg-accent-soft" : "border-border")}>
             <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-fg">{i + 1}</span>
             <button onClick={() => onSelect(e.id)} className="min-w-0 flex-1 truncate text-left text-[12px]">
-              {name(e)} <span className="text-muted">· {ANIM_LABEL[e.anim!]}</span>
+              {name(e)}
+              <span className="block text-[11px] text-muted">
+                {ANIMS.find((a) => a.id === e.anim)?.icon} {animLabel(e.anim)} · {TRIGGERS.find((t) => t.id === (e.animTrigger ?? "after"))?.label}
+              </span>
             </button>
             <button onClick={() => moveAnim(e.id, -1)} disabled={i === 0} className="text-muted hover:text-text disabled:opacity-30" aria-label="Antes"><ArrowUp className="size-3.5" /></button>
             <button onClick={() => moveAnim(e.id, 1)} disabled={i === animated.length - 1} className="text-muted hover:text-text disabled:opacity-30" aria-label="Después"><ArrowDown className="size-3.5" /></button>
@@ -224,7 +241,7 @@ export function SlidesPanel({
             onChange={(e) => onSlide((s) => ({ ...s, transition: e.target.value as Transition }))}
             className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12px]"
           >
-            {(Object.keys(TRANSITION_LABEL) as Transition[]).map((x) => <option key={x} value={x}>{TRANSITION_LABEL[x]}</option>)}
+            {TRANSITIONS.map((x) => <option key={x.id} value={x.id}>{x.icon} {x.label}</option>)}
           </select>
         </Row>
         <button onClick={onApplyTransitionAll} className="self-end text-[11.5px] text-accent hover:underline">Aplicar a todas</button>

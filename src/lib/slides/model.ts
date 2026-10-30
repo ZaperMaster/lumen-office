@@ -8,8 +8,90 @@ export const SLIDE_H = 720;
 
 export type ShapeKind = "rect" | "roundRect" | "ellipse" | "triangle" | "diamond" | "arrow" | "star" | "line";
 export type ElType = "text" | "shape" | "image";
-export type Anim = "none" | "fade" | "fly" | "zoom";
-export type Transition = "none" | "fade" | "slide" | "zoom";
+export type Anim =
+  | "none" | "fade" | "fly" | "flyDown" | "flyLeft" | "flyRight" | "zoom" | "grow" | "bounce" | "spin" | "flip"
+  | "wipe" | "blur" | "pop" | "swing" | "typewriter" | "pulse" | "shake";
+export type AnimTrigger = "click" | "with" | "after";
+export type Transition = "none" | "fade" | "slide" | "push" | "zoom" | "flip" | "wipe" | "blur";
+
+/** Animaciones disponibles, con su nombre y un icono para la galería. */
+export const ANIMS: { id: Anim; label: string; icon: string; group: "Entrada" | "Énfasis" }[] = [
+  { id: "fade", label: "Aparecer", icon: "◐", group: "Entrada" },
+  { id: "fly", label: "Desde abajo", icon: "⬆", group: "Entrada" },
+  { id: "flyDown", label: "Desde arriba", icon: "⬇", group: "Entrada" },
+  { id: "flyLeft", label: "Desde la izquierda", icon: "➡", group: "Entrada" },
+  { id: "flyRight", label: "Desde la derecha", icon: "⬅", group: "Entrada" },
+  { id: "zoom", label: "Acercar", icon: "🔍", group: "Entrada" },
+  { id: "grow", label: "Crecer", icon: "⤢", group: "Entrada" },
+  { id: "pop", label: "Saltar", icon: "✸", group: "Entrada" },
+  { id: "bounce", label: "Rebotar", icon: "⤓", group: "Entrada" },
+  { id: "spin", label: "Girar", icon: "⟳", group: "Entrada" },
+  { id: "flip", label: "Voltear", icon: "⇋", group: "Entrada" },
+  { id: "wipe", label: "Barrido", icon: "▤", group: "Entrada" },
+  { id: "blur", label: "Desenfoque", icon: "◌", group: "Entrada" },
+  { id: "swing", label: "Columpio", icon: "〰", group: "Entrada" },
+  { id: "typewriter", label: "Máquina de escribir", icon: "⌨", group: "Entrada" },
+  { id: "pulse", label: "Latido", icon: "♥", group: "Énfasis" },
+  { id: "shake", label: "Sacudir", icon: "≋", group: "Énfasis" },
+];
+
+export const animLabel = (a?: Anim) => (a && a !== "none" ? (ANIMS.find((x) => x.id === a)?.label ?? a) : "Ninguna");
+
+export const TRANSITIONS: { id: Transition; label: string; icon: string }[] = [
+  { id: "none", label: "Ninguna", icon: "▢" },
+  { id: "fade", label: "Desvanecer", icon: "◐" },
+  { id: "slide", label: "Deslizar", icon: "⇠" },
+  { id: "push", label: "Empujar", icon: "⇡" },
+  { id: "zoom", label: "Zoom", icon: "🔍" },
+  { id: "flip", label: "Voltear", icon: "⇋" },
+  { id: "wipe", label: "Barrido", icon: "▤" },
+  { id: "blur", label: "Desenfoque", icon: "◌" },
+];
+
+export const TRIGGERS: { id: AnimTrigger; label: string; hint: string }[] = [
+  { id: "click", label: "Al hacer clic", hint: "Aparece cuando haces clic al presentar" },
+  { id: "with", label: "Con la anterior", hint: "A la vez que la animación anterior" },
+  { id: "after", label: "Después de la anterior", hint: "Justo cuando termina la anterior" },
+];
+
+export interface AnimStep {
+  id: string;
+  /** Paso (0 = al entrar en la diapositiva; cada clic avanza uno) */
+  step: number;
+  /** Segundos desde el inicio del paso */
+  start: number;
+  dur: number;
+}
+
+/**
+ * Cuándo aparece cada elemento animado. Las animaciones «al hacer clic» abren
+ * un paso nuevo; «con la anterior» empieza a la vez y «después» al terminar.
+ */
+export function animTimeline(slide: Slide): { items: Map<string, AnimStep>; steps: number } {
+  const items = new Map<string, AnimStep>();
+  let step = 0;
+  let prevStart = 0;
+  let prevEnd = 0;
+  let first = true;
+  for (const el of slide.els) {
+    if (!el.anim || el.anim === "none") continue;
+    const dur = el.animDur ?? 0.6;
+    const delay = el.animDelay ?? 0;
+    // Las presentaciones antiguas no tenían «cuándo»: aparecían solas, una tras otra
+    const trigger = el.animTrigger ?? "after";
+    let start: number;
+    if (trigger === "click") {
+      step += 1;
+      start = delay;
+    } else if (trigger === "with" && !first) start = prevStart + delay;
+    else start = (first ? 0.2 : prevEnd) + delay;
+    items.set(el.id, { id: el.id, step, start, dur });
+    prevStart = start;
+    prevEnd = start + dur;
+    first = false;
+  }
+  return { items, steps: step };
+}
 export type Role = "title" | "subtitle" | "body";
 
 export interface SlideEl {
@@ -38,6 +120,10 @@ export interface SlideEl {
   src?: string;
   opacity?: number;
   anim?: Anim;
+  /** Cuándo empieza la animación, cuánto dura y cuánto espera (segundos) */
+  animTrigger?: AnimTrigger;
+  animDur?: number;
+  animDelay?: number;
   /** Esquinas redondeadas (px) de imágenes y cuadros de texto */
   radius?: number;
   shadow?: boolean;

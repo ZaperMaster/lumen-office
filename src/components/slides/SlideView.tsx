@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { SLIDE_H, SLIDE_W, htmlText, theme as getTheme, type Slide, type SlideEl, type Theme } from "@/lib/slides/model";
+import { SLIDE_H, SLIDE_W, animTimeline, htmlText, theme as getTheme, type AnimStep, type Slide, type SlideEl, type Theme } from "@/lib/slides/model";
 
 /* Dibujo de una diapositiva (miniaturas, editor, modo presentación e impresión). */
 
@@ -146,22 +146,36 @@ export function SlideBackground({ slide, t }: { slide: Slide; t: Theme }) {
   );
 }
 
-/** Diapositiva completa a la escala indicada (para miniaturas y presentación). */
-export function SlideView({ slide, themeId, scale, className, animate }: { slide: Slide; themeId: string; scale: number; className?: string; animate?: boolean }) {
+/** Clase y variables de animación de un elemento en un paso dado de la presentación. */
+export function animProps(el: SlideEl, entry: AnimStep | undefined, step: number | undefined): { className: string; style: CSSProperties } {
+  if (step === undefined || !entry || !el.anim || el.anim === "none") return { className: "slide-el", style: {} };
+  if (entry.step > step) return { className: "slide-el anim-hidden", style: {} };
+  if (entry.step < step) return { className: "slide-el", style: {} };
+  return {
+    className: `slide-el anim anim-${el.anim}`,
+    style: { ["--dur" as string]: `${entry.dur}s`, ["--delay" as string]: `${entry.start}s` },
+  };
+}
+
+/**
+ * Diapositiva completa a la escala indicada (miniaturas, impresión y presentación).
+ * Con `step`, los elementos animados aparecen según ese paso.
+ */
+export function SlideView({ slide, themeId, scale, className, step }: { slide: Slide; themeId: string; scale: number; className?: string; step?: number }) {
   const t = getTheme(themeId);
+  const timeline = step === undefined ? null : animTimeline(slide);
   return (
     <div className={className} style={{ width: SLIDE_W * scale, height: SLIDE_H * scale, position: "relative", overflow: "hidden" }}>
       <div className="slide-canvas" style={{ width: SLIDE_W, height: SLIDE_H, transform: `scale(${scale})`, transformOrigin: "0 0" }}>
         <SlideBackground slide={slide} t={t} />
-        {slide.els.map((el, i) => (
-          <div
-            key={el.id}
-            className={animate && el.anim && el.anim !== "none" ? `slide-el slide-anim-${el.anim}` : "slide-el"}
-            style={{ ...elBoxStyle(el), animationDelay: animate ? `${0.25 + i * 0.18}s` : undefined }}
-          >
-            <ElementView el={el} t={t} />
-          </div>
-        ))}
+        {slide.els.map((el) => {
+          const a = animProps(el, timeline?.items.get(el.id), step);
+          return (
+            <div key={`${el.id}-${a.className}`} className={a.className} style={{ ...elBoxStyle(el), ...a.style }}>
+              <ElementView el={el} t={t} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
