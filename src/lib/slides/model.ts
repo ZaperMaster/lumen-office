@@ -135,6 +135,17 @@ export interface SlideEl {
   circle?: boolean;
   /** Interlineado del texto */
   lineHeight?: number;
+  /** Ajustes de imagen (100 = normal) y filtros */
+  bright?: number;
+  contrast?: number;
+  saturate?: number;
+  gray?: boolean;
+  sepia?: boolean;
+  blurPx?: number;
+  /** Recorte de la imagen (% de cada lado) */
+  crop?: { t: number; r: number; b: number; l: number };
+  /** Marco blanco alrededor (px) */
+  frame?: number;
 }
 
 export interface Slide {

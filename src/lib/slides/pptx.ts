@@ -98,15 +98,23 @@ export async function buildPptx(deck: Deck, title: string): Promise<Uint8Array> 
       const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h), rotate: el.rot || undefined };
       const shadow = el.shadow ? ({ type: "outer", blur: 8, offset: 4, angle: 90, color: "000000", opacity: 0.3 } as PptxGenJS.ShadowProps) : undefined;
       if (el.type === "image" && el.src) {
+        // Con recorte, la imagen entera mide más que el trozo visible
+        const fullW = el.crop ? pos.w / Math.max(0.05, 1 - (el.crop.l + el.crop.r) / 100) : pos.w;
+        const fullH = el.crop ? pos.h / Math.max(0.05, 1 - (el.crop.t + el.crop.b) / 100) : pos.h;
         slide.addImage({
           data: el.src,
           ...pos,
+          w: fullW,
+          h: fullH,
           transparency: el.opacity !== undefined ? Math.round((1 - el.opacity) * 100) : undefined,
           rounding: el.circle || undefined,
           flipH: el.flipH || undefined,
           flipV: el.flipV || undefined,
           shadow,
-          sizing: el.fit && el.fit !== "fill" ? { type: el.fit, w: pos.w, h: pos.h } : undefined,
+          // Recorte: la parte visible de la imagen original
+          sizing: el.crop
+            ? { type: "crop", x: (el.crop.l / 100) * fullW, y: (el.crop.t / 100) * fullH, w: pos.w, h: pos.h }
+            : el.fit && el.fit !== "fill" ? { type: el.fit, w: pos.w, h: pos.h } : undefined,
         });
         continue;
       }

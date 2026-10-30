@@ -9,6 +9,25 @@ import { Button, Slider, Switch, cn } from "@/components/ui";
  */
 
 
+/** Estilos rápidos para imágenes. */
+const RESET_LOOK: Partial<SlideEl> = { bright: undefined, contrast: undefined, saturate: undefined, gray: undefined, sepia: undefined, blurPx: undefined };
+const IMAGE_PRESETS: { label: string; look: Partial<SlideEl> }[] = [
+  { label: "Original", look: {} },
+  { label: "Blanco y negro", look: { gray: true, contrast: 110 } },
+  { label: "Sepia", look: { sepia: true } },
+  { label: "Vívido", look: { saturate: 160, contrast: 110 } },
+  { label: "Cálido", look: { saturate: 125, bright: 105, sepia: undefined, contrast: 105 } },
+  { label: "Suave", look: { saturate: 70, bright: 112, contrast: 90 } },
+];
+const FRAMES: { label: string; look: Partial<SlideEl> }[] = [
+  { label: "Sin marco", look: {} },
+  { label: "Polaroid", look: { frame: 14, shadow: true } },
+  { label: "Inclinada", look: { frame: 10, shadow: true, rot: -4 } },
+  { label: "Redondeada", look: { radius: 24, shadow: true } },
+  { label: "Círculo", look: { circle: true, shadow: true } },
+  { label: "Sombra", look: { shadow: true } },
+];
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="border-b border-border px-4 py-3">
@@ -178,6 +197,60 @@ export function SlidesPanel({
             <Button size="sm" variant={one.flipV ? "secondary" : "ghost"} icon={<FlipVertical className="size-3.5" />} onClick={() => onEl({ flipV: !one.flipV || undefined })}>Vertical</Button>
             <Button size="sm" variant={one.circle ? "secondary" : "ghost"} icon={<Circle className="size-3.5" />} onClick={() => onEl({ circle: !one.circle || undefined })}>Círculo</Button>
           </div>
+        </Section>
+      )}
+
+      {one?.type === "image" && (
+        <Section title="Estilo de la imagen">
+          <div className="grid grid-cols-3 gap-1">
+            {IMAGE_PRESETS.map((p) => (
+              <button key={p.label} onClick={() => onEl((e) => ({ ...e, ...RESET_LOOK, ...p.look }))} className="rounded-md border border-border px-1 py-1 text-[11.5px] hover:border-accent hover:bg-surface-2">
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1 text-[11.5px] font-medium text-muted">Marco</div>
+          <div className="grid grid-cols-3 gap-1">
+            {FRAMES.map((p) => (
+              <button key={p.label} onClick={() => onEl((e) => ({ ...e, frame: undefined, shadow: undefined, rot: undefined, radius: undefined, circle: undefined, ...p.look }))} className="rounded-md border border-border px-1 py-1 text-[11.5px] hover:border-accent hover:bg-surface-2">
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </Section>
+      )}
+
+      {one?.type === "image" && (
+        <Section title="Ajustes">
+          <Row label="Brillo"><Slider value={one.bright ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ bright: v === 100 ? undefined : v })} className="w-[120px]" label="Brillo" /></Row>
+          <Row label="Contraste"><Slider value={one.contrast ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ contrast: v === 100 ? undefined : v })} className="w-[120px]" label="Contraste" /></Row>
+          <Row label="Saturación"><Slider value={one.saturate ?? 100} min={0} max={200} step={5} onChange={(v) => onEl({ saturate: v === 100 ? undefined : v })} className="w-[120px]" label="Saturación" /></Row>
+          <Row label="Desenfoque"><Slider value={one.blurPx ?? 0} min={0} max={12} onChange={(v) => onEl({ blurPx: v || undefined })} className="w-[120px]" label="Desenfoque" /></Row>
+          <div className="flex gap-3 text-[12px]">
+            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.gray} onChange={(e) => onEl({ gray: e.target.checked || undefined })} /> Blanco y negro</label>
+            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.sepia} onChange={(e) => onEl({ sepia: e.target.checked || undefined })} /> Sepia</label>
+          </div>
+        </Section>
+      )}
+
+      {one?.type === "image" && (
+        <Section title="Recortar">
+          {(["t", "b", "l", "r"] as const).map((side) => (
+            <Row key={side} label={{ t: "Arriba", b: "Abajo", l: "Izquierda", r: "Derecha" }[side]}>
+              <Slider
+                value={one.crop?.[side] ?? 0}
+                min={0}
+                max={45}
+                onChange={(v) => onEl((e) => {
+                  const crop = { t: 0, r: 0, b: 0, l: 0, ...e.crop, [side]: v };
+                  return { ...e, crop: crop.t || crop.r || crop.b || crop.l ? crop : undefined };
+                })}
+                className="w-[120px]"
+                label={`Recortar ${side}`}
+              />
+            </Row>
+          ))}
+          {one.crop && <button onClick={() => onEl({ crop: undefined })} className="self-end text-[11.5px] text-accent hover:underline">Quitar recorte</button>}
         </Section>
       )}
 

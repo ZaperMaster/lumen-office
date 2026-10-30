@@ -334,6 +334,38 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
       return { ...s, els };
     });
   };
+  /** Alinea o reparte varios elementos entre sí */
+  const alignGroup = (how: "left" | "center" | "right" | "top" | "middle" | "bottom" | "distH" | "distV") => {
+    if (selected.length < 2) return;
+    const minX = Math.min(...selected.map((e) => e.x));
+    const maxX = Math.max(...selected.map((e) => e.x + e.w));
+    const minY = Math.min(...selected.map((e) => e.y));
+    const maxY = Math.max(...selected.map((e) => e.y + e.h));
+    if (how === "distH" || how === "distV") {
+      const h = how === "distH";
+      const sorted = [...selected].sort((a, b) => (h ? a.x - b.x : a.y - b.y));
+      const total = sorted.reduce((acc, e) => acc + (h ? e.w : e.h), 0);
+      const gap = ((h ? maxX - minX : maxY - minY) - total) / (sorted.length - 1);
+      let pos = h ? minX : minY;
+      const at = new Map<string, number>();
+      for (const e of sorted) {
+        at.set(e.id, pos);
+        pos += (h ? e.w : e.h) + gap;
+      }
+      editEls(sel, (e) => (h ? { ...e, x: Math.round(at.get(e.id)!) } : { ...e, y: Math.round(at.get(e.id)!) }));
+      return;
+    }
+    editEls(sel, (e) => {
+      switch (how) {
+        case "left": return { ...e, x: minX };
+        case "center": return { ...e, x: Math.round((minX + maxX) / 2 - e.w / 2) };
+        case "right": return { ...e, x: maxX - e.w };
+        case "top": return { ...e, y: minY };
+        case "middle": return { ...e, y: Math.round((minY + maxY) / 2 - e.h / 2) };
+        default: return { ...e, y: maxY - e.h };
+      }
+    });
+  };
   const alignSel = (how: "hcenter" | "vcenter") => editEls(sel, (e) => (how === "hcenter" ? { ...e, x: Math.round((SLIDE_W - e.w) / 2) } : { ...e, y: Math.round((SLIDE_H - e.h) / 2) }));
 
   /* ---------------- Edición de texto ---------------- */
@@ -798,6 +830,16 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                         <MenuSeparator />
                         <MenuItem icon={<AlignHorizontalJustifyCenter />} onSelect={() => alignSel("hcenter")}>Centrar en horizontal</MenuItem>
                         <MenuItem icon={<AlignVerticalJustifyCenter />} onSelect={() => alignSel("vcenter")}>Centrar en vertical</MenuItem>
+                        <MenuSeparator />
+                        <MenuLabel>Varios elementos seleccionados</MenuLabel>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("left")}>Alinear a la izquierda</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("center")}>Alinear al centro</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("right")}>Alinear a la derecha</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("top")}>Alinear arriba</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("middle")}>Alinear en medio</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("bottom")}>Alinear abajo</MenuItem>
+                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distH")}>Repartir en horizontal</MenuItem>
+                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distV")}>Repartir en vertical</MenuItem>
                       </MenuContent>
                     </Menu>
                     <IconButton size="sm" label="Duplicar elemento" shortcut="Ctrl+D" onClick={duplicateSel} disabled={!sel.length}><Copy className="size-4" /></IconButton>

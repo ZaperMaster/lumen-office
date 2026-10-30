@@ -68,6 +68,52 @@ export function ShapeSvg({ el, accent }: { el: SlideEl; accent: string }) {
   );
 }
 
+/** Filtros CSS de una imagen. */
+export function imageFilter(el: SlideEl): string | undefined {
+  const f = [
+    el.bright !== undefined && el.bright !== 100 && `brightness(${el.bright}%)`,
+    el.contrast !== undefined && el.contrast !== 100 && `contrast(${el.contrast}%)`,
+    el.saturate !== undefined && el.saturate !== 100 && `saturate(${el.saturate}%)`,
+    el.gray && "grayscale(1)",
+    el.sepia && "sepia(0.85)",
+    el.blurPx && `blur(${el.blurPx}px)`,
+  ].filter(Boolean);
+  return f.length ? f.join(" ") : undefined;
+}
+
+/** Imagen con recorte, filtros, marco, esquinas y volteo. */
+function ImageView({ el, accent }: { el: SlideEl; accent: string }) {
+  const c = el.crop ?? { t: 0, r: 0, b: 0, l: 0 };
+  const cropped = c.t || c.r || c.b || c.l;
+  const w = 100 / Math.max(0.05, 1 - (c.l + c.r) / 100);
+  const h = 100 / Math.max(0.05, 1 - (c.t + c.b) / 100);
+  const frame = el.frame ?? 0;
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{
+        borderRadius: el.circle ? "50%" : el.radius,
+        border: el.strokeW ? `${el.strokeW}px solid ${el.stroke ?? accent}` : frame ? `${frame}px solid #ffffff` : undefined,
+        background: frame ? "#ffffff" : undefined,
+      }}
+    >
+      <img
+        src={el.src}
+        alt=""
+        draggable={false}
+        className="absolute max-w-none"
+        style={
+          cropped
+            ? { width: `${w}%`, height: `${h}%`, left: `${(-c.l / 100) * w}%`, top: `${(-c.t / 100) * h}%`, objectFit: "fill", filter: imageFilter(el), transform: flip(el) }
+            : { inset: 0, width: "100%", height: "100%", objectFit: el.fit ?? "fill", filter: imageFilter(el), transform: flip(el) }
+        }
+      />
+    </div>
+  );
+}
+
+const flip = (el: SlideEl) => (el.flipH || el.flipV ? `scale(${el.flipH ? -1 : 1}, ${el.flipV ? -1 : 1})` : undefined);
+
 /** Estilo del texto de un elemento. */
 export function textStyle(el: SlideEl, t: Theme): CSSProperties {
   return {
@@ -86,20 +132,7 @@ export function ElementView({ el, t, showPlaceholder }: { el: SlideEl; t: Theme;
   return (
     <>
       {el.type === "shape" && <ShapeSvg el={el} accent={t.accent} />}
-      {el.type === "image" && el.src && (
-        <img
-          src={el.src}
-          alt=""
-          draggable={false}
-          className="absolute inset-0 size-full"
-          style={{
-            objectFit: el.fit ?? "fill",
-            borderRadius: el.circle ? "50%" : el.radius,
-            transform: el.flipH || el.flipV ? `scale(${el.flipH ? -1 : 1}, ${el.flipV ? -1 : 1})` : undefined,
-            border: el.strokeW ? `${el.strokeW}px solid ${el.stroke ?? t.accent}` : undefined,
-          }}
-        />
-      )}
+      {el.type === "image" && el.src && <ImageView el={el} accent={t.accent} />}
       {el.type === "text" && (el.fill || el.strokeW) && (
         <div
           className="absolute inset-0"
