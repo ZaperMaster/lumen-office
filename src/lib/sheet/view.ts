@@ -236,3 +236,60 @@ export function validationOptions(v: Validation, ev: Evaluator, si: number): str
   else push(val);
   return out;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Alto automático de las filas                                       */
+/* ------------------------------------------------------------------ */
+
+let measureCtx: CanvasRenderingContext2D | null = null;
+
+/**
+ * Como en Excel, las filas sin alto puesto a mano crecen para que quepa una
+ * letra más grande o el texto ajustado en varias líneas.
+ */
+export function autoRowHeights(s: Sheet, ev: Evaluator, si: number): Map<number, number> {
+  const out = new Map<number, number>();
+  measureCtx ??= document.createElement("canvas").getContext("2d");
+  for (const k in s.cells) {
+    const cell = s.cells[k];
+    const st = cell.s;
+    if (!st || (!st.wrap && !(st.fs && st.fs > 11))) continue;
+    const r = Number(k.slice(0, k.indexOf(",")));
+    if (s.rowH[r] !== undefined) continue;
+    const c = Number(k.slice(k.indexOf(",") + 1));
+    const px = (st.fs ?? 11) * 1.333;
+    const lineH = px * 1.25;
+    let lines = 1;
+    if (st.wrap && cell.v && measureCtx) {
+      measureCtx.font = `${st.i ? "italic " : ""}${st.b ? "700 " : ""}${px}px ${st.font ?? "Inter Variable, sans-serif"}`;
+      const text = formatValue(ev.value(si, r, c), st);
+      const width = Math.max(20, (s.colW[c] ?? 96) - 10);
+      lines = 0;
+      for (const para of text.split("\n")) {
+        // Cuenta las líneas partiendo por palabras
+        let line = 0;
+        let count = 1;
+        for (const word of para.split(/(\s+)/)) {
+          const w = measureCtx.measureText(word).width;
+          if (line + w > width && line > 0) {
+            count++;
+            line = w;
+          } else line += w;
+        }
+        lines += count;
+      }
+    }
+    const need = Math.ceil(lines * lineH + 6);
+    if (need > (out.get(r) ?? 24)) out.set(r, Math.min(400, need));
+  }
+  return out;
+}
+
+/** ¿Se ve vacía la celda? (sin nada, solo espacios o una fórmula que no muestra nada) */
+export function looksEmpty(s: Sheet, ev: Evaluator, si: number, r: number, c: number): boolean {
+  const v = s.cells[`${r},${c}`]?.v;
+  if (!v || !v.trim()) return true;
+  if (!v.startsWith("=")) return false;
+  const x = ev.value(si, r, c);
+  return x === null || (typeof x === "string" && !x.trim());
+}

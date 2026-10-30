@@ -3,7 +3,7 @@ import { FErr, formulaRefs, type Evaluator } from "@/lib/sheet/formula";
 import { defaultAlign, formatValue } from "@/lib/sheet/format";
 import { colName, colWidth, key, mergeAt, normRange, rangeToA1, rowHeight, type ChartSpec, type Range, type Sheet } from "@/lib/sheet/model";
 import { ChartSvg, chartData } from "@/components/sheet/Chart";
-import type { CondStyle } from "@/lib/sheet/view";
+import { autoRowHeights, looksEmpty, type CondStyle } from "@/lib/sheet/view";
 import { cn } from "@/components/ui";
 
 /*
@@ -128,9 +128,11 @@ export function Grid({
     (c: number) => (gv.hiddenCols.has(c) ? 0 : (drag?.axis === "col" && drag.index === c ? drag.size : colWidth(sheet, c)) * z),
     [sheet, z, drag, gv.hiddenCols],
   );
+  // Filas que crecen solas con letra grande o texto ajustado
+  const autoH = useMemo(() => autoRowHeights(sheet, ev, si), [sheet, ev, si]);
   const rh = useCallback(
-    (r: number) => (gv.hiddenRows.has(r) ? 0 : (drag?.axis === "row" && drag.index === r ? drag.size : rowHeight(sheet, r)) * z),
-    [sheet, z, drag, gv.hiddenRows],
+    (r: number) => (gv.hiddenRows.has(r) ? 0 : (drag?.axis === "row" && drag.index === r ? drag.size : sheet.rowH[r] ?? autoH.get(r) ?? rowHeight(sheet, r)) * z),
+    [sheet, z, drag, gv.hiddenRows, autoH],
   );
   const colX = useMemo(() => prefix(sheet.cols, cw), [sheet.cols, cw]);
   const rowY = useMemo(() => prefix(sheet.rows, rh), [sheet.rows, rh]);
@@ -420,10 +422,12 @@ export function Grid({
         let textW = w;
         let textLeft = 0;
         if (!m && !st.wrap && text && typeof v === "string") {
-          const empty = (cc: number) => cc >= 0 && cc < sheet.cols && !sheet.cells[key(r, cc)]?.v && !covered.has(key(r, cc)) && !mergeAt(sheet, r, cc);
+          const empty = (cc: number) => cc >= 0 && cc < sheet.cols && looksEmpty(sheet, ev, si, r, cc) && !covered.has(key(r, cc)) && !mergeAt(sheet, r, cc);
           let right = 0;
           let left = 0;
-          if (align !== "right") for (let cc = c + 1; cc - c <= 20 && empty(cc); cc++) right += cw(cc);
+          // Desde una columna inmovilizada solo se cruza la línea si no hay desplazamiento lateral
+          const limit = c < fc && sx > 0 ? fc : sheet.cols;
+          if (align !== "right") for (let cc = c + 1; cc - c <= 20 && cc < limit && empty(cc); cc++) right += cw(cc);
           if (align !== "left") for (let cc = c - 1; c - cc <= 20 && empty(cc); cc--) left += cw(cc);
           if (align === "center") left = right = Math.min(left, right);
           textW = w + left + right;
@@ -596,7 +600,18 @@ export function Grid({
 
   const quadrant = (rows: number[], cols: number[], left: number, top: number, w: number, h: number, ox: number, oy: number, k: string) =>
     w > 0 && h > 0 ? (
-      <div key={k} className="sg-quad" style={{ left, top, width: w, height: h }}>
+      <div
+        key={k}
+        className="sg-quad"
+        style={{
+          left,
+          top,
+          width: w,
+          height: h,
+          // Las columnas inmovilizadas dejan que su texto largo siga por la derecha
+          ...((k === "left" || k === "corner") && sx === 0 ? { overflow: "visible", clipPath: `inset(0 -${vw}px 0 0)` } : {}),
+        }}
+      >
         {renderLines(rows, cols, ox, oy, w, h)}
         {renderCells(rows, cols, ox, oy)}
         {renderOverlay(ox, oy)}
