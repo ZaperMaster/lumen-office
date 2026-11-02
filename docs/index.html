@@ -8,7 +8,8 @@
 <link rel="icon" href="favicon.png">
 <meta property="og:title" content="Lumen Office">
 <meta property="og:description" content="Documentos, hojas de cálculo y presentaciones. En tu equipo, sin suscripciones.">
-<meta property="og:image" content="icon.png">
+<meta property="og:image" content="https://zapermaster.github.io/lumen-office/social.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --bg: #ffffff; --bg-2: #f5f6fa; --text: #1c1e24; --muted: #5d6270; --border: #e3e5ec;
@@ -52,6 +53,11 @@
   .mock-tabs { display: flex; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
   .mock-tabs b { padding: 3px 10px; border-radius: 6px; font-weight: 500; color: var(--muted); }
   .mock-tabs b:first-child { background: var(--accent); color: #fff; }
+  .mock img.shot { display: block; width: 100%; height: auto; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
+  .gallery figure { margin: 0; }
+  .gallery img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .gallery figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); text-align: center; }
   .mock-body { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; padding: 22px; }
   .page { background: #fff; color: #1c1e24; border-radius: 6px; padding: 26px 28px; box-shadow: 0 2px 10px rgb(0 0 0 / .08); min-height: 300px; }
   .page h3 { margin: 0 0 10px; font-size: 20px; }
@@ -141,23 +147,8 @@
       </div>
       <div class="note">Prueba gratis de 14 días, con todas las funciones · Windows 10 y 11 (64 bits)</div>
 
-      <div class="mock" aria-hidden="true">
-        <div class="mock-bar"><i></i><i></i><i></i>&nbsp; Informe trimestral — Lumen Office</div>
-        <div class="mock-tabs"><b>Inicio</b><b>Insertar</b><b>Diseño</b><b>Revisar</b><b>Vista</b><b>IA</b></div>
-        <div class="mock-body">
-          <div class="page">
-            <h3>Informe trimestral</h3>
-            <div class="line" style="width:92%"></div><div class="line" style="width:86%"></div><div class="line" style="width:64%"></div>
-            <div class="callout">Las ventas crecieron un 18 % respecto al año pasado.</div>
-            <div class="bars"><span style="height:45%"></span><span style="height:55%"></span><span style="height:62%"></span><span style="height:70%"></span><span style="height:78%"></span><span style="height:92%"></span></div>
-          </div>
-          <div class="side">
-            <div class="card-mini"><strong>Hoja de cálculo</strong>
-              <div class="grid-mini"><span>Mes</span><span>Ventas</span><span>Gasto</span><span>Total</span><span>Ene</span><span>1.240</span><span>860</span><span>380</span><span>Feb</span><span>1.410</span><span>900</span><span>510</span></div>
-            </div>
-            <div class="card-mini"><strong>Presentación</strong><div class="slide-mini">Resultados 2026</div></div>
-          </div>
-        </div>
+      <div class="mock">
+        <img class="shot" src="capturas/documento.png" alt="Lumen Office: documento con un título, un cuadro informativo, un gráfico y una tabla" width="1600" height="1000">
       </div>
     </div>
   </div>
@@ -195,7 +186,20 @@
     </div>
   </section>
 
-  <section id="funciones" class="alt">
+  <section id="capturas" class="alt">
+    <div class="wrap">
+      <h2>Así se ve</h2>
+      <p class="lead">Las mismas herramientas de siempre, con un diseño limpio y en modo claro u oscuro.</p>
+      <div class="gallery">
+        <figure><img src="capturas/hoja.png" alt="Hoja de cálculo con un presupuesto y un gráfico" width="1600" height="1000" loading="lazy"><figcaption>Hojas de cálculo con fórmulas y gráficos</figcaption></figure>
+        <figure><img src="capturas/presentacion.png" alt="Presentación con una tabla y un gráfico" width="1600" height="1000" loading="lazy"><figcaption>Presentaciones con tablas, gráficos y animaciones</figcaption></figure>
+        <figure><img src="capturas/oscuro.png" alt="Documento en modo oscuro" width="1600" height="1000" loading="lazy"><figcaption>Modo oscuro</figcaption></figure>
+        <figure><img src="capturas/inicio.png" alt="Pantalla de inicio con plantillas" width="1600" height="1000" loading="lazy"><figcaption>Inicio con plantillas listas para usar</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="funciones">
     <div class="wrap">
       <h2>Pensada para trabajar a gusto</h2>
       <p class="lead">Todo lo necesario para el día a día, sin anuncios ni sorpresas.</p>
