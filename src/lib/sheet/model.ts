@@ -87,7 +87,25 @@ export interface Sheet {
   validations?: Validation[];
   /** Comentarios de las celdas, por clave «fila,columna» */
   notes?: Record<string, string>;
+  /** Configuración de impresión */
+  print?: PrintSetup;
+  /** Hoja protegida: las celdas bloqueadas no se pueden cambiar */
+  protected?: boolean;
 }
+
+export interface PrintSetup {
+  landscape?: boolean;
+  margins?: "normal" | "narrow" | "wide";
+  /** Reducir para que quepa a lo ancho de la página */
+  fitWidth?: boolean;
+  /** Filas de títulos que se repiten en cada página */
+  repeatRows?: number;
+  /** Área de impresión (A1:F40); vacía = todo lo usado */
+  area?: string;
+  gridlines?: boolean;
+}
+
+export const PRINT_MARGINS = { normal: 15, narrow: 7, wide: 25 } as const;
 
 export interface Validation {
   id: string;

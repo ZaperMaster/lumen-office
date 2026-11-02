@@ -29,3 +29,8 @@ tauri-plugin-fs = "2"
 tauri-plugin-persisted-scope = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+
+# Guardar en PDF con el motor de impresión de WebView2 (mismas versiones que usa Tauri)
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.39"
+windows = "0.62"

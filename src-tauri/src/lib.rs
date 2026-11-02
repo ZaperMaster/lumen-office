@@ -1,3 +1,5 @@
+mod pdf;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -12,6 +14,8 @@ pub fn run() {
     .plugin(tauri_plugin_updater::Builder::new().build())
     // Reiniciar la app tras instalar una actualización
     .plugin(tauri_plugin_process::init())
+    // Guardar en PDF sin pasar por la ventana de imprimir
+    .invoke_handler(tauri::generate_handler![pdf::print_to_pdf])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

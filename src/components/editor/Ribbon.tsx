@@ -155,6 +155,8 @@ export interface FileActions {
   save: () => void;
   saveAs: () => void;
   exportAs: (format: FileFormat) => void;
+  /** Guardar como PDF directamente */
+  pdf: () => void;
 }
 
 function FileMenu({ files }: { files: FileActions }) {
@@ -197,12 +199,13 @@ function FileMenu({ files }: { files: FileActions }) {
           )}
           <SubMenu label="Exportar una copia" icon={<FileDown />}>
             <MenuItem icon={<FileText />} onSelect={() => files.exportAs("docx")}>Word (.docx)</MenuItem>
-            <MenuItem icon={<FileType2 />} onSelect={() => printDocument()}>PDF (mediante Imprimir)</MenuItem>
+            <MenuItem icon={<FileType2 />} onSelect={files.pdf}>PDF (.pdf)</MenuItem>
             <MenuItem icon={<FileJson />} onSelect={() => files.exportAs("lumen")}>Lumen, sin pérdidas (.lumen)</MenuItem>
             <MenuItem icon={<FileCode2 />} onSelect={() => files.exportAs("md")}>Markdown (.md)</MenuItem>
             <MenuItem icon={<Monitor />} onSelect={() => files.exportAs("html")}>Página web (.html)</MenuItem>
             <MenuItem icon={<Type />} onSelect={() => files.exportAs("txt")}>Texto sin formato (.txt)</MenuItem>
           </SubMenu>
+          <MenuItem icon={<FileType2 />} onSelect={files.pdf}>Guardar como PDF…</MenuItem>
           <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={() => printDocument()}>Imprimir…</MenuItem>
           {files.filePath && desktop && (
             <>

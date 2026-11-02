@@ -12,7 +12,7 @@ import { Evaluator, checkFormula, type Scalar } from "@/lib/sheet/formula";
 import { NUM_FORMATS, editText, formatValue } from "@/lib/sheet/format";
 import {
   addr, colWidth, key, newWorkbook, normRange, parseRange, rangeToA1, rowHeight, uid, usedRange, workbookText,
-  type CellStyle, type ChartSpec, type CondRule, type CondType, type NumFmt, type Range, type Sheet, type Workbook,
+  PRINT_MARGINS, type CellStyle, type ChartSpec, type CondRule, type CondType, type NumFmt, type PrintSetup, type Range, type Sheet, type Workbook,
 } from "@/lib/sheet/model";
 import * as ops from "@/lib/sheet/ops";
 import { FN_INFO, suggestFunctions, type FnInfo } from "@/lib/sheet/functions";
@@ -24,6 +24,8 @@ import { Grid, type EditState, type GridApi, type GridView, type Sel } from "@/c
 import { CondDialog, CondManager, FilterMenu, NoteDialog, PivotDialog, ValidationDialog } from "@/components/sheet/SheetExtras";
 import { buildPivot } from "@/lib/sheet/pivot";
 import { FormatCellsDialog } from "@/components/sheet/FormatCellsDialog";
+import { PrintSetupDialog } from "@/components/sheet/PrintSetupDialog";
+import { exportPdf, setPrintPage } from "@/lib/pdf";
 import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows, validationAt, validationOptions } from "@/lib/sheet/view";
 import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX, Settings2 } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
@@ -707,39 +709,42 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     setChartDialog(null);
   };
 
-  /* ---------------- Imprimir ---------------- */
-  function print() {
-    let el = document.getElementById("lumen-page-size") as HTMLStyleElement | null;
-    if (!el) {
-      el = document.createElement("style");
-      el.id = "lumen-page-size";
-      document.head.appendChild(el);
-    }
-    el.textContent = "@page { size: A4 landscape; margin: 12mm; }";
-    setPrinting(true);
-  }
+  /* ---------------- Imprimir y PDF ---------------- */
   const [printHtml, setPrintHtml] = useState<string | null>(null);
-  useEffect(() => {
-    if (!printing) return;
-    let cancelled = false;
-    void import("@/lib/sheet/xlsx").then(({ sheetHtml }) => {
-      if (cancelled) return;
-      setPrintHtml(sheetHtml(wbRef.current, wbRef.current.active));
-      // Se espera a que la tabla esté en la página antes de imprimir
-      window.addEventListener(
-        "afterprint",
-        () => {
-          setPrinting(false);
-          setPrintHtml(null);
-        },
-        { once: true },
-      );
-      setTimeout(() => window.print(), 80);
-    });
+  const [printZoom, setPrintZoom] = useState(1);
+  const [printDialog, setPrintDialog] = useState(false);
+  /** Papel (A4) según la configuración de la hoja */
+  const paper = (p: PrintSetup) => {
+    const m = PRINT_MARGINS[p.margins ?? "normal"];
+    const land = p.landscape !== false;
+    return { widthMm: land ? 297 : 210, heightMm: land ? 210 : 297, marginMm: m };
+  };
+  /** Prepara la copia para imprimir; devuelve cómo quitarla */
+  const renderForPrint = async (p: PrintSetup, pdf: boolean): Promise<() => void> => {
+    const { sheetHtml, printWidth } = await import("@/lib/sheet/xlsx");
+    const pg = paper(p);
+    // En el PDF los márgenes los pone el motor de impresión; al imprimir, la página
+    setPrintPage(`@page { size: ${pg.widthMm}mm ${pg.heightMm}mm; margin: ${pdf ? 0 : pg.marginMm}mm; }`);
+    const usable = (pg.widthMm - 2 * pg.marginMm) * 3.7795;
+    const w = printWidth(sheet, p);
+    setPrintZoom(p.fitWidth !== false && w > usable ? usable / w : 1);
+    setPrintHtml(sheetHtml(wbRef.current, wbRef.current.active, p));
+    setPrinting(true);
+    await new Promise((r) => setTimeout(r, 150));
     return () => {
-      cancelled = true;
+      setPrinting(false);
+      setPrintHtml(null);
     };
-  }, [printing]);
+  };
+  async function print(p: PrintSetup = sheet.print ?? {}) {
+    const undo = await renderForPrint(p, false);
+    window.addEventListener("afterprint", undo, { once: true });
+    window.print();
+  }
+  const pdf = (p: PrintSetup = sheet.print ?? {}) => {
+    const pg = paper(p);
+    void exportPdf(title || "Hoja de cálculo", pg, () => renderForPrint(p, true));
+  };
 
   /* ---------------- Barra de fórmulas ---------------- */
   const barValue = edit ? edit.text : showFormulas || !activeCell ? (activeCell?.v ?? "") : editText(activeCell.v, activeCell.s);
@@ -823,11 +828,11 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
               <OfficeFileMenu
                 files={files}
                 saveLabel="(.xlsx)"
-                onPrint={print}
+                onPrint={() => void print()}
                 exports={[
                   { label: "Excel (.xlsx)", icon: <FileSpreadsheet />, onSelect: () => files.exportAs("xlsx") },
                   { label: "CSV de la hoja actual (.csv)", icon: <FileText />, onSelect: () => files.exportAs("csv") },
-                  { label: "PDF (mediante Imprimir)", icon: <Printer />, onSelect: print },
+                  { label: "PDF (.pdf)", icon: <Printer />, onSelect: () => pdf() },
                 ]}
               />
             }
@@ -1122,6 +1127,11 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Mostrar">
                   <RBig icon={<Grid3x3 />} label="Líneas de cuadrícula" active={sheet.showGrid !== false} onClick={() => commit((w) => ops.updateSheet(w, w.active, { showGrid: sheet.showGrid === false }))} />
                   <RBig icon={<Eye />} label="Fórmulas" active={showFormulas} onClick={() => setShowFormulas((v) => !v)} />
+                </RGroup>
+                <RGroup label="Impresión">
+                  <RBig icon={<Settings2 />} label="Configurar página" onClick={() => setPrintDialog(true)} title="Orientación, márgenes, ajustar al ancho, títulos y área de impresión" />
+                  <RBig icon={<Printer />} label="Imprimir" onClick={() => void print()} />
+                  <RBig icon={<FileText />} label="Guardar como PDF" onClick={() => pdf()} />
                 </RGroup>
                 <RGroup label="Zoom">
                   <RBig icon={<Minus />} label="Alejar" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} />
@@ -1445,6 +1455,27 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           }}
         />
       )}
+      {printDialog && (
+        <PrintSetupDialog
+          initial={sheet.print ?? {}}
+          selection={rangeToA1(n)}
+          onClose={() => setPrintDialog(false)}
+          onSave={(p) => {
+            commit((w) => ops.updateSheet(w, w.active, { print: p }));
+            setPrintDialog(false);
+          }}
+          onPrint={(p) => {
+            commit((w) => ops.updateSheet(w, w.active, { print: p }));
+            setPrintDialog(false);
+            void print(p);
+          }}
+          onPdf={(p) => {
+            commit((w) => ops.updateSheet(w, w.active, { print: p }));
+            setPrintDialog(false);
+            pdf(p);
+          }}
+        />
+      )}
       {fmtDialog && (
         <FormatCellsDialog
           initial={activeCell?.s ?? {}}
@@ -1531,7 +1562,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       {printing && printHtml !== null &&
         createPortal(
           <div className="sheet-print">
-            <section>
+            <section style={{ zoom: printZoom }}>
               <h2>{title || "Hoja de cálculo"} · {sheet.name}</h2>
               <div dangerouslySetInnerHTML={{ __html: printHtml }} />
               {(sheet.charts ?? []).map((ch) => (

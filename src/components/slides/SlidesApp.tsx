@@ -21,6 +21,7 @@ import { ElementView, SlideBackground, SlideView, elBoxStyle, textStyle } from "
 import { SlidesPanel } from "@/components/slides/SlidesPanel";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
+import { exportPdf, setPrintPage } from "@/lib/pdf";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
 import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Popover, PopoverClose, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
@@ -647,14 +648,9 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
   /* ---------------- Imprimir ---------------- */
   useEffect(() => {
-    if (!printing) return;
-    let el = document.getElementById("lumen-page-size") as HTMLStyleElement | null;
-    if (!el) {
-      el = document.createElement("style");
-      el.id = "lumen-page-size";
-      document.head.appendChild(el);
-    }
-    el.textContent = "@page { size: 1280px 720px; margin: 0; }";
+    // El PDF no abre la ventana de imprimir (lo hace exportPdf)
+    if (!printing || pdfMode.current) return;
+    setPrintPage("@page { size: 1280px 720px; margin: 0; }");
     // Se quita la copia para imprimir cuando termina la impresión
     const done = () => setPrinting(false);
     window.addEventListener("afterprint", done, { once: true });
@@ -664,6 +660,22 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
       window.removeEventListener("afterprint", done);
     };
   }, [printing]);
+
+  const pdfMode = useRef(false);
+  const savePdf = () => {
+    finishEditing();
+    // 1280 × 720 px = 338,67 × 190,5 mm
+    void exportPdf(title || "Presentación", { widthMm: 338.667, heightMm: 190.5 }, async () => {
+      pdfMode.current = true;
+      setPrintPage("@page { size: 1280px 720px; margin: 0; }");
+      setPrinting(true);
+      await new Promise((r) => setTimeout(r, 200));
+      return () => {
+        pdfMode.current = false;
+        setPrinting(false);
+      };
+    });
+  };
 
   /* ---------------- Interfaz ---------------- */
   const tabs: { id: Tab; label: string }[] = [
@@ -729,7 +741,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 onPrint={() => { finishEditing(); setPrinting(true); }}
                 exports={[
                   { label: "PowerPoint (.pptx)", icon: <Presentation />, onSelect: () => files.exportAs("pptx") },
-                  { label: "PDF (mediante Imprimir)", icon: <Printer />, onSelect: () => { finishEditing(); setPrinting(true); } },
+                  { label: "PDF (.pdf)", icon: <Printer />, onSelect: savePdf },
                 ]}
               />
             }

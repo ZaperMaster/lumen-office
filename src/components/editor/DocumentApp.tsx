@@ -9,6 +9,7 @@ import {
   type DocSource,
 } from "@/lib/files";
 import { useConfirm } from "@/store/confirm";
+import { exportPdf } from "@/lib/pdf";
 import { openDoc } from "@/lib/actions";
 import { getTheme } from "@/lib/themes";
 import { MARGINS, MM_TO_PX, PAGE_SIZES, useSettings } from "@/store/settings";
@@ -139,6 +140,22 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
         });
       },
       exportAs: (format) => void exportDocument(format, source()),
+      pdf: () => {
+        const st = useSettings.getState();
+        const size = PAGE_SIZES[st.pageSize];
+        const land = st.orientation === "landscape";
+        // Se imprime en la vista de páginas (con encabezado y pie)
+        void exportPdf(titleRef.current || "Documento", { widthMm: land ? size.h : size.w, heightMm: land ? size.w : size.h }, async () => {
+          const prev = st.viewMode;
+          if (prev !== "page") {
+            st.set("viewMode", "page");
+            await new Promise((r) => setTimeout(r, 400));
+          }
+          return () => {
+            if (prev !== "page") useSettings.getState().set("viewMode", prev);
+          };
+        });
+      },
     };
   }, [doc.filePath, source, saveNow]);
   const unsavedFile = !!doc.filePath && (doc.savedAt ?? 0) < doc.updatedAt;

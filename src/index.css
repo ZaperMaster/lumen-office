@@ -527,3 +527,5 @@ button:disabled {
 
 .spell-error { text-decoration: underline wavy #e53935; text-decoration-skip-ink: none; text-underline-offset: 3px; }
 @media print { .spell-error { text-decoration: none; } }
+
+@media print { .sheet-print-table.no-grid td { border-color: transparent; } .sheet-print-table thead { display: table-header-group; } }

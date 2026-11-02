@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { Evaluator, FErr, dateToSerial, toExcelFormula, type Scalar } from "@/lib/sheet/formula";
 import { formatValue, parseInput } from "@/lib/sheet/format";
-import { DEFAULT_COL_W, DEFAULT_ROW_H, key, newSheet, parseKey, parseRange, rangeToA1, usedRange, type Cell, type CellStyle, type CondRule, type Sheet, type Workbook } from "@/lib/sheet/model";
+import { DEFAULT_COL_W, DEFAULT_ROW_H, key, newSheet, parseKey, parseRange, rangeToA1, usedRange, type Cell, type CellStyle, type CondRule, type PrintSetup, type Sheet, type Workbook } from "@/lib/sheet/model";
 import { condFormatter, filterRange, hiddenRows } from "@/lib/sheet/view";
 
 /*
@@ -510,9 +510,10 @@ export function readCsv(text: string, name = "Hoja1"): Workbook {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Tabla HTML con el área usada de una hoja, con su formato. */
-export function sheetHtml(wb: Workbook, si: number): string {
+export function sheetHtml(wb: Workbook, si: number, setup: PrintSetup = {}): string {
   const s = wb.sheets[si];
-  const used = usedRange(s);
+  const area = setup.area ? parseRange(setup.area) : null;
+  const used = area ?? usedRange(s);
   if (!used) return "<p></p>";
   const ev = new Evaluator(wb);
   const covered = new Set<string>();
@@ -520,13 +521,17 @@ export function sheetHtml(wb: Workbook, si: number): string {
   const hRows = hiddenRows(s, ev, si);
   const hCols = new Set(s.hiddenCols ?? []);
   const cf = condFormatter(s, ev, si);
-  let html = `<table class="sheet-print-table"><colgroup>`;
-  for (let c = 0; c <= used.c2; c++) if (!hCols.has(c)) html += `<col style="width:${s.colW[c] ?? DEFAULT_COL_W}px">`;
+  let html = `<table class="sheet-print-table${setup.gridlines === false ? " no-grid" : ""}"><colgroup>`;
+  for (let c = used.c1; c <= used.c2; c++) if (!hCols.has(c)) html += `<col style="width:${s.colW[c] ?? DEFAULT_COL_W}px">`;
   html += "</colgroup>";
-  for (let r = 0; r <= used.r2; r++) {
+  // Las filas de títulos van en <thead>, que se repite en cada página impresa
+  const repeat = Math.max(0, setup.repeatRows ?? 0);
+  if (repeat) html += "<thead>";
+  for (let r = used.r1; r <= used.r2; r++) {
+    if (repeat && r === used.r1 + repeat) html += "</thead><tbody>";
     if (hRows.has(r)) continue;
     html += `<tr style="height:${s.rowH[r] ?? DEFAULT_ROW_H}px">`;
-    for (let c = 0; c <= used.c2; c++) {
+    for (let c = used.c1; c <= used.c2; c++) {
       if (covered.has(key(r, c)) || hCols.has(c)) continue;
       const cell = s.cells[key(r, c)];
       const cond = cf?.(r, c);
@@ -561,5 +566,14 @@ export function sheetHtml(wb: Workbook, si: number): string {
     }
     html += "</tr>";
   }
-  return html + "</table>";
+  return html + (repeat ? "</tbody>" : "") + "</table>";
+}
+
+/** Ancho de la tabla impresa (px), para reducirla si no cabe. */
+export function printWidth(s: Sheet, setup: PrintSetup = {}): number {
+  const area = (setup.area ? parseRange(setup.area) : null) ?? usedRange(s);
+  if (!area) return 0;
+  let w = 0;
+  for (let c = area.c1; c <= area.c2; c++) if (!(s.hiddenCols ?? []).includes(c)) w += s.colW[c] ?? DEFAULT_COL_W;
+  return w;
 }
