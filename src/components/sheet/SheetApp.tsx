@@ -25,9 +25,10 @@ import { CondDialog, CondManager, FilterMenu, NoteDialog, PivotDialog, Validatio
 import { buildPivot } from "@/lib/sheet/pivot";
 import { FormatCellsDialog } from "@/components/sheet/FormatCellsDialog";
 import { PrintSetupDialog } from "@/components/sheet/PrintSetupDialog";
+import { SparkDialog, sparkValues } from "@/components/sheet/Sparkline";
 import { exportPdf, setPrintPage } from "@/lib/pdf";
 import { BAR_COLORS, SCALE_PRESETS, condFormatter, filterRange, hiddenRows, validationAt, validationOptions } from "@/lib/sheet/view";
-import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX, Settings2 } from "lucide-react";
+import { ListFilter, FilterX, Palette, EyeOff, LayoutList, ListChecks, MessageSquarePlus, MessageSquareX, Settings2, ShieldCheck, LockOpen } from "lucide-react";
 import { CHART_TYPES, ChartSvg, chartData } from "@/components/sheet/Chart";
 import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/components/office/OfficeChrome";
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
@@ -142,6 +143,9 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       filter: sheet.filter ? { r: sheet.filter.r1, c1: sheet.filter.c1, c2: sheet.filter.c2, active: new Set(Object.keys(sheet.filter.show).map(Number)) } : null,
       dropdown: !!validationAt(sheet, sel.ar, sel.ac),
       notes: sheet.notes,
+      sparks: sheet.sparks
+        ? Object.fromEntries(Object.entries(sheet.sparks).map(([k, sp]) => [k, { values: sparkValues(sp, ev, si), type: sp.type, color: sp.color ?? "#4f7cff" }]))
+        : undefined,
     }),
     [hidden, sheet, ev, si, sel.ar, sel.ac],
   );
@@ -150,6 +154,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   const [noteDialog, setNoteDialog] = useState(false);
   const [pivotDialog, setPivotDialog] = useState(false);
   const [fmtDialog, setFmtDialog] = useState(false);
+  const [sparkDialog, setSparkDialog] = useState(false);
   const [filterMenu, setFilterMenu] = useState<null | { col: number; x: number; y: number }>(null);
   const [condDialog, setCondDialog] = useState<CondType | null>(null);
   const [condManager, setCondManager] = useState(false);
@@ -169,6 +174,10 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     const prev = wbRef.current;
     const next = fn(prev);
     if (next === prev) return;
+    if (ops.touchesLocked(prev, next)) {
+      useApp.getState().toast("La hoja está protegida", "error", { detail: "Quita la protección en Datos → Proteger hoja para cambiar estas celdas." });
+      return;
+    }
     undoStack.current.push(prev);
     if (undoStack.current.length > 200) undoStack.current.shift();
     redoStack.current = [];
@@ -212,6 +221,11 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   /* ---------------- Edición de celdas ---------------- */
   const startEdit = useCallback(
     (text: string, typed: boolean, inBar = false) => {
+      const sh = wbRef.current.sheets[wbRef.current.active];
+      if (sh.protected && !sh.cells[key(sel.ar, sel.ac)]?.s?.unlocked) {
+        useApp.getState().toast("Esta celda está protegida", "error", { detail: "Quita la protección en Datos → Proteger hoja." });
+        return;
+      }
       setSuggestIdx(0);
       setEdit({ r: sel.ar, c: sel.ac, text, typed, inBar });
     },
@@ -1055,6 +1069,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Datos">
                   <RBig icon={<SquareFunction />} label="Función" onClick={() => setFnDialog(true)} />
                   <RBig icon={<MessageSquarePlus />} label="Comentario" onClick={() => setNoteDialog(true)} title="Añade una nota a la celda" />
+                  <RBig icon={<BarChart3 />} label="Minigráfico" onClick={() => setSparkDialog(true)} title="Un gráfico pequeño dentro de la celda" />
                   <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} />
                   <RBig icon={<Calendar />} label="Fecha de hoy" onClick={() => commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, "=HOY()"))} title="Inserta =HOY() en la celda" />
                 </RGroup>
@@ -1112,6 +1127,28 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   <RBig icon={<Columns3 />} label="Autoajustar columnas" onClick={autofitCols} title="Ancho justo para el contenido de las columnas seleccionadas" />
                   <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
                   <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} />
+                </RGroup>
+                <RGroup label="Proteger">
+                  <RBig
+                    icon={<ShieldCheck />}
+                    label={sheet.protected ? "Desproteger hoja" : "Proteger hoja"}
+                    active={!!sheet.protected}
+                    onClick={() => {
+                      commit((w) => ops.updateSheet(w, w.active, { protected: !w.sheets[w.active].protected || undefined }));
+                      toast(sheet.protected ? "Hoja desprotegida" : "Hoja protegida: solo se pueden cambiar las celdas desbloqueadas", "success");
+                    }}
+                    title="Evita cambios por error en las celdas bloqueadas"
+                  />
+                  <RBig
+                    icon={<LockOpen />}
+                    label="Desbloquear celdas"
+                    disabled={!!sheet.protected}
+                    onClick={() => {
+                      commit((w) => ops.styleRange(w, w.active, n, (st) => ({ ...st, unlocked: st.unlocked ? undefined : true })));
+                      toast("Las celdas seleccionadas se podrán cambiar con la hoja protegida", "success");
+                    }}
+                    title="Celdas que se podrán rellenar aunque la hoja esté protegida (por ejemplo, un formulario)"
+                  />
                 </RGroup>
                 <RGroup label="Inmovilizar">
                   <RBig icon={<Lock />} label="Fila superior" active={sheet.freezeR === 1 && !sheet.freezeC} onClick={() => freeze(1, 0)} />
@@ -1452,6 +1489,29 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             const id = validationAt(sheet, sel.ar, sel.ac)?.id;
             commit((w) => ops.updateSheet(w, w.active, { validations: (w.sheets[w.active].validations ?? []).filter((x) => x.id !== id) }));
             setValDialog(false);
+          }}
+        />
+      )}
+      {sparkDialog && (
+        <SparkDialog
+          cell={addr(sel.ar, sel.ac)}
+          sheet={sheet}
+          initial={
+            sheet.sparks?.[key(sel.ar, sel.ac)] ?? {
+              // Por defecto, los números de la izquierda en la misma fila
+              range: sel.ac > 0 ? `${addr(sel.ar, Math.max(0, sel.ac - 6))}:${addr(sel.ar, sel.ac - 1)}` : addr(sel.ar, 1),
+              type: "line",
+            }
+          }
+          onClose={() => setSparkDialog(false)}
+          onSave={(sp) => {
+            commit((w) => {
+              const sparks = { ...(w.sheets[w.active].sparks ?? {}) };
+              if (sp) sparks[key(sel.ar, sel.ac)] = sp;
+              else delete sparks[key(sel.ar, sel.ac)];
+              return ops.updateSheet(w, w.active, { sparks });
+            });
+            setSparkDialog(false);
           }}
         />
       )}

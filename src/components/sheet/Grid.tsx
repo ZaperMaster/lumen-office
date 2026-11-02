@@ -4,6 +4,7 @@ import { defaultAlign, formatValue } from "@/lib/sheet/format";
 import { colName, colWidth, key, mergeAt, normRange, rangeToA1, rowHeight, type ChartSpec, type Range, type Sheet } from "@/lib/sheet/model";
 import { ChartSvg, chartData } from "@/components/sheet/Chart";
 import { autoRowHeights, looksEmpty, type CondStyle } from "@/lib/sheet/view";
+import { SparkSvg } from "@/components/sheet/Sparkline";
 import { cn } from "@/components/ui";
 
 /*
@@ -85,6 +86,8 @@ export interface GridView {
   /** La celda activa tiene lista desplegable */
   dropdown: boolean;
   notes?: Record<string, string>;
+  /** Minigráficos ya calculados */
+  sparks?: Record<string, { values: number[]; type: "line" | "column"; color: string }>;
 }
 
 export function Grid({
@@ -467,6 +470,20 @@ export function Grid({
                 {text}
               </div>
             )}
+          </div>,
+        );
+      }
+    }
+    // Minigráficos
+    if (gv.sparks) {
+      const rowSet = new Set(rows);
+      const colSet = new Set(cols);
+      for (const [k, sp] of Object.entries(gv.sparks)) {
+        const [r, c] = k.split(",").map(Number);
+        if (!rowSet.has(r) || !colSet.has(c) || gv.hiddenRows.has(r) || gv.hiddenCols.has(c)) continue;
+        out.push(
+          <div key={`s${k}`} className="sg-cell" style={{ left: sxOf(c) - ox, top: syOf(r) - oy, width: cw(c), height: rh(r) }}>
+            <SparkSvg values={sp.values} type={sp.type} color={sp.color} w={cw(c)} h={rh(r)} />
           </div>,
         );
       }

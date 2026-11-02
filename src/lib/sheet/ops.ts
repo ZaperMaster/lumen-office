@@ -487,3 +487,27 @@ export function setNote(wb: Workbook, si: number, r: number, c: number, text: st
     s.notes = notes;
   });
 }
+
+/**
+ * ¿Cambia el paso de `prev` a `next` alguna celda bloqueada de una hoja protegida?
+ * (Proteger o desproteger la hoja sí se permite.)
+ */
+export function touchesLocked(prev: Workbook, next: Workbook): boolean {
+  for (let i = 0; i < next.sheets.length; i++) {
+    const a = prev.sheets.find((s) => s.id === next.sheets[i].id);
+    const b = next.sheets[i];
+    if (!a || !a.protected || !b.protected || a === b) continue;
+    if (a.cells !== b.cells) {
+      const keys = new Set([...Object.keys(a.cells), ...Object.keys(b.cells)]);
+      for (const k of keys) {
+        const x = a.cells[k];
+        const y = b.cells[k];
+        if (x === y || JSON.stringify(x) === JSON.stringify(y)) continue;
+        if (!x?.s?.unlocked) return true;
+      }
+    }
+    // Insertar o borrar filas y columnas o combinar celdas también cambia celdas bloqueadas
+    if (a.rows !== b.rows || a.cols !== b.cols || a.merges !== b.merges) return true;
+  }
+  return false;
+}

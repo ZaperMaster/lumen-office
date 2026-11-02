@@ -23,6 +23,8 @@ export interface CellStyle {
   fs?: number;
   font?: string;
   wrap?: boolean;
+  /** Celda que se puede cambiar aunque la hoja esté protegida */
+  unlocked?: boolean;
   /** Bordes: arriba, derecha, abajo, izquierda */
   bt?: boolean;
   br?: boolean;
@@ -89,8 +91,16 @@ export interface Sheet {
   notes?: Record<string, string>;
   /** Configuración de impresión */
   print?: PrintSetup;
+  /** Minigráficos por celda («fila,columna») */
+  sparks?: Record<string, Spark>;
   /** Hoja protegida: las celdas bloqueadas no se pueden cambiar */
   protected?: boolean;
+}
+
+export interface Spark {
+  range: string;
+  type: "line" | "column";
+  color?: string;
 }
 
 export interface PrintSetup {

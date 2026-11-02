@@ -98,3 +98,38 @@ describe("Excel y CSV", () => {
     expect(readCsv(csv).sheets[0].cells[key(1, 1)].v).toBe("7.5");
   });
 });
+
+describe("gráficos y protección en Excel", () => {
+  it("los gráficos se guardan en el .xlsx y se vuelven a leer", async () => {
+    const { wb } = sheetTemplate("budget").build();
+    const bytes = await buildXlsx(wb);
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(bytes);
+    const chart = await zip.file("xl/charts/chart1.xml")!.async("string");
+    expect(chart).toContain("<c:barChart>");
+    expect(chart).toContain("'Presupuesto'!$B$4:$B$11");
+    expect(await zip.file("xl/worksheets/sheet1.xml")!.async("string")).toContain('<drawing r:id="rIdLumenDrawing"/>');
+    expect(await zip.file("[Content_Types].xml")!.async("string")).toContain("/xl/charts/chart1.xml");
+    const back = await readXlsx(ab(bytes));
+    expect(back.sheets[0].charts?.[0]).toMatchObject({ type: "column", title: "Previsto y real" });
+    expect(back.sheets[0].charts?.[0].range).toBe("A3:C11");
+  });
+  it("la protección y las celdas desbloqueadas se conservan", async () => {
+    let wb = newWorkbook();
+    wb = ops.inputCell(wb, 0, 0, 0, "Fijo");
+    wb = ops.styleRange(wb, 0, { r1: 1, c1: 0, r2: 1, c2: 0 }, { unlocked: true });
+    wb = ops.updateSheet(wb, 0, { protected: true });
+    const back = await readXlsx(ab(await buildXlsx(wb)));
+    expect(back.sheets[0].protected).toBe(true);
+    expect(back.sheets[0].cells[key(1, 0)]?.s?.unlocked).toBe(true);
+  });
+  it("con la hoja protegida no se cambian celdas bloqueadas", () => {
+    let wb = newWorkbook();
+    wb = ops.inputCell(wb, 0, 0, 0, "Fijo");
+    wb = ops.styleRange(wb, 0, { r1: 1, c1: 0, r2: 1, c2: 0 }, { unlocked: true });
+    wb = ops.updateSheet(wb, 0, { protected: true });
+    expect(ops.touchesLocked(wb, ops.inputCell(wb, 0, 0, 0, "Otro"))).toBe(true);
+    expect(ops.touchesLocked(wb, ops.inputCell(wb, 0, 1, 0, "Libre"))).toBe(false);
+    expect(ops.touchesLocked(wb, ops.insertLines(wb, 0, "row", 0, 1))).toBe(true);
+  });
+});

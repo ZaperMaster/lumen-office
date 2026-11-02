@@ -3,6 +3,7 @@ import { Evaluator, FErr, dateToSerial, toExcelFormula, type Scalar } from "@/li
 import { formatValue, parseInput } from "@/lib/sheet/format";
 import { DEFAULT_COL_W, DEFAULT_ROW_H, key, newSheet, parseKey, parseRange, rangeToA1, usedRange, type Cell, type CellStyle, type CondRule, type PrintSetup, type Sheet, type Workbook } from "@/lib/sheet/model";
 import { condFormatter, filterRange, hiddenRows } from "@/lib/sheet/view";
+import { addChartsToXlsx, readSheetCharts } from "@/lib/sheet/xlsxCharts";
 
 /*
  * Libros de Excel (.xlsx) y CSV. Este módulo se carga solo al abrir o guardar.
@@ -194,6 +195,7 @@ export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
   book.creator = "Lumen Office";
   book.created = new Date();
   const ev = new Evaluator(wb);
+  const protections: Promise<void>[] = [];
   wb.sheets.forEach((s, si) => {
     const ws = book.addWorksheet(s.name.slice(0, 31), {
       views: [
@@ -238,7 +240,10 @@ export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
       }
       const nf = excelNumFmt(st);
       if (nf) xc.numFmt = nf;
+      if (st.unlocked) xc.protection = { locked: false };
     }
+    // Hoja protegida (sin contraseña)
+    if (s.protected) protections.push(ws.protect("", { selectLockedCells: true, selectUnlockedCells: true, formatColumns: true, formatRows: true }));
     for (const m of s.merges ?? []) ws.mergeCells(m.r1 + 1, m.c1 + 1, m.r2 + 1, m.c2 + 1);
     // Comentarios y listas desplegables
     for (const [k, text] of Object.entries(s.notes ?? {})) {
@@ -267,7 +272,9 @@ export async function buildXlsx(wb: Workbook): Promise<Uint8Array> {
       if (x) ws.addConditionalFormatting({ ref: rule.range, rules: [x] });
     });
   });
-  return new Uint8Array(await book.xlsx.writeBuffer());
+  await Promise.all(protections);
+  // Los gráficos se añaden aparte (la librería no los escribe)
+  return addChartsToXlsx(new Uint8Array(await book.xlsx.writeBuffer()), wb, ev);
 }
 
 /* ------------------------------------------------------------------ */
@@ -325,9 +332,10 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
     const s = newSheet(ws.name);
     let maxR = 0;
     let maxC = 0;
-    ws.eachRow({ includeEmpty: false }, (row, rn) => {
+    ws.eachRow({ includeEmpty: true }, (row, rn) => {
       if (row.height && Math.abs(row.height / 0.75 - DEFAULT_ROW_H) > 1) s.rowH[rn - 1] = Math.round(row.height / 0.75);
-      row.eachCell({ includeEmpty: false }, (xc, cn) => {
+      // También las celdas vacías con formato (relleno, bordes, desbloqueadas)
+      row.eachCell({ includeEmpty: true }, (xc, cn) => {
         const { v, date } = readValue(xc.value);
         const st: CellStyle = {};
         const f = xc.font;
@@ -361,6 +369,7 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
         }
         Object.assign(st, fmtFromExcel(xc.numFmt));
         if (date && !st.fmt) st.fmt = "date";
+        if (xc.protection?.locked === false) st.unlocked = true;
         const cell: Cell = { v };
         if (Object.keys(st).length) cell.s = st;
         const note = xc.note as unknown as string | { texts?: { text: string }[] } | undefined;
@@ -413,10 +422,21 @@ export async function readXlsx(data: ArrayBuffer): Promise<Workbook> {
       validations.push({ id: Math.random().toString(36).slice(2, 10), range, strict: !!dv.showErrorMessage, ...v });
     }
     if (validations.length) s.validations = mergeValidations(validations);
+    const prot = (ws as unknown as { sheetProtection?: { sheet?: boolean } }).sheetProtection;
+    if (prot?.sheet) s.protected = true;
     s.rows = Math.max(200, maxR + 50);
     s.cols = Math.max(26, maxC + 5);
     sheets.push(s);
   });
+  // Gráficos guardados en el archivo
+  for (let i = 0; i < sheets.length; i++) {
+    try {
+      const charts = await readSheetCharts(data, i, sheets[i]);
+      if (charts.length) sheets[i].charts = charts;
+    } catch {
+      // Un gráfico que no se entiende no impide abrir el libro
+    }
+  }
   if (!sheets.length) sheets.push(newSheet("Hoja1"));
   return { sheets, active: 0 };
 }
