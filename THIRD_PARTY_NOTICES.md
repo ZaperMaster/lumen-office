@@ -3,7 +3,7 @@
 Lumen Office incluye software de terceros. A continuación se reproducen sus licencias y avisos de copyright,
 tal como exigen. Lumen Office en sí se distribuye bajo la licencia PolyForm Strict 1.0.0 (archivo LICENSE).
 
-Paquetes incluidos: 660 (379 de npm, 281 de crates.io).
+Paquetes incluidos: 666 (385 de npm, 281 de crates.io).
 
 Los modelos de IA que se descargan desde la app no forman parte de este paquete: cada uno tiene su propia licencia,
 indicada en su página de Hugging Face.
@@ -143,6 +143,7 @@ indicada en su página de Hugging Face.
 - @tiptap/pm 3.32.0 (npm) — MIT
 - @tiptap/react 3.32.0 (npm) — MIT
 - @tiptap/starter-kit 3.32.0 (npm) — MIT
+- @types/dom-webcodecs 0.1.19 (npm) — MIT
 - @types/node 14.18.63 (npm) — MIT
 - @types/node 22.20.5 (npm) — MIT
 - @types/node 26.6.5 (npm) — MIT
@@ -150,6 +151,7 @@ indicada en su página de Hugging Face.
 - @types/react-dom 19.3.0 (npm) — MIT
 - @types/trusted-types 2.0.7 (npm) — MIT
 - @types/use-sync-external-store 0.0.6 (npm) — MIT
+- @types/wicg-file-system-access 2020.9.8 (npm) — MIT
 - @xmldom/xmldom 0.8.15 (npm) — MIT
 - adler2 2.0.1 (crates.io) — 0BSD OR MIT OR Apache-2.0
 - aho-corasick 1.1.5 (crates.io) — Unlicense OR MIT
@@ -235,6 +237,7 @@ indicada en su página de Hugging Face.
 - detect-node-es 1.1.0 (npm) — MIT
 - dexie 4.4.7 (npm) — Apache-2.0
 - dexie-react-hooks 4.4.0 (npm) — Apache-2.0
+- dictionary-es 4.0.0 (npm) — (GPL-3.0 OR LGPL-3.0 OR MPL-1.1)
 - digest 0.10.7 (crates.io) — MIT OR Apache-2.0
 - dingbat-to-unicode 1.0.2 (npm) — BSD-2-Clause
 - dirs 7.0.0 (crates.io) — MIT OR Apache-2.0
@@ -346,6 +349,7 @@ indicada en su página de Hugging Face.
 - is-async-function 2.1.1 (npm) — MIT
 - is-bigint 1.1.0 (npm) — MIT
 - is-boolean-object 1.2.2 (npm) — MIT
+- is-buffer 2.0.5 (npm) — MIT
 - is-callable 1.2.7 (npm) — MIT
 - is-data-view 1.0.2 (npm) — MIT
 - is-date-object 1.1.0 (npm) — MIT
@@ -415,10 +419,12 @@ indicada en su página de Hugging Face.
 - miniz_oxide 0.9.1 (crates.io) — MIT OR Zlib OR Apache-2.0
 - mio 1.2.4 (crates.io) — MIT
 - mkdirp 0.5.6 (npm) — MIT
+- mp4-muxer 5.2.2 (npm) — MIT
 - muda 0.20.0 (crates.io) — Apache-2.0 OR MIT
 - nanoid 6.0.2 (npm) — MIT
 - new_debug_unreachable 1.0.6 (crates.io) — MIT
 - normalize-path 3.0.0 (npm) — MIT
+- nspell 2.1.5 (npm) — MIT
 - num-conv 0.2.2 (crates.io) — MIT OR Apache-2.0
 - num-traits 0.2.19 (crates.io) — MIT OR Apache-2.0
 - object-inspect 1.13.4 (npm) — MIT
@@ -3853,6 +3859,7 @@ SOFTWARE.
 ## Licencia 32: MIT
 
 Usada por:
+- @types/dom-webcodecs 0.1.19
 - @types/node 14.18.63
 - @types/node 22.20.5
 - @types/node 26.6.5
@@ -3860,6 +3867,7 @@ Usada por:
 - @types/react-dom 19.3.0
 - @types/trusted-types 2.0.7
 - @types/use-sync-external-store 0.0.6
+- @types/wicg-file-system-access 2020.9.8
 
 MIT License
 
@@ -11727,7 +11735,90 @@ Apache License
 
 --------------------------------------------------------------------------------
 
-## Licencia 101: MIT OR Apache-2.0
+## Licencia 101: (GPL-3.0 OR LGPL-3.0 OR MPL-1.1)
+
+Usada por:
+- dictionary-es 4.0.0
+
+****************************************************************************
+  **                                                                        **
+  **          Diccionario para corrección ortográfica en español de         **
+  **                      LibreOffice/Apache OpenOffice                     **
+  **                                                                        **
+  ****************************************************************************
+
+Para: es_ES
+
+  ****************************************************************************
+
+                                  Versión 2.8
+
+SUMARIO
+
+1. AUTOR
+2. LICENCIA
+3. COLABORACIÓN
+4. AGRADECIMIENTOS
+
+
+1. AUTOR
+
+   Este diccionario ha sido desarrollado inicialmente por Santiago Bosio;
+quien actualmente coordina el desarrollo de todos los diccionarios localizados.
+
+   El diccionario es un desarrollo completamente nuevo, y NO ESTÁ BASADO en el
+trabajo de Jesús Carretero y Santiago Rodríguez, ni en la versión adaptada al
+formato de MySpell por Richard Holt.
+
+2. LICENCIA
+
+   Este diccionario para corrección ortográfica, integrado por el fichero
+de afijos y la lista de palabras (es_ES[.aff|.dic]) se distribuye
+bajo un triple esquema de licencias disjuntas: GNU GPL versión 3 o posterior,
+GNU LGPL versión 3 o posterior, ó MPL versión 1.1 o posterior. Puede
+seleccionar libremente bajo cuál de estas licencias utilizará este diccionario.
+En el fichero LICENSE.md encontrá más detalles.
+
+3. COLABORACIÓN
+
+   Este diccionario es resultado del trabajo colaborativo de muchas personas.
+La buena noticia es que ¡usted también puede participar!
+
+   ¿Tiene dudas o sugerencias? ¿Desearía ver palabras agregadas, o que se
+realizaran correcciones? Consulte las indicaciones técnicas publicadas en
+CONTRIBUTING.md. Estaremos encantados de atenderle.
+
+4. AGRADECIMIENTOS
+
+   Hay varias personas que han colaborado con aportes o sugerencias a la
+creación de este diccionario. Se agradece especialmente a:
+
+   - Richard Holt.
+   - Marcelo Garrone.
+   - Kevin Hendricks.
+   - Juan Rey Saura.
+   - Carlos Dávila.
+   - Román Gelbort.
+   - J. Eduardo Moreno.
+   - Gonzalo Higuera Díaz.
+   - Ricardo Palomares Martínez.
+   - Sergio Medina.
+   - Ismael Olea.
+   - Alejandro Moreno.
+   - Alexandro Colorado.
+   - Andrés Sánchez.
+   - Juan Rafael Fernández García.
+   - eksperimental.
+   - Ezequiel (ezeperez26).
+   - KNTRO.
+   - Ricardo Berlasso.
+   - Edward Villegas-Pulgarin (cosmocalibur)
+   - y a todos los integrantes de la comunidad en español que proponen mejoras
+     a este diccionario.
+
+--------------------------------------------------------------------------------
+
+## Licencia 102: MIT OR Apache-2.0
 
 Usada por:
 - digest 0.10.7
@@ -11964,7 +12055,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 102: BSD-2-Clause
+## Licencia 103: BSD-2-Clause
 
 Usada por:
 - dingbat-to-unicode 1.0.2
@@ -11994,7 +12085,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 103: MIT OR Apache-2.0
+## Licencia 104: MIT OR Apache-2.0
 
 Usada por:
 - dirs 7.0.0
@@ -12199,7 +12290,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 104: MIT
+## Licencia 105: MIT
 
 Usada por:
 - docx 9.14.0
@@ -12228,7 +12319,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 105: MIT
+## Licencia 106: MIT
 
 Usada por:
 - dom_query 0.28.0
@@ -12263,7 +12354,7 @@ developed by Chen Jiaju, licensed under the MIT License and the Apache License 2
 
 --------------------------------------------------------------------------------
 
-## Licencia 106: (MPL-2.0 OR Apache-2.0)
+## Licencia 107: (MPL-2.0 OR Apache-2.0)
 
 Usada por:
 - dompurify 3.4.17
@@ -12848,7 +12939,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 --------------------------------------------------------------------------------
 
-## Licencia 107: Apache-2.0 AND MIT
+## Licencia 108: Apache-2.0 AND MIT
 
 Usada por:
 - dpi 0.1.2
@@ -13111,7 +13202,7 @@ have been licensed under extremely permissive terms.
 
 --------------------------------------------------------------------------------
 
-## Licencia 108: MPL-2.0
+## Licencia 109: MPL-2.0
 
 Usada por:
 - dtoa-short 0.3.5
@@ -13492,7 +13583,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 --------------------------------------------------------------------------------
 
-## Licencia 109: BSD
+## Licencia 110: BSD
 
 Usada por:
 - duck 0.1.12
@@ -13525,7 +13616,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 110: CC0-1.0 OR MIT-0 OR Apache-2.0
+## Licencia 111: CC0-1.0 OR MIT-0 OR Apache-2.0
 
 Usada por:
 - dunce 1.0.5
@@ -13654,7 +13745,7 @@ express Statement of Purpose.
 
 --------------------------------------------------------------------------------
 
-## Licencia 111: MIT
+## Licencia 112: MIT
 
 Usada por:
 - dunder-proto 1.0.1
@@ -13684,7 +13775,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 112: BSD-3-Clause
+## Licencia 113: BSD-3-Clause
 
 Usada por:
 - duplexer2 0.1.4
@@ -13718,7 +13809,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 113: MIT
+## Licencia 114: MIT
 
 Usada por:
 - end-of-stream 1.4.5
@@ -13748,7 +13839,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 114: Apache-2.0 OR MIT
+## Licencia 115: Apache-2.0 OR MIT
 
 Usada por:
 - equivalent 1.0.3
@@ -13985,7 +14076,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 115: MIT
+## Licencia 116: MIT
 
 Usada por:
 - es-abstract-get 1.0.0
@@ -14014,7 +14105,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 116: MIT
+## Licencia 117: MIT
 
 Usada por:
 - es-set-tostringtag 2.1.0
@@ -14043,7 +14134,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 117: MIT
+## Licencia 118: MIT
 
 Usada por:
 - es-to-primitive 1.3.4
@@ -14081,7 +14172,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 118: MIT
+## Licencia 119: MIT
 
 Usada por:
 - exceljs 4.4.0
@@ -14110,7 +14201,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 119: MIT
+## Licencia 120: MIT
 
 Usada por:
 - fast-equals 5.4.5
@@ -14139,7 +14230,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 120: MIT OR Apache-2.0
+## Licencia 121: MIT OR Apache-2.0
 
 Usada por:
 - fdeflate 0.3.7
@@ -14351,7 +14442,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 121: MIT
+## Licencia 122: MIT
 
 Usada por:
 - fern 0.7.1
@@ -14366,7 +14457,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 122: MIT
+## Licencia 123: MIT
 
 Usada por:
 - file-saver 2.0.5
@@ -14385,7 +14476,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 123: MIT OR Apache-2.0
+## Licencia 124: MIT OR Apache-2.0
 
 Usada por:
 - flate2 1.1.10
@@ -14622,7 +14713,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 124: Apache-2.0 / MIT
+## Licencia 125: Apache-2.0 / MIT
 
 Usada por:
 - fnv 1.0.7
@@ -14859,7 +14950,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 125: Zlib
+## Licencia 126: Zlib
 
 Usada por:
 - foldhash 0.2.0
@@ -14886,7 +14977,7 @@ the following restrictions:
 
 --------------------------------------------------------------------------------
 
-## Licencia 126: MIT
+## Licencia 127: MIT
 
 Usada por:
 - for-each 0.3.5
@@ -14915,7 +15006,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 127: MIT OR Apache-2.0
+## Licencia 128: MIT OR Apache-2.0
 
 Usada por:
 - form_urlencoded 1.2.2
@@ -15152,7 +15243,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 128: MIT
+## Licencia 129: MIT
 
 Usada por:
 - fs-constants 1.0.0
@@ -15181,7 +15272,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 129: ISC
+## Licencia 130: ISC
 
 Usada por:
 - fs.realpath 1.0.0
@@ -15232,7 +15323,7 @@ the licensed code:
 
 --------------------------------------------------------------------------------
 
-## Licencia 130: ISC
+## Licencia 131: ISC
 
 Usada por:
 - fstream 1.0.12
@@ -15259,7 +15350,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 131: MIT
+## Licencia 132: MIT
 
 Usada por:
 - function-bind 1.1.2
@@ -15286,7 +15377,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 132: MIT
+## Licencia 133: MIT
 
 Usada por:
 - function.prototype.name 1.2.0
@@ -15316,7 +15407,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 133: MIT
+## Licencia 134: MIT
 
 Usada por:
 - functions-have-names 1.2.3
@@ -15351,7 +15442,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 134: MIT OR Apache-2.0
+## Licencia 135: MIT OR Apache-2.0
 
 Usada por:
 - futures-channel 0.3.34
@@ -15596,7 +15687,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 135: MIT
+## Licencia 136: MIT
 
 Usada por:
 - generator-function 2.0.1
@@ -15611,7 +15702,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 136: MIT
+## Licencia 137: MIT
 
 Usada por:
 - generic-array 0.14.7
@@ -15640,7 +15731,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 137: MIT
+## Licencia 138: MIT
 
 Usada por:
 - get-nonce 1.0.1
@@ -15669,7 +15760,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 138: MIT
+## Licencia 139: MIT
 
 Usada por:
 - get-proto 1.0.1
@@ -15698,7 +15789,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 139: MIT
+## Licencia 140: MIT
 
 Usada por:
 - get-symbol-description 1.1.0
@@ -15729,7 +15820,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 140: MIT OR Apache-2.0
+## Licencia 141: MIT OR Apache-2.0
 
 Usada por:
 - getrandom 0.2.17
@@ -15967,7 +16058,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 141: MIT OR Apache-2.0
+## Licencia 142: MIT OR Apache-2.0
 
 Usada por:
 - getrandom 0.3.4
@@ -16205,7 +16296,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 142: MIT OR Apache-2.0
+## Licencia 143: MIT OR Apache-2.0
 
 Usada por:
 - getrandom 0.4.3
@@ -16443,7 +16534,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 143: ISC
+## Licencia 144: ISC
 
 Usada por:
 - glob 7.2.3
@@ -16472,7 +16563,7 @@ https://creativecommons.org/licenses/by-sa/4.0/
 
 --------------------------------------------------------------------------------
 
-## Licencia 144: MIT
+## Licencia 145: MIT
 
 Usada por:
 - gopd 1.2.0
@@ -16502,7 +16593,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 145: ISC
+## Licencia 146: ISC
 
 Usada por:
 - graceful-fs 4.2.11
@@ -16525,7 +16616,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 146: MIT
+## Licencia 147: MIT
 
 Usada por:
 - has-property-descriptors 1.0.2
@@ -16555,7 +16646,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 147: MIT
+## Licencia 148: MIT
 
 Usada por:
 - has-symbols 1.1.0
@@ -16584,7 +16675,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 148: MIT OR Apache-2.0
+## Licencia 149: MIT OR Apache-2.0
 
 Usada por:
 - hashbrown 0.12.3
@@ -16822,7 +16913,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 149: MIT
+## Licencia 150: MIT
 
 Usada por:
 - hasown 2.0.4
@@ -16853,7 +16944,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 150: MIT OR Apache-2.0
+## Licencia 151: MIT OR Apache-2.0
 
 Usada por:
 - heck 0.5.0
@@ -17090,7 +17181,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 151: MIT OR Apache-2.0
+## Licencia 152: MIT OR Apache-2.0
 
 Usada por:
 - hex 0.4.3
@@ -17322,7 +17413,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 152: MIT OR Apache-2.0
+## Licencia 153: MIT OR Apache-2.0
 
 Usada por:
 - html5ever 0.39.0
@@ -17561,7 +17652,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 153: MIT OR Apache-2.0
+## Licencia 154: MIT OR Apache-2.0
 
 Usada por:
 - http 1.5.0
@@ -17798,7 +17889,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 154: MIT
+## Licencia 155: MIT
 
 Usada por:
 - http-body 1.1.0
@@ -17832,7 +17923,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 155: MIT OR Apache-2.0
+## Licencia 156: MIT OR Apache-2.0
 
 Usada por:
 - httparse 1.10.1
@@ -18063,7 +18154,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 156: ISC
+## Licencia 157: ISC
 
 Usada por:
 - https 1.0.0
@@ -18073,7 +18164,7 @@ Usada por:
 
 --------------------------------------------------------------------------------
 
-## Licencia 157: MIT
+## Licencia 158: MIT
 
 Usada por:
 - hyper 1.12.0
@@ -18100,7 +18191,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 158: Apache-2.0 OR ISC OR MIT
+## Licencia 159: Apache-2.0 OR ISC OR MIT
 
 Usada por:
 - hyper-rustls 0.27.10
@@ -18356,7 +18447,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 159: MIT
+## Licencia 160: MIT
 
 Usada por:
 - hyper-util 0.1.21
@@ -18383,7 +18474,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 160: MIT
+## Licencia 161: MIT
 
 Usada por:
 - ico 0.6.0
@@ -18412,7 +18503,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 161: Unicode-3.0
+## Licencia 162: Unicode-3.0
 
 Usada por:
 - icu_collections 2.4.0
@@ -18483,7 +18574,7 @@ ICU 1.8.1 to ICU 57.1 © 1995-2016 International Business Machines Corporation a
 
 --------------------------------------------------------------------------------
 
-## Licencia 162: MIT/Apache-2.0
+## Licencia 163: MIT/Apache-2.0
 
 Usada por:
 - ident_case 1.0.1
@@ -18510,7 +18601,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 163: MIT OR Apache-2.0
+## Licencia 164: MIT OR Apache-2.0
 
 Usada por:
 - idna 1.1.0
@@ -18749,7 +18840,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 164: Apache-2.0 OR MIT
+## Licencia 165: Apache-2.0 OR MIT
 
 Usada por:
 - idna_adapter 1.2.2
@@ -18986,7 +19077,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 165: BSD-3-Clause
+## Licencia 166: BSD-3-Clause
 
 Usada por:
 - ieee754 1.2.1
@@ -19005,7 +19096,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 --------------------------------------------------------------------------------
 
-## Licencia 166: MIT
+## Licencia 167: MIT
 
 Usada por:
 - image-size 1.2.1
@@ -19022,7 +19113,7 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 --------------------------------------------------------------------------------
 
-## Licencia 167: MIT
+## Licencia 168: MIT
 
 Usada por:
 - immediate 3.0.6
@@ -19050,7 +19141,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 168: Apache-2.0 OR MIT
+## Licencia 169: Apache-2.0 OR MIT
 
 Usada por:
 - indexmap 1.9.3
@@ -19288,7 +19379,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 169: MIT
+## Licencia 170: MIT
 
 Usada por:
 - infer 0.22.0
@@ -19317,7 +19408,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 170: ISC
+## Licencia 171: ISC
 
 Usada por:
 - inflight 1.0.6
@@ -19340,7 +19431,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 171: ISC
+## Licencia 172: ISC
 
 Usada por:
 - inherits 2.0.4
@@ -19363,7 +19454,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 172: MIT OR Apache-2.0
+## Licencia 173: MIT OR Apache-2.0
 
 Usada por:
 - ipnet 2.12.2
@@ -19582,7 +19673,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 173: MIT
+## Licencia 174: MIT
 
 Usada por:
 - is-array-buffer 3.0.5
@@ -19611,7 +19702,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 174: MIT
+## Licencia 175: MIT
 
 Usada por:
 - is-async-function 2.1.1
@@ -19639,7 +19730,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 175: MIT
+## Licencia 176: MIT
 
 Usada por:
 - is-bigint 1.1.0
@@ -19668,7 +19759,37 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 176: MIT
+## Licencia 177: MIT
+
+Usada por:
+- is-buffer 2.0.5
+- safe-buffer 5.1.2
+
+The MIT License (MIT)
+
+Copyright (c) Feross Aboukhadijeh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+## Licencia 178: MIT
 
 Usada por:
 - is-data-view 1.0.2
@@ -19697,7 +19818,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 177: MIT
+## Licencia 179: MIT
 
 Usada por:
 - is-document.all 1.0.0
@@ -19726,7 +19847,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 178: MIT
+## Licencia 180: MIT
 
 Usada por:
 - is-generator-function 1.1.2
@@ -19756,7 +19877,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 179: MIT
+## Licencia 181: MIT
 
 Usada por:
 - is-map 2.0.3
@@ -19789,7 +19910,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 180: MIT/Apache-2.0
+## Licencia 182: MIT/Apache-2.0
 
 Usada por:
 - json-patch 4.2.0
@@ -20022,7 +20143,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 181: MIT
+## Licencia 183: MIT
 
 Usada por:
 - json-schema-to-ts 3.1.1
@@ -20052,7 +20173,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 182: MIT OR Apache-2.0
+## Licencia 184: MIT OR Apache-2.0
 
 Usada por:
 - jsonptr 0.7.1
@@ -20285,7 +20406,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 183: (MIT OR GPL-3.0-or-later)
+## Licencia 185: (MIT OR GPL-3.0-or-later)
 
 Usada por:
 - jszip 3.10.2
@@ -20944,7 +21065,7 @@ copy of the Program in return for a fee.
 
 --------------------------------------------------------------------------------
 
-## Licencia 184: MIT OR Apache-2.0
+## Licencia 186: MIT OR Apache-2.0
 
 Usada por:
 - keyboard-types 0.8.3
@@ -21175,7 +21296,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 185: MIT
+## Licencia 187: MIT
 
 Usada por:
 - lazystream 1.0.1
@@ -21205,7 +21326,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 186: MIT OR Apache-2.0
+## Licencia 188: MIT OR Apache-2.0
 
 Usada por:
 - libc 0.2.191
@@ -21417,7 +21538,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 187: MIT
+## Licencia 189: MIT
 
 Usada por:
 - lie 3.3.0
@@ -21432,7 +21553,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 --------------------------------------------------------------------------------
 
-## Licencia 188: MIT
+## Licencia 190: MIT
 
 Usada por:
 - linkifyjs 4.4.0
@@ -21459,7 +21580,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 189: ISC
+## Licencia 191: ISC
 
 Usada por:
 - listenercount 1.0.1
@@ -21472,7 +21593,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 --------------------------------------------------------------------------------
 
-## Licencia 190: MIT OR Apache-2.0
+## Licencia 192: MIT OR Apache-2.0
 
 Usada por:
 - lock_api 0.4.14
@@ -21711,7 +21832,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 191: MIT
+## Licencia 193: MIT
 
 Usada por:
 - lodash.defaults 4.2.0
@@ -21773,7 +21894,7 @@ terms above.
 
 --------------------------------------------------------------------------------
 
-## Licencia 192: MIT
+## Licencia 194: MIT
 
 Usada por:
 - lodash.isboolean 3.0.3
@@ -21804,7 +21925,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 193: MIT
+## Licencia 195: MIT
 
 Usada por:
 - lodash.isequal 4.5.0
@@ -21860,7 +21981,7 @@ terms above.
 
 --------------------------------------------------------------------------------
 
-## Licencia 194: MIT
+## Licencia 196: MIT
 
 Usada por:
 - lodash.isundefined 3.0.1
@@ -21890,7 +22011,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 195: MIT
+## Licencia 197: MIT
 
 Usada por:
 - loglevel 1.9.2
@@ -21920,7 +22041,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 196: ISC
+## Licencia 198: ISC
 
 Usada por:
 - lucide-react 1.62.0
@@ -21971,7 +22092,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 197: MIT
+## Licencia 199: MIT
 
 Usada por:
 - marked 18.1.2
@@ -22023,7 +22144,7 @@ This software is provided by the copyright holders and contributors “as is” 
 
 --------------------------------------------------------------------------------
 
-## Licencia 198: MIT OR Apache-2.0
+## Licencia 200: MIT OR Apache-2.0
 
 Usada por:
 - mime 0.3.17
@@ -22254,7 +22375,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 199: ISC
+## Licencia 201: ISC
 
 Usada por:
 - minimalistic-assert 1.0.1
@@ -22275,7 +22396,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 200: ISC
+## Licencia 202: ISC
 
 Usada por:
 - minimatch 5.1.9
@@ -22298,7 +22419,7 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 201: MIT
+## Licencia 203: MIT
 
 Usada por:
 - minisign-verify 0.3.0
@@ -22365,7 +22486,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 202: MIT OR Zlib OR Apache-2.0
+## Licencia 204: MIT OR Zlib OR Apache-2.0
 
 Usada por:
 - miniz_oxide 0.8.9
@@ -22622,7 +22743,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 --------------------------------------------------------------------------------
 
-## Licencia 203: MIT
+## Licencia 205: MIT
 
 Usada por:
 - mio 1.2.4
@@ -22649,7 +22770,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 204: MIT
+## Licencia 206: MIT
 
 Usada por:
 - mkdirp 0.5.6
@@ -22678,7 +22799,36 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 205: Apache-2.0 OR MIT
+## Licencia 207: MIT
+
+Usada por:
+- mp4-muxer 5.2.2
+
+MIT License
+
+Copyright (c) 2023 Vanilagy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+## Licencia 208: Apache-2.0 OR MIT
 
 Usada por:
 - muda 0.20.0
@@ -22933,7 +23083,7 @@ Creator: Person: Daniel Thompson-Yvetot
 
 --------------------------------------------------------------------------------
 
-## Licencia 206: MIT
+## Licencia 209: MIT
 
 Usada por:
 - nanoid 6.0.2
@@ -22961,7 +23111,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 207: MIT
+## Licencia 210: MIT
 
 Usada por:
 - new_debug_unreachable 1.0.6
@@ -22994,7 +23144,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 208: MIT
+## Licencia 211: MIT
 
 Usada por:
 - normalize-path 3.0.0
@@ -23023,7 +23173,37 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 209: MIT OR Apache-2.0
+## Licencia 212: MIT
+
+Usada por:
+- nspell 2.1.5
+
+(The MIT License)
+
+Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+## Licencia 213: MIT OR Apache-2.0
 
 Usada por:
 - num-conv 0.2.2
@@ -23229,7 +23409,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 210: MIT
+## Licencia 214: MIT
 
 Usada por:
 - object-inspect 1.13.4
@@ -23258,7 +23438,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 211: MIT
+## Licencia 215: MIT
 
 Usada por:
 - object-keys 1.1.1
@@ -23287,7 +23467,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 212: MIT
+## Licencia 216: MIT
 
 Usada por:
 - object.assign 4.1.7
@@ -23316,7 +23496,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 213: MIT
+## Licencia 217: MIT
 
 Usada por:
 - open 5.4.5
@@ -23349,7 +23529,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 214: MPL-2.0
+## Licencia 218: MPL-2.0
 
 Usada por:
 - option-ext 0.2.0
@@ -23730,7 +23910,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 --------------------------------------------------------------------------------
 
-## Licencia 215: MIT
+## Licencia 219: MIT
 
 Usada por:
 - orderedmap 2.1.1
@@ -23758,7 +23938,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 216: (MIT AND Zlib)
+## Licencia 220: (MIT AND Zlib)
 
 Usada por:
 - pako 1.0.11
@@ -23787,7 +23967,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 217: MIT
+## Licencia 221: MIT
 
 Usada por:
 - path-is-absolute 1.0.1
@@ -23816,7 +23996,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 218: MIT
+## Licencia 222: MIT
 
 Usada por:
 - phf 0.13.1
@@ -23847,7 +24027,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 219: Apache-2.0 OR MIT
+## Licencia 223: Apache-2.0 OR MIT
 
 Usada por:
 - pin-project-lite 0.2.17
@@ -24057,7 +24237,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 220: MIT
+## Licencia 224: MIT
 
 Usada por:
 - plist 1.10.3
@@ -24084,7 +24264,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 221: MIT OR Apache-2.0
+## Licencia 225: MIT OR Apache-2.0
 
 Usada por:
 - png 0.18.1
@@ -24321,7 +24501,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 222: MIT OR Apache-2.0
+## Licencia 226: MIT OR Apache-2.0
 
 Usada por:
 - powerfmt 0.2.1
@@ -24552,7 +24732,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 223: MIT
+## Licencia 227: MIT
 
 Usada por:
 - pptxgenjs 4.0.1
@@ -24581,7 +24761,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 224: MIT
+## Licencia 228: MIT
 
 Usada por:
 - precomputed-hash 0.1.1
@@ -24610,7 +24790,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 225: MIT
+## Licencia 229: MIT
 
 Usada por:
 - process-nextick-args 2.0.1
@@ -24637,7 +24817,7 @@ SOFTWARE.**
 
 --------------------------------------------------------------------------------
 
-## Licencia 226: MIT
+## Licencia 230: MIT
 
 Usada por:
 - prosemirror-changeset 2.4.4
@@ -24664,7 +24844,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 227: MIT
+## Licencia 231: MIT
 
 Usada por:
 - prosemirror-commands 1.7.2
@@ -24701,7 +24881,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 228: MIT
+## Licencia 232: MIT
 
 Usada por:
 - prosemirror-tables 1.8.5
@@ -24728,7 +24908,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 229: MIT
+## Licencia 233: MIT
 
 Usada por:
 - queue 6.0.2
@@ -24744,7 +24924,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 230: MIT
+## Licencia 234: MIT
 
 Usada por:
 - quick-xml 0.42.0
@@ -24775,7 +24955,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 231: MIT OR Apache-2.0 OR Zlib
+## Licencia 235: MIT OR Apache-2.0 OR Zlib
 
 Usada por:
 - raw-window-handle 0.6.2
@@ -24997,7 +25177,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 --------------------------------------------------------------------------------
 
-## Licencia 232: MIT
+## Licencia 236: MIT
 
 Usada por:
 - react 19.3.1
@@ -25029,7 +25209,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 233: MIT
+## Licencia 237: MIT
 
 Usada por:
 - readable-stream 2.3.8
@@ -25086,7 +25266,7 @@ IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 234: Apache-2.0
+## Licencia 238: Apache-2.0
 
 Usada por:
 - readdir-glob 1.1.3
@@ -25295,7 +25475,7 @@ Apache License
 
 --------------------------------------------------------------------------------
 
-## Licencia 235: MIT
+## Licencia 239: MIT
 
 Usada por:
 - reflect.getprototypeof 1.0.10
@@ -25324,7 +25504,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 236: MIT
+## Licencia 240: MIT
 
 Usada por:
 - regexp.prototype.flags 1.5.4
@@ -25353,7 +25533,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 237: MIT OR Apache-2.0
+## Licencia 241: MIT OR Apache-2.0
 
 Usada por:
 - reqwest 0.13.5
@@ -25584,7 +25764,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 238: MIT
+## Licencia 242: MIT
 
 Usada por:
 - rfd 0.16.1
@@ -25613,7 +25793,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 239: Apache-2.0 AND ISC
+## Licencia 243: Apache-2.0 AND ISC
 
 Usada por:
 - ring 0.17.14
@@ -25920,7 +26100,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 240: MIT
+## Licencia 244: MIT
 
 Usada por:
 - rope-sequence 1.3.4
@@ -25947,7 +26127,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 241: MIT OR Apache-2.0
+## Licencia 245: MIT OR Apache-2.0
 
 Usada por:
 - rustls-pki-types 1.15.1
@@ -26184,7 +26364,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 242: MIT OR Apache-2.0
+## Licencia 246: MIT OR Apache-2.0
 
 Usada por:
 - rustls-platform-verifier 0.7.1
@@ -26417,7 +26597,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 243: ISC
+## Licencia 247: ISC
 
 Usada por:
 - rustls-webpki 0.103.16
@@ -26444,36 +26624,7 @@ third-party/chromium/LICENSE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 244: MIT
-
-Usada por:
-- safe-buffer 5.1.2
-
-The MIT License (MIT)
-
-Copyright (c) Feross Aboukhadijeh
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
---------------------------------------------------------------------------------
-
-## Licencia 245: Unlicense/MIT
+## Licencia 248: Unlicense/MIT
 
 Usada por:
 - same-file 1.0.6
@@ -26509,7 +26660,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 246: MIT
+## Licencia 249: MIT
 
 Usada por:
 - schemars 0.8.22
@@ -26541,7 +26692,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 247: MIT OR Apache-2.0
+## Licencia 250: MIT OR Apache-2.0
 
 Usada por:
 - scopeguard 1.2.0
@@ -26778,7 +26929,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 248: MPL-2.0
+## Licencia 251: MPL-2.0
 
 Usada por:
 - selectors 0.38.0
@@ -26787,7 +26938,7 @@ Usada por:
 
 --------------------------------------------------------------------------------
 
-## Licencia 249: MIT OR Apache-2.0
+## Licencia 252: MIT OR Apache-2.0
 
 Usada por:
 - serde_spanned 1.1.2
@@ -27022,7 +27173,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 250: MIT OR Apache-2.0
+## Licencia 253: MIT OR Apache-2.0
 
 Usada por:
 - serde_with 3.24.0
@@ -27260,7 +27411,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 251: MIT OR Apache-2.0
+## Licencia 254: MIT OR Apache-2.0
 
 Usada por:
 - serialize-to-javascript 0.1.2
@@ -27494,7 +27645,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 252: MIT
+## Licencia 255: MIT
 
 Usada por:
 - setimmediate 1.0.5
@@ -27522,7 +27673,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 253: MIT OR Apache-2.0
+## Licencia 256: MIT OR Apache-2.0
 
 Usada por:
 - sha2 0.10.9
@@ -27761,7 +27912,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 254: MIT
+## Licencia 257: MIT
 
 Usada por:
 - simd-adler32 0.3.10
@@ -27790,7 +27941,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 255: MIT OR Apache-2.0
+## Licencia 258: MIT OR Apache-2.0
 
 Usada por:
 - siphasher 1.0.4
@@ -28029,7 +28180,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 256: MIT
+## Licencia 259: MIT
 
 Usada por:
 - slab 0.4.12
@@ -28062,7 +28213,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 257: MIT OR Apache-2.0
+## Licencia 260: MIT OR Apache-2.0
 
 Usada por:
 - smallvec 1.16.4
@@ -28299,7 +28450,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 258: MIT OR Apache-2.0
+## Licencia 261: MIT OR Apache-2.0
 
 Usada por:
 - softbuffer 0.4.8
@@ -28530,7 +28681,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 259: BSD-3-Clause
+## Licencia 262: BSD-3-Clause
 
 Usada por:
 - sprintf-js 1.0.3
@@ -28562,7 +28713,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 260: MIT OR Apache-2.0
+## Licencia 263: MIT OR Apache-2.0
 
 Usada por:
 - stable_deref_trait 1.2.1
@@ -28799,7 +28950,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 261: MIT OR Apache-2.0
+## Licencia 264: MIT OR Apache-2.0
 
 Usada por:
 - string_cache 0.9.0
@@ -29036,7 +29187,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 262: MIT
+## Licencia 265: MIT
 
 Usada por:
 - string.prototype.trimend 1.0.10
@@ -29066,7 +29217,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 263: MIT
+## Licencia 266: MIT
 
 Usada por:
 - strsim 0.11.1
@@ -29097,7 +29248,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 264: BSD-3-Clause
+## Licencia 267: BSD-3-Clause
 
 Usada por:
 - subtle 2.6.1
@@ -29134,7 +29285,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 265: Apache-2.0
+## Licencia 268: Apache-2.0
 
 Usada por:
 - sync_wrapper 1.0.2
@@ -29318,7 +29469,7 @@ Apache License
 
 --------------------------------------------------------------------------------
 
-## Licencia 266: MIT
+## Licencia 269: MIT
 
 Usada por:
 - synstructure 0.14.0
@@ -29333,7 +29484,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 267: Apache-2.0
+## Licencia 270: Apache-2.0
 
 Usada por:
 - tao 0.37.2
@@ -29563,7 +29714,7 @@ Creator: Person: Daniel Thompson-Yvetot
 
 --------------------------------------------------------------------------------
 
-## Licencia 268: Apache-2.0 OR MIT
+## Licencia 271: Apache-2.0 OR MIT
 
 Usada por:
 - tauri 2.12.5
@@ -29776,7 +29927,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 269: Apache-2.0 OR MIT
+## Licencia 272: Apache-2.0 OR MIT
 
 Usada por:
 - tauri-plugin-dialog 2.8.3
@@ -30013,7 +30164,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 270: MIT OR Apache-2.0
+## Licencia 273: MIT OR Apache-2.0
 
 Usada por:
 - tempfile 3.27.0
@@ -30250,7 +30401,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 271: MIT OR Apache-2.0
+## Licencia 274: MIT OR Apache-2.0
 
 Usada por:
 - tendril 0.5.1
@@ -30487,7 +30638,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 272: MIT OR Apache-2.0
+## Licencia 275: MIT OR Apache-2.0
 
 Usada por:
 - time 0.3.55
@@ -30695,7 +30846,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 273: Zlib OR Apache-2.0 OR MIT
+## Licencia 276: Zlib OR Apache-2.0 OR MIT
 
 Usada por:
 - tinyvec 1.13.3
@@ -30926,7 +31077,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 --------------------------------------------------------------------------------
 
-## Licencia 274: MIT
+## Licencia 277: MIT
 
 Usada por:
 - tmp 0.2.7
@@ -30955,7 +31106,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 275: MIT
+## Licencia 278: MIT
 
 Usada por:
 - tokio 1.54.1
@@ -30985,7 +31136,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 276: MIT OR Apache-2.0
+## Licencia 279: MIT OR Apache-2.0
 
 Usada por:
 - tokio-rustls 0.26.6
@@ -31222,7 +31373,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 277: MIT
+## Licencia 280: MIT
 
 Usada por:
 - tower 0.5.3
@@ -31257,7 +31408,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 278: MIT
+## Licencia 281: MIT
 
 Usada por:
 - tower-http 0.6.11
@@ -31290,7 +31441,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 279: MIT
+## Licencia 282: MIT
 
 Usada por:
 - tracing 0.1.44
@@ -31325,7 +31476,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 280: MIT
+## Licencia 283: MIT
 
 Usada por:
 - traverse 0.3.10
@@ -31354,7 +31505,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 281: MIT OR Apache-2.0
+## Licencia 284: MIT OR Apache-2.0
 
 Usada por:
 - tray-icon 0.25.1
@@ -31609,7 +31760,7 @@ Creator: Person: Daniel Thompson-Yvetot
 
 --------------------------------------------------------------------------------
 
-## Licencia 282: MIT
+## Licencia 285: MIT
 
 Usada por:
 - try-lock 0.2.5
@@ -31637,7 +31788,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 283: 0BSD
+## Licencia 286: 0BSD
 
 Usada por:
 - tslib 2.8.1
@@ -31657,7 +31808,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 284: MIT
+## Licencia 287: MIT
 
 Usada por:
 - turndown 7.2.4
@@ -31686,7 +31837,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 285: MIT OR Apache-2.0
+## Licencia 288: MIT OR Apache-2.0
 
 Usada por:
 - typenum 1.20.1
@@ -31923,7 +32074,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 286: MIT
+## Licencia 289: MIT
 
 Usada por:
 - underscore 1.13.8
@@ -31953,7 +32104,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 287: MIT
+## Licencia 290: MIT
 
 Usada por:
 - undici-types 6.21.0
@@ -31983,7 +32134,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 288: (MIT OR Apache-2.0) AND Unicode-3.0
+## Licencia 291: (MIT OR Apache-2.0) AND Unicode-3.0
 
 Usada por:
 - unicode-ident 1.0.27
@@ -32235,7 +32386,7 @@ authorization of the copyright holder.
 
 --------------------------------------------------------------------------------
 
-## Licencia 289: MIT OR Apache-2.0
+## Licencia 292: MIT OR Apache-2.0
 
 Usada por:
 - unicode-segmentation 1.13.3
@@ -32482,7 +32633,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 290: ISC
+## Licencia 293: ISC
 
 Usada por:
 - untrusted 0.9.0
@@ -32503,7 +32654,7 @@ Usada por:
 
 --------------------------------------------------------------------------------
 
-## Licencia 291: MIT
+## Licencia 294: MIT
 
 Usada por:
 - unzipper 0.10.14
@@ -32536,7 +32687,7 @@ and fall under same licence structure as the original repo (MIT)
 
 --------------------------------------------------------------------------------
 
-## Licencia 292: MIT
+## Licencia 295: MIT
 
 Usada por:
 - urlpattern 0.6.0
@@ -32565,7 +32716,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 293: Apache-2.0 OR MIT
+## Licencia 296: Apache-2.0 OR MIT
 
 Usada por:
 - utf8_iter 1.0.4
@@ -32847,7 +32998,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 294: MIT
+## Licencia 297: MIT
 
 Usada por:
 - util-deprecate 1.0.2
@@ -32879,7 +33030,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 295: Apache-2.0 OR MIT
+## Licencia 298: Apache-2.0 OR MIT
 
 Usada por:
 - uuid 1.29.0
@@ -33117,7 +33268,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 296: MIT
+## Licencia 299: MIT
 
 Usada por:
 - uuid 8.3.2
@@ -33134,7 +33285,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --------------------------------------------------------------------------------
 
-## Licencia 297: MIT
+## Licencia 300: MIT
 
 Usada por:
 - want 0.3.2
@@ -33161,7 +33312,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 298: MIT OR Apache-2.0
+## Licencia 301: MIT OR Apache-2.0
 
 Usada por:
 - web-time 1.1.0
@@ -33394,7 +33545,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 299: MIT
+## Licencia 302: MIT
 
 Usada por:
 - which-builtin-type 1.2.1
@@ -33423,7 +33574,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 300: Apache-2.0 OR MIT
+## Licencia 303: Apache-2.0 OR MIT
 
 Usada por:
 - window-vibrancy 0.8.1
@@ -33678,7 +33829,7 @@ Creator: Person: Daniel Thompson-Yvetot
 
 --------------------------------------------------------------------------------
 
-## Licencia 301: MIT OR Apache-2.0
+## Licencia 304: MIT OR Apache-2.0
 
 Usada por:
 - windows 0.62.2
@@ -33927,7 +34078,7 @@ MIT License
 
 --------------------------------------------------------------------------------
 
-## Licencia 302: MIT
+## Licencia 305: MIT
 
 Usada por:
 - winnow 1.0.4
@@ -33953,7 +34104,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 303: Apache-2.0 OR MIT
+## Licencia 306: Apache-2.0 OR MIT
 
 Usada por:
 - wry 0.57.1
@@ -34209,7 +34360,7 @@ Creator: Person: Daniel Thompson-Yvetot
 
 --------------------------------------------------------------------------------
 
-## Licencia 304: MIT
+## Licencia 307: MIT
 
 Usada por:
 - xmlbuilder 10.1.1
@@ -34238,7 +34389,7 @@ THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 305: MIT
+## Licencia 308: MIT
 
 Usada por:
 - xmlchars 2.2.0
@@ -34264,7 +34415,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 306: Apache-2.0 OR MIT
+## Licencia 309: Apache-2.0 OR MIT
 
 Usada por:
 - zeroize 1.9.1
@@ -34501,7 +34652,7 @@ DEALINGS IN THE SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 307: MIT
+## Licencia 310: MIT
 
 Usada por:
 - zip 9.1.3
@@ -34530,7 +34681,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------
 
-## Licencia 308: Zlib
+## Licencia 311: Zlib
 
 Usada por:
 - zlib-rs 0.6.8
@@ -34557,7 +34708,7 @@ freely, subject to the following restrictions:
 
 --------------------------------------------------------------------------------
 
-## Licencia 309: MIT
+## Licencia 312: MIT
 
 Usada por:
 - zustand 5.0.16

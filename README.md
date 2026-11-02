@@ -21,6 +21,9 @@ Una vez instalada, la app se actualiza sola.
   recortar, girar, voltear y texto alternativo.
 - **Vínculos**: Ctrl+clic para abrirlos y menú para abrir, editar, copiar o quitar.
 - Buscar y reemplazar, contador de palabras y menú flotante sobre la selección.
+- **Corrector ortográfico en español** con sugerencias, diccionario personal e «Ignorar».
+- **Comentarios** (responder, resolver) y **control de cambios** (aceptar o rechazar), también al abrir y guardar Word.
+- **Gráficos** con tus datos, **cuadros de texto**, **notas al pie** y texto en **columnas**.
 
 **Hojas de cálculo**
 - Fórmulas con nombres en español o inglés (SUMA, SI, BUSCARV, SUMAR.SI.CONJUNTO…), sugerencias al escribir y
@@ -30,16 +33,22 @@ Una vez instalada, la app se actualiza sola.
 - Formato condicional (reglas, barras de datos, escalas de color), formato de tabla, listas desplegables y comentarios.
 - Gráficos (columnas, barras, líneas, área, circular, anillo, dispersión) y tablas dinámicas.
 - IA: escribir fórmulas, analizar datos y generar tablas. Abre y guarda Excel (.xlsx) y CSV.
+- Los gráficos se guardan dentro del archivo de Excel; **minigráficos** en las celdas.
+- **Configurar página** (orientación, márgenes, ajustar al ancho, filas que se repiten, área de impresión).
+- **Proteger hoja** y desbloquear celdas.
 
 **Presentaciones**
 - Diapositivas con diseños, 8 temas, textos, imágenes y formas que se mueven, redimensionan y giran.
 - Transiciones, animaciones, notas del orador y modo presentación a pantalla completa (F5).
 - IA: crear una presentación entera a partir de un tema y escribir las notas del orador.
-- Abre y guarda PowerPoint (.pptx); imprimir y PDF.
+- **Tablas y gráficos** en las diapositivas.
+- **Vista del moderador**: en tu pantalla las notas, la siguiente diapositiva y el cronómetro; en el proyector, solo la
+  diapositiva (Alt+F5).
+- Abre y guarda PowerPoint (.pptx); imprimir, PDF y **vídeo MP4**.
 
 **Archivos, como en Word**
 - **Guardar** (Ctrl+S) reemplaza el archivo vinculado; **Guardar como** (F12) elige carpeta, nombre y formato.
-- **Exportar una copia** a Word (.docx), Lumen (.lumen, sin pérdidas), Markdown, HTML, texto o PDF (imprimir).
+- **Exportar una copia** a Word (.docx), Lumen (.lumen, sin pérdidas), Markdown, HTML, texto o **PDF de un clic**.
 - **Abrir archivo** (Ctrl+O): .docx, .xlsx, .csv, .pptx, .lumen, .md, .html y .txt.
 - **Autoguardado en el archivo** y aviso **Guardar / No guardar / Cancelar** al salir o cerrar con cambios pendientes.
 
@@ -74,7 +83,10 @@ npm install
 npm run dev          # en el navegador: http://localhost:5173
 npm run tauri dev    # como app de escritorio
 npm run tauri build  # instaladores en src-tauri/target/release/bundle
+npm test             # pruebas automáticas (también se ejecutan antes de publicar)
 ```
+
+La página web de la app está en `docs/` (se puede servir con GitHub Pages desde la carpeta `/docs`).
 
 Requisitos: Node.js 20+, Rust (`winget install Rustlang.Rustup`) y Visual Studio Build Tools con
 «Desarrollo de escritorio con C++».
