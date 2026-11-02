@@ -30,6 +30,19 @@ export interface DocRecord {
   pageLayout?: PageLayout | null;
   /** Contenido de las hojas de cálculo y presentaciones (libro o diapositivas) */
   data?: unknown;
+  /** Comentarios del documento, por id (el texto marcado lleva ese id) */
+  comments?: Record<string, DocComment>;
+  /** Control de cambios activado */
+  track?: boolean;
+}
+
+export interface DocComment {
+  id: string;
+  author: string;
+  date: number;
+  text: string;
+  resolved?: boolean;
+  replies?: { author: string; date: number; text: string }[];
 }
 
 export type FileFormat = "docx" | "lumen" | "md" | "html" | "txt" | "xlsx" | "csv" | "pptx";
@@ -59,7 +72,7 @@ export function newId(): string {
 
 export async function createDoc(
   kind: DocKind,
-  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat" | "pageLayout" | "data" | "text">> = {},
+  init: Partial<Pick<DocRecord, "title" | "content" | "color" | "tags" | "filePath" | "fileFormat" | "pageLayout" | "data" | "text" | "comments">> = {},
 ): Promise<DocRecord> {
   const now = Date.now();
   const doc: DocRecord = {
@@ -82,6 +95,7 @@ export async function createDoc(
     savedAt: init.filePath ? now : null,
     pageLayout: init.pageLayout ?? null,
     data: init.data,
+    comments: init.comments,
   };
   doc.text = init.text ?? plainText(doc.content);
   doc.words = countWords(doc.text);

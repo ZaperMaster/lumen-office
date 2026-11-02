@@ -529,3 +529,12 @@ button:disabled {
 @media print { .spell-error { text-decoration: none; } }
 
 @media print { .sheet-print-table.no-grid td { border-color: transparent; } .sheet-print-table thead { display: table-header-group; } }
+
+/* Revisión: comentarios y control de cambios */
+.lumen-editor .comment-mark { background: color-mix(in oklab, #facc15 32%, transparent); border-bottom: 2px solid #eab308; cursor: pointer; }
+.lumen-editor .comment-mark.comment-active, .lumen-editor .comment-active .comment-mark { background: color-mix(in oklab, #facc15 60%, transparent); }
+.lumen-editor ins.track-ins { color: #15803d; text-decoration: underline; text-decoration-color: #16a34a; text-decoration-thickness: 2px; background: color-mix(in oklab, #22c55e 10%, transparent); }
+.lumen-editor del.track-del { color: #b91c1c; text-decoration: line-through; text-decoration-thickness: 2px; background: color-mix(in oklab, #ef4444 8%, transparent); }
+@media print {
+  .lumen-editor .comment-mark { background: none; border: none; }
+}

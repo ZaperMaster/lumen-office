@@ -22,6 +22,9 @@ import { FindBar } from "@/components/editor/FindBar";
 import { StatusBar, SaveIndicator } from "@/components/editor/StatusBar";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
 import { SpellMenu } from "@/components/editor/SpellMenu";
+import { ReviewPanel } from "@/components/editor/ReviewPanel";
+import type { TrackStorage } from "@/components/editor/review";
+import type { DocComment } from "@/lib/db";
 import { LinkBubble } from "@/components/editor/LinkBubble";
 import { WordCountDialog } from "@/components/editor/WordCountDialog";
 import { useDocEditor } from "@/components/editor/useDocEditor";
@@ -118,6 +121,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       text: editor.getText({ blockSeparator: "\n\n" }),
       title: titleRef.current,
       pageLayout: docRef.current.pageLayout ?? null,
+      comments: docRef.current.comments ?? null,
     }),
     [editor],
   );
@@ -263,6 +267,51 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const [lastUsed, setLastUsed] = useState(0);
+  /* ---------------- Revisión: comentarios y control de cambios ---------------- */
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [focusComment, setFocusComment] = useState<string | null>(null);
+  const comments = doc.comments ?? {};
+  const saveComments = useCallback(
+    (next: Record<string, DocComment>) => {
+      edits.current += 1;
+      void updateDoc(doc.id, { comments: next });
+    },
+    [doc.id],
+  );
+  const author = s.userName || "Tú";
+  useEffect(() => {
+    const st = (editor.storage as unknown as { trackChanges: TrackStorage }).trackChanges;
+    st.enabled = !!doc.track;
+    st.author = author;
+  }, [editor, doc.track, author]);
+  const review = {
+    panelOpen: reviewOpen,
+    togglePanel: () => setReviewOpen((v) => !v),
+    track: !!doc.track,
+    setTrack: (on: boolean) => {
+      void updateDoc(doc.id, { track: on });
+      toast(on ? "Control de cambios activado: lo que escribas o borres quedará marcado" : "Control de cambios desactivado", "success");
+    },
+    newComment: () => {
+      const { from, to } = editor.state.selection;
+      if (from === to) return toast("Selecciona primero el texto que quieres comentar");
+      const id = crypto.randomUUID();
+      editor.chain().focus().setMark("comment", { id }).run();
+      saveComments({ ...comments, [id]: { id, author, date: Date.now(), text: "" } });
+      setFocusComment(id);
+      setReviewOpen(true);
+    },
+  };
+  // Clic en un texto comentado: se abre el panel
+  useEffect(() => {
+    const dom = editor.view.dom;
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest?.(".comment-mark")) setReviewOpen(true);
+    };
+    dom.addEventListener("click", onClick);
+    return () => dom.removeEventListener("click", onClick);
+  }, [editor]);
+
   // Encabezado o pie que se está editando y su posición en la página (px sin zoom)
   const mbRef = useRef(0);
   const [hfEdit, setHfEdit] = useState<{ zone: "header" | "footer"; top: number } | null>(null);
@@ -477,7 +526,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       </header>
 
       {!focus && (
-        <Ribbon editor={editor} files={files} layout={layoutActions} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
+        <Ribbon editor={editor} files={files} layout={layoutActions} review={review} onFind={(replace) => setFind({ replace: !!replace })} onWordCount={() => setWordCount(true)} />
       )}
 
       <div className="flex min-h-0 flex-1">
@@ -550,6 +599,18 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
             </Button>
           )}
         </div>
+        {reviewOpen && (
+          <ReviewPanel
+            editor={editor}
+            comments={comments}
+            track={!!doc.track}
+            author={author}
+            focusId={focusComment}
+            onComments={saveComments}
+            onTrack={review.setTrack}
+            onClose={() => setReviewOpen(false)}
+          />
+        )}
         {panelOpen && (
           <aside className="no-print w-[360px] shrink-0 animate-fade-in">
             <ChatPanel editor={editor} docTitle={title} onClose={() => setPanelOpen(false)} />

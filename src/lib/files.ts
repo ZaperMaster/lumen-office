@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import { saveAs } from "file-saver";
-import { db, type DocRecord, type FileFormat } from "@/lib/db";
+import { db, type DocComment, type DocRecord, type FileFormat } from "@/lib/db";
 import { safeFileName } from "@/lib/fileName";
 import { useApp } from "@/store/app";
 import type { PageLayout } from "@/lib/pageLayout";
@@ -49,6 +49,7 @@ export interface DocSource {
   text: string;
   title: string;
   pageLayout?: PageLayout | null;
+  comments?: Record<string, DocComment> | null;
 }
 
 /** Contenido que sabe convertirse a bytes en cada formato (hojas de cálculo y presentaciones). */
@@ -63,7 +64,7 @@ async function buildBytes(format: FileFormat, src: DocSource | FileSource): Prom
   if (isFileSource(src)) return src.build(format);
   // La conversión (editor, Word, Markdown) se carga solo al guardar
   const { buildDocx, buildHtmlPage, buildLumen, buildMarkdown } = await import("@/lib/io");
-  if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title, src.pageLayout)).arrayBuffer());
+  if (format === "docx") return new Uint8Array(await (await buildDocx(src.json, src.title, src.pageLayout, src.comments)).arrayBuffer());
   const text =
     format === "lumen"
       ? buildLumen(src.json, src.title, src.pageLayout)

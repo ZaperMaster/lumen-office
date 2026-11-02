@@ -44,6 +44,29 @@ describe("Word (.docx)", () => {
     expect(t.header.left).toBe("Mi doc");
     expect(t.footer.center).toBe("2 / 3");
   });
+  it("exporta y vuelve a abrir comentarios y cambios propuestos", async () => {
+    const { buildDocx } = await import("@/lib/docx");
+    const content = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [
+            { type: "text", text: "Hola " },
+            { type: "text", text: "mundo", marks: [{ type: "comment", attrs: { id: "c1" } }] },
+            { type: "text", text: " nuevo", marks: [{ type: "insertion", attrs: { author: "Ana", date: 1700000000000 } }] },
+            { type: "text", text: " viejo", marks: [{ type: "deletion", attrs: { author: "Ana", date: 1700000000000 } }] },
+          ],
+        },
+      ],
+    };
+    const blob = await buildDocx(content, "Prueba", null, { c1: { id: "c1", author: "Luis", date: 1700000000000, text: "¿Seguro?" } });
+    const { html, comments } = await readDocx(await blob.arrayBuffer());
+    expect(html).toMatch(/<span data-comment-id="w0">[^]*mundo/);
+    expect(html).toMatch(/<ins data-author="Ana"[^>]*>[^]*nuevo/);
+    expect(html).toMatch(/<del data-author="Ana"[^>]*>[^]*viejo/);
+    expect(comments?.w0).toMatchObject({ author: "Luis", text: "¿Seguro?" });
+  });
 });
 
 describe("PowerPoint (.pptx)", () => {

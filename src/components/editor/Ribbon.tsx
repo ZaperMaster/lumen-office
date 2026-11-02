@@ -8,7 +8,7 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, ListTree, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
+  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, ListTree, MessageSquarePlus, FilePen, CheckCheck, XCircle, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
 } from "lucide-react";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
@@ -36,15 +36,25 @@ export interface LayoutActions {
   hasPageNumbers: boolean;
 }
 
+/** Comentarios y control de cambios */
+export interface ReviewActions {
+  newComment: () => void;
+  panelOpen: boolean;
+  togglePanel: () => void;
+  track: boolean;
+  setTrack: (on: boolean) => void;
+}
+
 export interface RibbonProps {
   editor: Editor;
   files: FileActions;
   layout: LayoutActions;
+  review: ReviewActions;
   onFind: (replace?: boolean) => void;
   onWordCount: () => void;
 }
 
-export function Ribbon({ editor, files, layout, onFind, onWordCount }: RibbonProps) {
+export function Ribbon({ editor, files, layout, review, onFind, onWordCount }: RibbonProps) {
   const flags = useEditorFlags(editor);
   const [tab, setTab] = useState<Tab>("home");
   const { ribbonCollapsed, set } = useSettings();
@@ -99,7 +109,7 @@ export function Ribbon({ editor, files, layout, onFind, onWordCount }: RibbonPro
           {activeTab === "home" && <HomeTab editor={editor} flags={flags} />}
           {activeTab === "insert" && <InsertTab editor={editor} layout={layout} />}
           {activeTab === "layout" && <LayoutTab editor={editor} />}
-          {activeTab === "review" && <ReviewTab editor={editor} onFind={onFind} onWordCount={onWordCount} />}
+          {activeTab === "review" && <ReviewTab editor={editor} review={review} onFind={onFind} onWordCount={onWordCount} />}
           {activeTab === "view" && <ViewTab />}
           {activeTab === "ai" && <AITab editor={editor} />}
           {activeTab === "table" && <TableTab editor={editor} />}
@@ -717,7 +727,7 @@ function LayoutTab({ editor }: { editor: Editor }) {
 /*  Revisar                                                            */
 /* ------------------------------------------------------------------ */
 
-function ReviewTab({ editor, onFind, onWordCount }: { editor: Editor; onFind: (replace?: boolean) => void; onWordCount: () => void }) {
+function ReviewTab({ editor, review, onFind, onWordCount }: { editor: Editor; review: ReviewActions; onFind: (replace?: boolean) => void; onWordCount: () => void }) {
   const { spellcheck, set, smartTyping } = useSettings();
   const run = useAI((s) => s.run);
   return (
@@ -730,6 +740,15 @@ function ReviewTab({ editor, onFind, onWordCount }: { editor: Editor; onFind: (r
         <Big icon={<SpellCheck />} label="Ortografía" active={spellcheck} onClick={() => set("spellcheck", !spellcheck)} title="Subrayar errores ortográficos" />
         <Big icon={<CaseSensitive />} label="Autoformato" active={smartTyping} onClick={() => set("smartTyping", !smartTyping)} title="Comillas tipográficas, guiones y símbolos automáticos" />
         <Big icon={<WholeWord />} label="Contar palabras" onClick={onWordCount} />
+      </Group>
+      <Group label="Comentarios">
+        <Big icon={<MessageSquarePlus />} label="Nuevo comentario" onClick={review.newComment} title="Comenta el texto seleccionado" />
+        <Big icon={<PanelRight />} label="Panel de revisión" active={review.panelOpen} onClick={review.togglePanel} title="Comentarios y cambios propuestos" />
+      </Group>
+      <Group label="Seguimiento">
+        <Big icon={<FilePen />} label="Control de cambios" active={review.track} onClick={() => review.setTrack(!review.track)} title="Lo que escribas o borres queda marcado para aceptarlo o rechazarlo" />
+        <Big icon={<CheckCheck />} label="Aceptar todo" onClick={() => editor.chain().focus().acceptAllChanges().run()} />
+        <Big icon={<XCircle />} label="Rechazar todo" onClick={() => editor.chain().focus().rejectAllChanges().run()} />
       </Group>
       <Group label="Revisión con IA">
         <Big icon={<Wand2 />} label="Corregir" onClick={() => run(editor, "fix")} title="Corrige ortografía y gramática del texto seleccionado" />

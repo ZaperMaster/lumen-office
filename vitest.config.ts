@@ -3,7 +3,7 @@ import path from "node:path";
 
 // Pruebas automáticas: npm test
 export default defineConfig({
-  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+  resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
   test: {
     environment: "happy-dom",
     include: ["tests/**/*.test.ts"],

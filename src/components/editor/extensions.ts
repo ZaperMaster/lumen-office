@@ -9,6 +9,7 @@ import { TableKit } from "@tiptap/extension-table";
 import { ImageBlock } from "@/components/editor/image/ImageBlock";
 import { Pagination } from "@/components/editor/pagination";
 import { SpellCheck } from "@/components/editor/spellcheck";
+import { CommentMark, DeletionMark, InsertionMark, TrackChanges } from "@/components/editor/review";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
@@ -348,6 +349,10 @@ export function buildExtensions(opts: { placeholder: string; smartTyping: boolea
     Search,
     Pagination,
     SpellCheck,
+    CommentMark,
+    InsertionMark,
+    DeletionMark,
+    TrackChanges,
   ];
   if (opts.smartTyping) exts.push(Typography.configure({ openDoubleQuote: "«", closeDoubleQuote: "»" }));
   return exts;

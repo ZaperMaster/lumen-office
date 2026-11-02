@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import {
+  CommentRangeEnd, CommentRangeStart, CommentReference, DeletedTextRun, InsertedTextRun,
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
   ImageRun, LevelFormat, Packer, PageBreak, PageNumber, TabStopType, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
   PageOrientation, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
@@ -7,6 +8,7 @@ import {
 } from "docx";
 import { MARGINS, PAGE_SIZES, useSettings } from "@/store/settings";
 import { hasContent, withDefaults, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
+import type { DocComment } from "@/lib/db";
 
 /*
  * Exportación a Word (.docx). Va en un módulo aparte para que la librería docx
@@ -91,8 +93,18 @@ interface Ctx {
   numberInstance: number;
 }
 
+/** Comentarios y cambios del documento que se está exportando */
+const review = { ids: new Map<string, number>(), change: 0 };
+
 function inlineRuns(nodes: JSONContent[] | undefined, base: { font?: string; size?: number; italics?: boolean; color?: string } = {}): ParagraphChild[] {
   const out: ParagraphChild[] = [];
+  // Comentario abierto en este párrafo (Word marca su inicio y su fin)
+  let open: number | null = null;
+  const closeComment = () => {
+    if (open === null) return;
+    out.push(new CommentRangeEnd(open), new TextRun({ children: [new CommentReference(open)] }));
+    open = null;
+  };
   for (const n of nodes ?? []) {
     if (n.type === "hardBreak") {
       out.push(new TextRun({ text: "", break: 1 }));
@@ -100,13 +112,23 @@ function inlineRuns(nodes: JSONContent[] | undefined, base: { font?: string; siz
     }
     if (n.type !== "text" || !n.text) continue;
     const marks = n.marks ?? [];
+    const cid = marks.find((m) => m.type === "comment")?.attrs?.id as string | undefined;
+    const num = cid !== undefined ? review.ids.get(cid) : undefined;
+    if ((num ?? null) !== open) {
+      closeComment();
+      if (num !== undefined) {
+        out.push(new CommentRangeStart(num));
+        open = num;
+      }
+    }
     const has = (t: string) => marks.some((m) => m.type === t);
     const ts = marks.find((m) => m.type === "textStyle")?.attrs ?? {};
     const hl = marks.find((m) => m.type === "highlight")?.attrs;
     const link = marks.find((m) => m.type === "link")?.attrs?.href as string | undefined;
     const size = ptFromSize(ts.fontSize) ?? base.size;
-    const run = new TextRun({
-      text: n.text,
+    const ins = marks.find((m) => m.type === "insertion")?.attrs;
+    const del = marks.find((m) => m.type === "deletion")?.attrs;
+    const fmt = {
       bold: has("bold") || undefined,
       italics: has("italic") || base.italics || undefined,
       underline: has("underline") || link ? {} : undefined,
@@ -117,9 +139,13 @@ function inlineRuns(nodes: JSONContent[] | undefined, base: { font?: string; siz
       font: has("code") ? "Consolas" : firstFont(ts.fontFamily) ?? base.font,
       size: size ? Math.round(size * 2) : undefined,
       shading: hl ? { type: ShadingType.CLEAR, color: "auto", fill: hex(hl.color as string) ?? "FFF59D" } : ts.backgroundColor ? { type: ShadingType.CLEAR, color: "auto", fill: hex(ts.backgroundColor) ?? "FFFFFF" } : undefined,
-    });
+    };
+    // Control de cambios: texto añadido o eliminado con su autor y fecha
+    const track = (a: Record<string, unknown>) => ({ id: ++review.change, author: String(a.author || "Lumen"), date: new Date(Number(a.date) || Date.now()).toISOString() });
+    const run = ins ? new InsertedTextRun({ text: n.text, ...fmt, ...track(ins) }) : del ? new DeletedTextRun({ text: n.text, ...fmt, ...track(del) }) : new TextRun({ text: n.text, ...fmt });
     out.push(link ? new ExternalHyperlink({ link, children: [run] }) : run);
   }
+  closeComment();
   return out;
 }
 
@@ -258,7 +284,18 @@ function hfParagraph(hf: HeaderFooter, title: string, author: string, widthTwips
   });
 }
 
-export async function buildDocx(content: JSONContent, title: string, pageLayout?: PageLayout | null): Promise<Blob> {
+export async function buildDocx(content: JSONContent, title: string, pageLayout?: PageLayout | null, comments?: Record<string, DocComment> | null): Promise<Blob> {
+  // Comentarios con número (Word los identifica así); solo los que tienen texto
+  review.ids = new Map(Object.values(comments ?? {}).filter((c) => c.text).map((c, i) => [c.id, i]));
+  review.change = 0;
+  const wordComments = Object.values(comments ?? {})
+    .filter((c) => review.ids.has(c.id))
+    .map((c) => ({
+      id: review.ids.get(c.id)!,
+      author: c.author,
+      date: new Date(c.date),
+      children: [new Paragraph(c.text), ...(c.replies ?? []).map((r) => new Paragraph({ children: [new TextRun({ text: `${r.author}: `, bold: true }), new TextRun(r.text)] }))],
+    }));
   const s = useSettings.getState();
   const size = PAGE_SIZES[s.pageSize];
   const margin = MARGINS[s.margins];
@@ -286,6 +323,7 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
     }));
 
   const doc = new Document({
+    comments: wordComments.length ? { children: wordComments } : undefined,
     creator: s.userName || "Lumen Office",
     title: title || "Documento",
     styles: {

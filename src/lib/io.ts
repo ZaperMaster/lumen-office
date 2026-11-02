@@ -6,6 +6,7 @@ import { buildExtensions } from "@/components/editor/extensions";
 import { createDoc, type DocRecord } from "@/lib/db";
 import { useSettings } from "@/store/settings";
 import type { PageLayout } from "@/lib/pageLayout";
+import type { DocComment } from "@/lib/db";
 
 /* ------------------------------------------------------------------ */
 /*  Conversión de formatos                                             */
@@ -93,7 +94,7 @@ export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, 
       // Lector propio: conserva alineación, colores, tamaños, listas, encabezado y pie…
       const { readDocx } = await import("@/lib/docxImport");
       const res = await readDocx(buf);
-      return createDoc("document", { title, content: htmlToJSON(res.html), pageLayout: res.pageLayout, ...extra });
+      return createDoc("document", { title, content: htmlToJSON(res.html), pageLayout: res.pageLayout, comments: res.comments ?? undefined, ...extra });
     } catch (e) {
       console.warn("Lector de Word propio falló; se usa el alternativo", e);
       const mammoth = await import("mammoth");
@@ -159,7 +160,7 @@ export function printDocument() {
 }
 
 /** Documento de Word (.docx). La librería se carga solo al usarla. */
-export async function buildDocx(content: JSONContent, title: string, pageLayout?: PageLayout | null): Promise<Blob> {
+export async function buildDocx(content: JSONContent, title: string, pageLayout?: PageLayout | null, comments?: Record<string, DocComment> | null): Promise<Blob> {
   const m = await import("@/lib/docx");
-  return m.buildDocx(content, title, pageLayout);
+  return m.buildDocx(content, title, pageLayout, comments);
 }

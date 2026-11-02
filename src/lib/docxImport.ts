@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { EMPTY_HF, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
+import type { DocComment } from "@/lib/db";
 
 /*
  * Lectura de documentos de Word (.docx) conservando lo más posible: títulos,
@@ -100,6 +101,8 @@ function wrapRun(text: string, p: RunProps): string {
 }
 
 interface Ctx {
+  /** Comentarios abiertos (se envuelve el texto con su marca) */
+  openComments: Set<string>;
   zip: JSZip;
   rels: Record<string, string>;
   styles: Map<string, { name: string; rPr: Element | null; pPr: Element | null; basedOn: string | null }>;
@@ -164,16 +167,30 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
   const images: string[] = [];
   let fieldDepth = 0;
   let inResult = true;
-  const walk = async (parent: Element, href?: string) => {
+  const walk = async (parent: Element, href?: string, change?: { tag: "ins" | "del"; author: string; date: number }) => {
     for (const node of [...parent.children]) {
       if (node.namespaceURI !== W) continue;
       if (node.localName === "hyperlink") {
         const rid = nsAttr(node, R, "r", "id");
         const anchor = nsAttr(node, W, "w", "anchor");
-        await walk(node, rid ? ctx.rels[rid] : anchor ? `#${anchor}` : undefined);
+        await walk(node, rid ? ctx.rels[rid] : anchor ? `#${anchor}` : undefined, change);
         continue;
       }
-      if (node.localName === "ins" || node.localName === "smartTag" || node.localName === "sdt" || node.localName === "sdtContent" || node.localName === "fldSimple") {
+      // Comentarios y control de cambios
+      if (node.localName === "commentRangeStart") {
+        ctx.openComments.add(`w${attr(node, "id")}`);
+        continue;
+      }
+      if (node.localName === "commentRangeEnd") {
+        ctx.openComments.delete(`w${attr(node, "id")}`);
+        continue;
+      }
+      if (node.localName === "ins" || node.localName === "del") {
+        const when = Date.parse(attr(node, "date") ?? "") || Date.now();
+        await walk(node, href, { tag: node.localName, author: attr(node, "author") ?? "", date: when });
+        continue;
+      }
+      if (node.localName === "smartTag" || node.localName === "sdt" || node.localName === "sdtContent" || node.localName === "fldSimple") {
         await walk(node.localName === "sdt" ? (kid(node, "sdtContent") ?? node) : node, href);
         continue;
       }
@@ -203,6 +220,7 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
             break;
           }
           case "t":
+          case "delText":
             if (fieldDepth === 0 || inResult) text += esc(c.textContent ?? "");
             break;
           case "tab":
@@ -225,7 +243,9 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
         }
       }
       if (!text) continue;
-      const piece = wrapRun(text, props);
+      let piece = wrapRun(text, props);
+      if (change) piece = `<${change.tag} data-author="${esc(change.author)}" data-date="${change.date}">${piece}</${change.tag}>`;
+      for (const id of ctx.openComments) piece = `<span data-comment-id="${id}">${piece}</span>`;
       html += href ? `<a href="${esc(href)}">${piece}</a>` : piece;
     }
   };
@@ -416,7 +436,7 @@ async function headerFooter(zip: JSZip, path: string): Promise<HeaderFooter | nu
   return out.left || out.center || out.right ? out : null;
 }
 
-export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageLayout: PageLayout | null }> {
+export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageLayout: PageLayout | null; comments: Record<string, DocComment> | null }> {
   const zip = await JSZip.loadAsync(data);
   const docPath = "word/document.xml";
   const docXml = await zip.file(docPath)?.async("string");
@@ -450,7 +470,18 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
     }
   }
 
-  const ctx: Ctx = { zip, rels: await readRels(zip, docPath), styles, numbering, pendingBreak: false };
+  const ctx: Ctx = { zip, rels: await readRels(zip, docPath), styles, numbering, pendingBreak: false, openComments: new Set() };
+  // Comentarios de Word (word/comments.xml)
+  let comments: Record<string, DocComment> | null = null;
+  const commentsXml = await zip.file("word/comments.xml")?.async("string");
+  if (commentsXml) {
+    comments = {};
+    for (const c of byTag(xml(commentsXml), W, "comment")) {
+      const id = `w${attr(c, "id")}`;
+      const text = byTag(c, W, "p").map((p) => byTag(p, W, "t").map((t) => t.textContent).join("")).join("\n").trim();
+      comments[id] = { id, author: attr(c, "author") ?? "", date: Date.parse(attr(c, "date") ?? "") || Date.now(), text };
+    }
+  }
   const body = byTag(doc, W, "body")[0];
   const html = await blocksToHtml(ctx, body);
 
@@ -476,5 +507,5 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
       };
     }
   }
-  return { html, pageLayout };
+  return { html, pageLayout, comments };
 }
