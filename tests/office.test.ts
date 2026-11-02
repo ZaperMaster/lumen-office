@@ -67,6 +67,24 @@ describe("Word (.docx)", () => {
     expect(html).toMatch(/<del data-author="Ana"[^>]*>[^]*viejo/);
     expect(comments?.w0).toMatchObject({ author: "Luis", text: "¿Seguro?" });
   });
+  it("exporta y vuelve a abrir notas al pie, columnas y cuadros de texto", async () => {
+    const { buildDocx } = await import("@/lib/docx");
+    const p = (text: string, extra: object[] = []) => ({ type: "paragraph", content: [{ type: "text", text }, ...extra] });
+    const content = {
+      type: "doc",
+      content: [
+        p("Introducción", [{ type: "footnote", attrs: { text: "Fuente: INE 2025" } }]),
+        { type: "columns", attrs: { count: 2 }, content: [p("Columna uno"), p("Columna dos")] },
+        { type: "callout", attrs: { kind: "info" }, content: [p("Dentro del cuadro")] },
+        { type: "docChart", attrs: { chart: { type: "pie", title: "", width: 400, legend: true, categories: ["A"], series: [{ name: "S", values: [1] }] } } },
+      ],
+    };
+    const { html } = await readDocx(await (await buildDocx(content, "Prueba")).arrayBuffer());
+    expect(html).toContain('<sup data-footnote="Fuente: INE 2025"></sup>');
+    expect(html).toMatch(/<div data-columns="2">[^]*Columna uno[^]*Columna dos[^]*<\/div>/);
+    expect(html).not.toMatch(/data-columns[^]*Dentro del cuadro[^]*<\/div>$/);
+    expect(html).toContain("Dentro del cuadro");
+  });
 });
 
 describe("PowerPoint (.pptx)", () => {

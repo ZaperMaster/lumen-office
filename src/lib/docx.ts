@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import {
-  CommentRangeEnd, CommentRangeStart, CommentReference, DeletedTextRun, InsertedTextRun,
+  CommentRangeEnd, CommentRangeStart, CommentReference, DeletedTextRun, InsertedTextRun, FootnoteReferenceRun, SectionType,
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom,
   ImageRun, LevelFormat, Packer, PageBreak, PageNumber, TabStopType, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom,
   PageOrientation, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
@@ -9,6 +9,7 @@ import {
 import { MARGINS, PAGE_SIZES, useSettings } from "@/store/settings";
 import { hasContent, withDefaults, type HeaderFooter, type PageLayout } from "@/lib/pageLayout";
 import type { DocComment } from "@/lib/db";
+import { CALLOUTS, chartHeight, chartSvgUrl, type DocChart } from "@/components/editor/docBlocks";
 
 /*
  * Exportación a Word (.docx). Va en un módulo aparte para que la librería docx
@@ -93,8 +94,33 @@ interface Ctx {
   numberInstance: number;
 }
 
-/** Comentarios y cambios del documento que se está exportando */
-const review = { ids: new Map<string, number>(), change: 0 };
+/** Comentarios, cambios y notas al pie del documento que se está exportando */
+const review = { ids: new Map<string, number>(), change: 0, notes: {} as Record<string, { children: Paragraph[] }>, note: 0 };
+
+/** Gráfico del documento como imagen PNG (Word no lee SVG en todas sus versiones). */
+async function chartImage(chart: DocChart): Promise<ImageRun | null> {
+  try {
+    const img = new Image();
+    img.src = chartSvgUrl(chart);
+    await img.decode();
+    const w = chart.width;
+    const h = chartHeight(chart);
+    const canvas = document.createElement("canvas");
+    canvas.width = w * 2;
+    canvas.height = h * 2;
+    const g = canvas.getContext("2d");
+    if (!g) return null;
+    g.fillStyle = "#fff";
+    g.fillRect(0, 0, canvas.width, canvas.height);
+    g.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
+    if (!blob) return null;
+    const k = Math.min(1, 600 / w);
+    return new ImageRun({ type: "png", data: new Uint8Array(await blob.arrayBuffer()), transformation: { width: w * k, height: h * k } });
+  } catch {
+    return null;
+  }
+}
 
 function inlineRuns(nodes: JSONContent[] | undefined, base: { font?: string; size?: number; italics?: boolean; color?: string } = {}): ParagraphChild[] {
   const out: ParagraphChild[] = [];
@@ -108,6 +134,12 @@ function inlineRuns(nodes: JSONContent[] | undefined, base: { font?: string; siz
   for (const n of nodes ?? []) {
     if (n.type === "hardBreak") {
       out.push(new TextRun({ text: "", break: 1 }));
+      continue;
+    }
+    if (n.type === "footnote") {
+      const id = ++review.note;
+      review.notes[id] = { children: [new Paragraph(String(n.attrs?.text ?? ""))] };
+      out.push(new FootnoteReferenceRun(id));
       continue;
     }
     if (n.type !== "text" || !n.text) continue;
@@ -183,6 +215,32 @@ async function blockToDocx(node: JSONContent, ctx: Ctx, extra: Partial<IParagrap
             spacing: { before: 0, after: 0 },
           }),
       );
+    }
+    case "callout": {
+      // Cuadro de texto: párrafos con borde y fondo (Word los une en un solo recuadro)
+      const k = CALLOUTS.find((x) => x.id === attrs.kind) ?? CALLOUTS[0];
+      const side = { style: BorderStyle.SINGLE, size: 8, color: k.border, space: 6 };
+      const out: (Paragraph | Table)[] = [];
+      for (const c of node.content ?? []) {
+        out.push(
+          ...(await blockToDocx(c, ctx, {
+            border: { top: side, bottom: side, right: side, left: { ...side, size: k.id === "box" ? 8 : 24 } },
+            shading: k.id === "box" ? undefined : { type: ShadingType.CLEAR, color: "auto", fill: k.fill },
+            indent: { left: 170, right: 170 },
+            ...extra,
+          })),
+        );
+      }
+      return out;
+    }
+    case "columns": {
+      const out: (Paragraph | Table)[] = [];
+      for (const c of node.content ?? []) out.push(...(await blockToDocx(c, ctx, extra)));
+      return out;
+    }
+    case "docChart": {
+      const run = attrs.chart ? await chartImage(attrs.chart as DocChart) : null;
+      return run ? [new Paragraph({ children: [run], alignment: AlignmentType.CENTER })] : [];
     }
     case "horizontalRule":
       return [new Paragraph({ children: [], border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "BBBBBB", space: 1 } } })];
@@ -288,6 +346,8 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
   // Comentarios con número (Word los identifica así); solo los que tienen texto
   review.ids = new Map(Object.values(comments ?? {}).filter((c) => c.text).map((c, i) => [c.id, i]));
   review.change = 0;
+  review.notes = {};
+  review.note = 0;
   const wordComments = Object.values(comments ?? {})
     .filter((c) => review.ids.has(c.id))
     .map((c) => ({
@@ -308,8 +368,17 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
   const emptyHeader = () => new Header({ children: [new Paragraph("")] });
   const emptyFooter = () => new Footer({ children: [new Paragraph("")] });
   const ctx: Ctx = { bulletRef: "lumen-bullets", numberRef: "lumen-numbers", numberInstance: 0 };
-  const children: (Paragraph | Table)[] = [];
-  for (const n of content.content ?? []) children.push(...(await blockToDocx(n, ctx)));
+  // El texto en columnas va en su propia sección continua, como hace Word
+  const segments: { cols: number; children: (Paragraph | Table)[] }[] = [{ cols: 1, children: [] }];
+  for (const n of content.content ?? []) {
+    if (n.type === "columns") {
+      const seg = { cols: Math.min(3, Number(n.attrs?.count) || 2), children: [] as (Paragraph | Table)[] };
+      for (const c of n.content ?? []) seg.children.push(...(await blockToDocx(c, ctx)));
+      segments.push(seg, { cols: 1, children: [] });
+    } else segments[segments.length - 1].children.push(...(await blockToDocx(n, ctx)));
+  }
+  const segs = segments.filter((g) => g.children.length);
+  if (!segs.length) segs.push({ cols: 1, children: [new Paragraph("")] });
 
   const bullets = ["•", "◦", "▪"];
   const numberFormats = [LevelFormat.DECIMAL, LevelFormat.LOWER_LETTER, LevelFormat.LOWER_ROMAN];
@@ -324,6 +393,7 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
 
   const doc = new Document({
     comments: wordComments.length ? { children: wordComments } : undefined,
+    footnotes: review.note ? review.notes : undefined,
     creator: s.userName || "Lumen Office",
     title: title || "Documento",
     styles: {
@@ -340,9 +410,10 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
         { reference: ctx.numberRef, levels: levels("number") },
       ],
     },
-    sections: [
-      {
+    sections: segs.map((seg, si) => ({
         properties: {
+          type: si ? SectionType.CONTINUOUS : undefined,
+          column: seg.cols > 1 ? { count: seg.cols, space: 708, equalWidth: true } : undefined,
           page: {
             size: {
               width: Math.round(size.w * MM_TO_TWIP),
@@ -358,25 +429,24 @@ export async function buildDocx(content: JSONContent, title: string, pageLayout?
               header: Math.round(Math.min(12.7, margin.v / 2) * MM_TO_TWIP),
               footer: Math.round(Math.min(12.7, margin.v / 2) * MM_TO_TWIP),
             },
-            pageNumbers: { start: layout.startNumber },
+            pageNumbers: si ? undefined : { start: layout.startNumber },
           },
-          titlePage: layout.differentFirstPage,
+          titlePage: si === 0 && layout.differentFirstPage,
         },
-        headers: hasHeader
+        headers: si === 0 && hasHeader
           ? {
               default: new Header({ children: [hfParagraph(layout.header, title, s.userName, textWidth, 9.5)] }),
               ...(layout.differentFirstPage ? { first: emptyHeader() } : {}),
             }
           : undefined,
-        footers: hasFooter
+        footers: si === 0 && hasFooter
           ? {
               default: new Footer({ children: [hfParagraph(layout.footer, title, s.userName, textWidth, 9.5)] }),
               ...(layout.differentFirstPage ? { first: emptyFooter() } : {}),
             }
           : undefined,
-        children: children.length ? children : [new Paragraph("")],
-      },
-    ],
+        children: seg.children,
+      })),
   });
   return Packer.toBlob(doc);
 }

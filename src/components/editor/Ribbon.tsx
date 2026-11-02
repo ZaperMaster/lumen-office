@@ -8,8 +8,10 @@ import {
   Quote, Redo2, Replace, Rows3, ScanText, Scissors, Search, Sparkles, SpellCheck, SquareCode, Strikethrough, Subscript,
   Superscript, Table2, Type, Underline, Undo2, WholeWord, Smile, Columns3, Trash2, Merge, Split, PanelTop, ArrowUpToLine,
   ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, FileImage, Monitor, BookOpen, SeparatorHorizontal, CaseSensitive,
-  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, ListTree, MessageSquarePlus, FilePen, CheckCheck, XCircle, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson,
+  Wand2, Languages, AlignVerticalSpaceAround, House, PanelBottom, Hash, Settings2, ListTree, MessageSquarePlus, FilePen, CheckCheck, XCircle, FilePlus2, StickyNote, Sheet, Presentation, Save, SaveAll, FolderOpen, FolderSearch, FileJson, ChartColumnBig, SquareDashedText, Columns2, TextQuote,
 } from "lucide-react";
+import { CALLOUTS, SAMPLE_CHART } from "@/components/editor/docBlocks";
+import { ChartDialog } from "@/components/editor/DocChartView";
 import { useEditorFlags, FontPicker, FontSizePicker, parsePt, stepSize, ColorButton, HIGHLIGHT_COLORS, TableGridPicker, StyleGallery } from "@/components/editor/controls";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
 import { useAI } from "@/components/ai/aiStore";
@@ -418,6 +420,7 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
   const fileRef = useRef<HTMLInputElement>(null);
   const c = () => editor.chain().focus();
   const [imgUrl, setImgUrl] = useState("");
+  const [chartOpen, setChartOpen] = useState(false);
   const toast = useApp((s) => s.toast);
   const now = new Date();
 
@@ -543,6 +546,29 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
             if (f) c().setImage({ src: await readImageFile(f), alt: f.name }).run();
           }}
         />
+      </Group>
+      <Group label="Elementos">
+        <Big icon={<ChartColumnBig />} label="Gráfico" onClick={() => setChartOpen(true)} title="Gráfico de columnas, barras, líneas o circular con tus datos" />
+        <Menu>
+          <MenuTrigger asChild>
+            <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
+              <SquareDashedText className="size-[22px]" />
+              Cuadro de texto
+            </button>
+          </MenuTrigger>
+          <MenuContent>
+            {CALLOUTS.map((k) => (
+              <MenuItem key={k.id} onSelect={() => c().setCallout(k.id).run()}>
+                <span className="mr-2 inline-block size-3.5 rounded-sm border-2" style={{ background: `#${k.fill}`, borderColor: `#${k.border}` }} />
+                {k.label}
+              </MenuItem>
+            ))}
+            <MenuSeparator />
+            <MenuItem icon={<Trash2 />} disabled={!editor.isActive("callout")} onSelect={() => c().unsetCallout().run()}>Quitar el cuadro</MenuItem>
+          </MenuContent>
+        </Menu>
+        <Big icon={<TextQuote />} label="Nota al pie" onClick={() => c().insertFootnote().run()} title="Nota numerada que aparece al final del documento (en Word, al pie de la página)" />
+        {chartOpen && <ChartDialog insert initial={SAMPLE_CHART} onClose={() => setChartOpen(false)} onSave={(ch) => c().insertDocChart(ch).run()} />}
       </Group>
       <Group label="Vínculos">
         <LinkButton editor={editor} big />
@@ -692,6 +718,21 @@ function LayoutTab({ editor }: { editor: Editor }) {
           title="Cambiar orientación"
         />
         <Big icon={<SeparatorHorizontal />} label="Salto" onClick={() => editor.chain().focus().setPageBreak().run()} title="Insertar salto de página" />
+        <Menu>
+          <MenuTrigger asChild>
+            <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2" title="Sin texto seleccionado se aplica a todo el documento">
+              <Columns2 className="size-[22px]" />
+              Columnas
+            </button>
+          </MenuTrigger>
+          <MenuContent>
+            {[1, 2, 3].map((n) => (
+              <MenuCheckItem key={n} checked={(editor.isActive("columns") ? (editor.getAttributes("columns").count as number) : 1) === n} onSelect={() => editor.chain().focus().setColumns(n).run()}>
+                {n === 1 ? "Una" : n === 2 ? "Dos" : "Tres"}
+              </MenuCheckItem>
+            ))}
+          </MenuContent>
+        </Menu>
       </Group>
       <Group label="Texto predeterminado">
         <Col>

@@ -101,6 +101,8 @@ function wrapRun(text: string, p: RunProps): string {
 }
 
 interface Ctx {
+  /** Texto de las notas al pie (word/footnotes.xml) por su número */
+  notes: Record<string, string>;
   /** Comentarios abiertos (se envuelve el texto con su marca) */
   openComments: Set<string>;
   zip: JSZip;
@@ -197,6 +199,7 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
       if (node.localName !== "r") continue;
       const props = runProps(kid(node, "rPr"), base);
       let text = "";
+      let tail = "";
       for (const c of [...node.children]) {
         // Las imágenes nuevas suelen ir dentro de mc:AlternateContent
         if (c.localName === "AlternateContent") {
@@ -231,6 +234,9 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
             if (attr(c, "type") === "page") ctx.pendingBreak = true;
             else text += "<br>";
             break;
+          case "footnoteReference":
+            tail += `<sup data-footnote="${esc(ctx.notes[attr(c, "id") ?? ""] ?? "")}"></sup>`;
+            break;
           case "noBreakHyphen":
             text += "-";
             break;
@@ -242,11 +248,11 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
           }
         }
       }
-      if (!text) continue;
-      let piece = wrapRun(text, props);
-      if (change) piece = `<${change.tag} data-author="${esc(change.author)}" data-date="${change.date}">${piece}</${change.tag}>`;
-      for (const id of ctx.openComments) piece = `<span data-comment-id="${id}">${piece}</span>`;
-      html += href ? `<a href="${esc(href)}">${piece}</a>` : piece;
+      if (!text && !tail) continue;
+      let piece = text ? wrapRun(text, props) : "";
+      if (piece && change) piece = `<${change.tag} data-author="${esc(change.author)}" data-date="${change.date}">${piece}</${change.tag}>`;
+      if (piece) for (const id of ctx.openComments) piece = `<span data-comment-id="${id}">${piece}</span>`;
+      html += (piece && href ? `<a href="${esc(href)}">${piece}</a>` : piece) + tail;
     }
   };
   await walk(p);
@@ -254,8 +260,10 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
 }
 
 interface Block {
-  kind: "p" | "list" | "table" | "break" | "raw";
+  kind: "p" | "list" | "table" | "break" | "raw" | "section";
   html: string;
+  /** Columnas de la sección que termina aquí */
+  cols?: number;
   list?: { ordered: boolean; level: number };
 }
 
@@ -311,7 +319,10 @@ async function paragraphBlock(ctx: Ctx, p: Element): Promise<Block[]> {
   if (ctx.pendingBreak) blocks.push({ kind: "break", html: "" });
   // Un cambio de sección con página nueva también es un salto
   const sect = kid(pPr, "sectPr");
-  if (sect && (val(kid(sect, "type")) ?? "nextPage") !== "continuous") blocks.push({ kind: "break", html: "" });
+  if (sect) {
+    blocks.push({ kind: "section", html: "", cols: Number(attr(kid(sect, "cols"), "num") ?? 1) });
+    if ((val(kid(sect, "type")) ?? "nextPage") !== "continuous") blocks.push({ kind: "break", html: "" });
+  }
   return blocks;
 }
 
@@ -352,6 +363,12 @@ async function blocksToHtml(ctx: Ctx, container: Element): Promise<string> {
   const closeTo = (level: number) => {
     while (stack.length && stack[stack.length - 1].level > level) html += `</li></${stack.pop()!.tag}>`;
   };
+  // Inicio de la sección actual (para envolver el texto en columnas)
+  let secStart = 0;
+  const wrapColumns = (cols: number) => {
+    if (cols > 1 && html.length > secStart) html = `${html.slice(0, secStart)}<div data-columns="${Math.min(3, cols)}">${html.slice(secStart)}</div>`;
+    secStart = html.length;
+  };
   for (const b of blocks) {
     if (b.kind === "list") {
       const { ordered, level } = b.list!;
@@ -369,10 +386,14 @@ async function blocksToHtml(ctx: Ctx, container: Element): Promise<string> {
     }
     closeTo(-1);
     stack = [];
-    if (b.kind === "break") html += `<div data-page-break=""></div>`;
+    if (b.kind === "section") wrapColumns(b.cols ?? 1);
+    else if (b.kind === "break") html += `<div data-page-break=""></div>`;
     else html += b.html;
   }
   closeTo(-1);
+  // Última sección (la del final del cuerpo)
+  const last = [...container.children].find((c) => c.localName === "sectPr");
+  if (last) wrapColumns(Number(attr(kid(last, "cols"), "num") ?? 1));
   return html;
 }
 
@@ -470,7 +491,15 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
     }
   }
 
-  const ctx: Ctx = { zip, rels: await readRels(zip, docPath), styles, numbering, pendingBreak: false, openComments: new Set() };
+  const ctx: Ctx = { zip, rels: await readRels(zip, docPath), styles, numbering, pendingBreak: false, openComments: new Set(), notes: {} };
+  // Notas al pie (las de tipo separador no son notas)
+  const notesXml = await zip.file("word/footnotes.xml")?.async("string");
+  if (notesXml) {
+    for (const f of byTag(xml(notesXml), W, "footnote")) {
+      if (attr(f, "type")) continue;
+      ctx.notes[attr(f, "id") ?? ""] = byTag(f, W, "t").map((t) => t.textContent).join("").trim();
+    }
+  }
   // Comentarios de Word (word/comments.xml)
   let comments: Record<string, DocComment> | null = null;
   const commentsXml = await zip.file("word/comments.xml")?.async("string");
