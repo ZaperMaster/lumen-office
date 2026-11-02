@@ -5,6 +5,7 @@ import { useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
 import { Button, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Barra de progreso de descarga/carga del modelo. */
 export function ModelProgress({ className }: { className?: string }) {
   const { status, progress, message } = useLocalAI();
@@ -14,7 +15,7 @@ export function ModelProgress({ className }: { className?: string }) {
       <div className="mb-1.5 flex items-center justify-between text-[12px] text-muted">
         <span className="flex items-center gap-1.5">
           <Loader2 className="size-3.5 animate-spin" />
-          {message || "Cargando el modelo…"}
+          {message || L("Cargando el modelo…")}
         </span>
         <span className="tabular-nums">{Math.round(progress * 100)}%</span>
       </div>
@@ -38,7 +39,7 @@ export function LocalAIBanner() {
 
   const configure = (
     <button onClick={() => openSettings("ai")} className="ml-1 font-semibold text-accent underline">
-      Configurar
+      {L("Configurar")}
     </button>
   );
 
@@ -47,7 +48,7 @@ export function LocalAIBanner() {
     if (missing) {
       return (
         <div className="rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
-          Falta la clave o el modelo de tu API.
+          {L("Falta la clave o el modelo de tu API.")}
           {configure}
         </div>
       );
@@ -55,7 +56,7 @@ export function LocalAIBanner() {
     return (
       <div className="flex items-center gap-1.5 text-[11.5px] text-muted">
         <Globe className="size-3.5" />
-        Usando tu API: los textos que envíes se mandan a ese servicio.
+        {L("Usando tu API: los textos que envíes se mandan a ese servicio.")}
       </div>
     );
   }
@@ -63,7 +64,7 @@ export function LocalAIBanner() {
     if (s.ollamaModel) return null;
     return (
       <div className="rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
-        Elige qué modelo de Ollama usar.
+        {L("Elige qué modelo de Ollama usar.")}
         {configure}
       </div>
     );
@@ -71,7 +72,7 @@ export function LocalAIBanner() {
   if (!webgpuAvailable()) {
     return (
       <div className="rounded-[var(--radius)] border border-red-500/30 bg-red-500/10 p-3 text-[13px]">
-        Este equipo no admite el motor integrado (WebGPU). Puedes usar Ollama o tu propia API.
+        {L("Este equipo no admite el motor integrado (WebGPU). Puedes usar Ollama o tu propia API.")}
         {configure}
       </div>
     );
@@ -84,14 +85,14 @@ export function LocalAIBanner() {
     <div className="rounded-[var(--radius)] border border-border bg-surface-2/60 p-3 text-[13px]">
       <div className="mb-1 flex items-center gap-1.5 font-medium">
         <Cpu className="size-4 text-accent" />
-        IA local · {model?.name ?? s.localModel}
+        {L("IA local ·")}{" "} {model?.name ?? s.localModel}
       </div>
       <p className="mb-2.5 text-[12.5px] text-muted">
         {downloaded
           ? s.aiAutoUnload
-            ? "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se libera solo cuando dejas de usarlo."
-            : "El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se queda cargado para responder más rápido."
-          : `Funciona sin conexión y tus textos no salen del equipo. La primera vez se descarga el modelo (${model?.sizeGB.toLocaleString("es-ES")} GB).`}
+            ? L("El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se libera solo cuando dejas de usarlo.")
+            : L("El modelo está en tu equipo. Se carga en la tarjeta gráfica al usarlo y se queda cargado para responder más rápido.")
+          : L("Funciona sin conexión y tus textos no salen del equipo. La primera vez se descarga el modelo ({0} GB).", model?.sizeGB.toLocaleString("es-ES"))}
       </p>
       {error && <p className="mb-2 text-[12.5px] text-red-500">{error}</p>}
       <Button
@@ -100,7 +101,7 @@ export function LocalAIBanner() {
         icon={downloaded ? <Cpu className="size-3.5" /> : <Download className="size-3.5" />}
         onClick={() => loadEngine().then((m) => m.ensureModel(s.localModel)).catch(() => {})}
       >
-        {downloaded ? "Cargar ahora" : "Descargar modelo"}
+        {downloaded ? L("Cargar ahora") : L("Descargar modelo")}
       </Button>
     </div>
   );

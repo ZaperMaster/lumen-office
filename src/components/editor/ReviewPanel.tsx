@@ -6,6 +6,7 @@ import { listChanges, type Change } from "@/components/editor/review";
 import { relativeTime } from "@/lib/format";
 import { Button, Switch, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /*
  * Panel de revisión: comentarios (con respuestas) y lista de cambios
  * propuestos para aceptarlos o rechazarlos uno a uno.
@@ -98,20 +99,20 @@ export function ReviewPanel({
   return (
     <aside className="no-print flex h-full w-[340px] shrink-0 flex-col border-l border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <span className="text-[14px] font-semibold">Revisión</span>
-        <button onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2" aria-label="Cerrar panel"><X className="size-4" /></button>
+        <span className="text-[14px] font-semibold">{L("Revisión")}</span>
+        <button onClick={onClose} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2" aria-label={L("Cerrar panel")}><X className="size-4" /></button>
       </div>
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
         <label className="flex items-center gap-2 text-[12.5px] font-medium">
-          <Switch checked={track} onChange={onTrack} label="Control de cambios" />
-          Control de cambios
+          <Switch checked={track} onChange={onTrack} label={L("Control de cambios")} />
+          {L("Control de cambios")}
         </label>
-        {track && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Activado</span>}
+        {track && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-700">{L("Activado")}</span>}
       </div>
       <div className="flex gap-1 border-b border-border px-3 py-2">
         {(["comments", "changes"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={cn("flex-1 rounded-md py-1.5 text-[12.5px] font-medium", tab === t ? "bg-accent-soft text-accent" : "text-muted hover:bg-surface-2")}>
-            {t === "comments" ? `Comentarios (${list.length})` : `Cambios (${changes.length})`}
+            {t === "comments" ? L("Comentarios ({0})", list.length) : L("Cambios ({0})", changes.length)}
           </button>
         ))}
       </div>
@@ -122,7 +123,7 @@ export function ReviewPanel({
             {!list.length && (
               <div className="py-10 text-center text-[12.5px] text-muted">
                 <MessageSquare className="mx-auto mb-2 size-7 opacity-40" />
-                Selecciona un texto y pulsa «Nuevo comentario».
+                {L("Selecciona un texto y pulsa «Nuevo comentario».")}
               </div>
             )}
             <div className="flex flex-col gap-2">
@@ -142,7 +143,7 @@ export function ReviewPanel({
               ))}
             </div>
             <label className="mt-3 flex items-center gap-2 text-[12px] text-muted">
-              <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} /> Ver también los resueltos
+              <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} /> {" "}{L("Ver también los resueltos")}
             </label>
           </>
         )}
@@ -151,13 +152,13 @@ export function ReviewPanel({
           <>
             {changes.length > 0 && (
               <div className="mb-3 flex gap-2">
-                <Button size="sm" variant="primary" icon={<CheckCheck className="size-3.5" />} onClick={() => editor.chain().focus().acceptAllChanges().run()}>Aceptar todo</Button>
-                <Button size="sm" variant="outline" icon={<XCircle className="size-3.5" />} onClick={() => editor.chain().focus().rejectAllChanges().run()}>Rechazar todo</Button>
+                <Button size="sm" variant="primary" icon={<CheckCheck className="size-3.5" />} onClick={() => editor.chain().focus().acceptAllChanges().run()}>{L("Aceptar todo")}</Button>
+                <Button size="sm" variant="outline" icon={<XCircle className="size-3.5" />} onClick={() => editor.chain().focus().rejectAllChanges().run()}>{L("Rechazar todo")}</Button>
               </div>
             )}
             {!changes.length && (
               <div className="py-10 text-center text-[12.5px] text-muted">
-                {track ? "Escribe o borra en el documento: los cambios aparecerán aquí." : "Activa el control de cambios para ver aquí lo que se añade y se borra."}
+                {track ? L("Escribe o borra en el documento: los cambios aparecerán aquí.") : L("Activa el control de cambios para ver aquí lo que se añade y se borra.")}
               </div>
             )}
             <div className="flex flex-col gap-2">
@@ -166,15 +167,15 @@ export function ReviewPanel({
                   <button onClick={() => select(ch.from, ch.to)} className="w-full text-left">
                     <div className="mb-1 flex items-center gap-2 text-[11.5px] text-muted">
                       <span className={cn("rounded px-1.5 py-0.5 font-semibold", ch.type === "insertion" ? "bg-emerald-500/15 text-emerald-700" : "bg-red-500/15 text-red-700")}>
-                        {ch.type === "insertion" ? "Añadido" : "Eliminado"}
+                        {ch.type === "insertion" ? L("Añadido") : L("Eliminado")}
                       </span>
                       {ch.author} · {relativeTime(ch.date)}
                     </div>
                     <div className={cn("line-clamp-3 text-[13px]", ch.type === "deletion" && "text-red-700 line-through")}>{ch.text}</div>
                   </button>
                   <div className="mt-2 flex gap-1.5">
-                    <Button size="sm" variant="ghost" icon={<Check className="size-3.5" />} onClick={() => editor.chain().focus().acceptChange(ch.from, ch.to, ch.type).run()}>Aceptar</Button>
-                    <Button size="sm" variant="ghost" icon={<X className="size-3.5" />} onClick={() => editor.chain().focus().rejectChange(ch.from, ch.to, ch.type).run()}>Rechazar</Button>
+                    <Button size="sm" variant="ghost" icon={<Check className="size-3.5" />} onClick={() => editor.chain().focus().acceptChange(ch.from, ch.to, ch.type).run()}>{L("Aceptar")}</Button>
+                    <Button size="sm" variant="ghost" icon={<X className="size-3.5" />} onClick={() => editor.chain().focus().rejectChange(ch.from, ch.to, ch.type).run()}>{L("Rechazar")}</Button>
                   </div>
                 </div>
               ))}
@@ -220,12 +221,12 @@ function CommentCard({
         <span className="grid size-6 place-items-center rounded-full bg-accent text-[10.5px] font-bold text-accent-fg">{initials(c.author)}</span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[12.5px] font-semibold">{c.author}</div>
-          <div className="text-[11px] text-muted">{relativeTime(c.date)}{c.resolved ? " · Resuelto" : ""}</div>
+          <div className="text-[11px] text-muted">{relativeTime(c.date)}{c.resolved ? L(" · Resuelto") : ""}</div>
         </div>
-        <button onClick={(e) => { e.stopPropagation(); onResolve(); }} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2" title={c.resolved ? "Reabrir" : "Marcar como resuelto"}>
+        <button onClick={(e) => { e.stopPropagation(); onResolve(); }} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2" title={c.resolved ? L("Reabrir") : L("Marcar como resuelto")}>
           {c.resolved ? <RotateCcw className="size-3.5" /> : <Check className="size-3.5" />}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-red-500" title="Eliminar comentario">
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-red-500" title={L("Eliminar comentario")}>
           <Trash2 className="size-3.5" />
         </button>
       </div>
@@ -244,12 +245,12 @@ function CommentCard({
               }
             }}
             rows={3}
-            placeholder="Escribe tu comentario…"
+            placeholder={L("Escribe tu comentario…")}
             className="w-full resize-none rounded-md border border-border bg-surface px-2 py-1.5 text-[13px] outline-none focus:border-accent"
           />
           <div className="mt-1.5 flex justify-end gap-1.5">
-            <Button size="sm" variant="ghost" onClick={() => { setDraft(c.text); setEditing(false); if (!c.text) onDelete(); }}>Cancelar</Button>
-            <Button size="sm" variant="primary" disabled={!draft.trim()} onClick={() => { onSave(draft.trim()); setEditing(false); }}>Comentar</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setDraft(c.text); setEditing(false); if (!c.text) onDelete(); }}>{L("Cancelar")}</Button>
+            <Button size="sm" variant="primary" disabled={!draft.trim()} onClick={() => { onSave(draft.trim()); setEditing(false); }}>{L("Comentar")}</Button>
           </div>
         </div>
       ) : (
@@ -273,7 +274,7 @@ function CommentCard({
               setReply("");
             }
           }}
-          placeholder="Responder… (Intro)"
+          placeholder={L("Responder… (Intro)")}
           className="mt-2 h-8 w-full rounded-md border border-border bg-surface px-2 text-[12.5px] outline-none focus:border-accent"
         />
       )}

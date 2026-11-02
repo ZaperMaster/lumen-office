@@ -7,6 +7,7 @@ import { useApp } from "@/store/app";
 import { Button } from "@/components/ui";
 import { ModelProgress } from "@/components/ai/LocalAIStatus";
 
+import { L } from "@/lib/i18n";
 /** Tarjeta flotante con la respuesta de la IA y opciones para aplicarla. */
 export function AIResultCard({ editor }: { editor: Editor }) {
   const { status, label, output, error, insertAfter, stop, discard, accept, retry } = useAI();
@@ -21,8 +22,8 @@ export function AIResultCard({ editor }: { editor: Editor }) {
           <Sparkles className="size-3.5" />
         </span>
         <span className="text-[13px] font-semibold">{label}</span>
-        {status === "running" && <span className="text-[12px] text-muted">escribiendo…</span>}
-        <button onClick={discard} className="ml-auto rounded-md p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label="Cerrar">
+        {status === "running" && <span className="text-[12px] text-muted">{L("escribiendo…")}</span>}
+        <button onClick={discard} className="ml-auto rounded-md p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("Cerrar")}>
           <X className="size-4" />
         </button>
       </div>
@@ -33,9 +34,9 @@ export function AIResultCard({ editor }: { editor: Editor }) {
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             <div>
               {error}
-              {error?.includes("Configuración") && (
+              {error?.includes(L("Configuración")) && (
                 <button onClick={() => openSettings("ai")} className="ml-2 font-medium text-accent underline">
-                  Abrir configuración
+                  {L("Abrir configuración")}
                 </button>
               )}
             </div>
@@ -51,7 +52,7 @@ export function AIResultCard({ editor }: { editor: Editor }) {
             <ModelProgress className="mb-2" />
             <div className="flex items-center gap-2 py-2 text-[13px] text-muted">
               <span className="size-2 animate-pulse rounded-full bg-accent" />
-              Pensando…
+              {L("Pensando…")}
             </div>
           </>
         )}
@@ -60,27 +61,27 @@ export function AIResultCard({ editor }: { editor: Editor }) {
       <div className="flex items-center gap-2 border-t border-border px-4 py-2.5">
         {status === "running" ? (
           <Button size="sm" variant="outline" icon={<Square className="size-3" />} onClick={stop}>
-            Detener
+            {L("Detener")}
           </Button>
         ) : status === "done" ? (
           <>
             <Button size="sm" variant="primary" icon={<Check className="size-3.5" />} onClick={() => accept(editor, insertAfter ? "below" : "replace")}>
-              {insertAfter ? "Insertar debajo" : "Reemplazar"}
+              {insertAfter ? L("Insertar debajo") : L("Reemplazar")}
             </Button>
             <Button size="sm" variant="outline" icon={<ArrowDownToLine className="size-3.5" />} onClick={() => accept(editor, insertAfter ? "replace" : "below")}>
-              {insertAfter ? "Reemplazar selección" : "Insertar debajo"}
+              {insertAfter ? L("Reemplazar selección") : L("Insertar debajo")}
             </Button>
             <Button size="sm" variant="ghost" icon={<RotateCcw className="size-3.5" />} onClick={() => retry(editor)}>
-              Reintentar
+              {L("Reintentar")}
             </Button>
           </>
         ) : (
           <Button size="sm" variant="ghost" icon={<RotateCcw className="size-3.5" />} onClick={() => retry(editor)}>
-            Reintentar
+            {L("Reintentar")}
           </Button>
         )}
         <Button size="sm" variant="ghost" className="ml-auto" onClick={discard}>
-          Descartar
+          {L("Descartar")}
         </Button>
       </div>
     </div>

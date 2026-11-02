@@ -8,6 +8,7 @@ import { useApp } from "@/store/app";
 import { CropDialog } from "@/components/editor/image/CropDialog";
 import { Button, Input, Popover, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 export type ImageAlign = "left" | "center" | "right";
 
 const MIN_WIDTH = 40;
@@ -57,7 +58,7 @@ export function ImageView({ node, updateAttributes, deleteNode, selected, editor
     try {
       updateAttributes(await fn());
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudo editar la imagen", "error");
+      toast(e instanceof Error ? e.message : L("No se pudo editar la imagen"), "error");
     } finally {
       setBusy(false);
     }
@@ -124,7 +125,7 @@ export function ImageView({ node, updateAttributes, deleteNode, selected, editor
               />
             ))}
             {liveWidth && (
-              <span className="no-print absolute right-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[11px] text-white">{liveWidth} px</span>
+              <span className="no-print absolute right-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[11px] text-white">{liveWidth} {" "}{L("px")}</span>
             )}
 
             {/* Barra de herramientas de la imagen */}
@@ -134,42 +135,42 @@ export function ImageView({ node, updateAttributes, deleteNode, selected, editor
               className={cn("no-print absolute left-1/2 z-20 flex -translate-x-1/2 items-center", toolbarBelow ? "-bottom-11" : "-top-11", "gap-0.5 rounded-[var(--radius)] border border-border bg-surface p-1 text-text shadow-soft")}
               style={{ fontFamily: "var(--ui-font)", fontSize: 13, lineHeight: 1 }}
             >
-              <ToolBtn label="Texto alrededor, imagen a la izquierda" active={align === "left"} onClick={() => updateAttributes({ align: "left" })}>
+              <ToolBtn label={L("Texto alrededor, imagen a la izquierda")} active={align === "left"} onClick={() => updateAttributes({ align: "left" })}>
                 <PanelLeft className="size-4" />
               </ToolBtn>
-              <ToolBtn label="Centrada, sin texto alrededor" active={align === "center"} onClick={() => updateAttributes({ align: "center" })}>
+              <ToolBtn label={L("Centrada, sin texto alrededor")} active={align === "center"} onClick={() => updateAttributes({ align: "center" })}>
                 <AlignCenter className="size-4" />
               </ToolBtn>
-              <ToolBtn label="Texto alrededor, imagen a la derecha" active={align === "right"} onClick={() => updateAttributes({ align: "right" })}>
+              <ToolBtn label={L("Texto alrededor, imagen a la derecha")} active={align === "right"} onClick={() => updateAttributes({ align: "right" })}>
                 <PanelRight className="size-4" />
               </ToolBtn>
               <Sep />
               {[25, 50, 75, 100].map((p) => (
-                <Tooltip key={p} label={`${p} % del ancho de la página`}>
+                <Tooltip key={p} label={L("{0} % del ancho de la página", p)}>
                   <button onClick={() => setPercent(p)} className="h-7 rounded-md px-1.5 text-[12px] hover:bg-surface-2">
                     {p}%
                   </button>
                 </Tooltip>
               ))}
-              <ToolBtn label="Tamaño original" onClick={() => updateAttributes({ width: null })}>
+              <ToolBtn label={L("Tamaño original")} onClick={() => updateAttributes({ width: null })}>
                 <Undo2 className="size-4" />
               </ToolBtn>
               <Sep />
-              <ToolBtn label="Recortar" onClick={() => setCropping(true)}>
+              <ToolBtn label={L("Recortar")} onClick={() => setCropping(true)}>
                 <Crop className="size-4" />
               </ToolBtn>
-              <ToolBtn label="Girar a la izquierda" onClick={() => rotate(-1)}>
+              <ToolBtn label={L("Girar a la izquierda")} onClick={() => rotate(-1)}>
                 <RotateCcw className="size-4" />
               </ToolBtn>
-              <ToolBtn label="Girar a la derecha" onClick={() => rotate(1)}>
+              <ToolBtn label={L("Girar a la derecha")} onClick={() => rotate(1)}>
                 <RotateCw className="size-4" />
               </ToolBtn>
-              <ToolBtn label="Voltear horizontalmente" onClick={() => run(async () => ({ src: await flipImage(src) }))}>
+              <ToolBtn label={L("Voltear horizontalmente")} onClick={() => run(async () => ({ src: await flipImage(src) }))}>
                 <FlipHorizontal2 className="size-4" />
               </ToolBtn>
               <Sep />
               <AltTextButton alt={alt} onSave={(v) => updateAttributes({ alt: v || null })} />
-              <ToolBtn label="Eliminar imagen" onClick={deleteNode}>
+              <ToolBtn label={L("Eliminar imagen")} onClick={deleteNode}>
                 <Trash2 className="size-4 text-red-500" />
               </ToolBtn>
             </div>
@@ -208,15 +209,15 @@ function AltTextButton({ alt, onSave }: { alt: string | null; onSave: (v: string
         if (o) setValue(alt ?? "");
       }}
     >
-      <Tooltip label="Texto alternativo (descripción para lectores de pantalla)">
+      <Tooltip label={L("Texto alternativo (descripción para lectores de pantalla)")}>
         <PopoverTrigger asChild>
-          <button aria-label="Texto alternativo" className={cn("grid size-7 place-items-center rounded-md hover:bg-surface-2", alt && "text-accent")}>
+          <button aria-label={L("Texto alternativo")} className={cn("grid size-7 place-items-center rounded-md hover:bg-surface-2", alt && "text-accent")}>
             <Type className="size-4" />
           </button>
         </PopoverTrigger>
       </Tooltip>
       <PopoverContent className="w-[320px]">
-        <div className="mb-2 text-[12.5px] font-medium">Describe la imagen</div>
+        <div className="mb-2 text-[12.5px] font-medium">{L("Describe la imagen")}</div>
         <div className="flex gap-2">
           <Input
             autoFocus
@@ -228,7 +229,7 @@ function AltTextButton({ alt, onSave }: { alt: string | null; onSave: (v: string
                 setOpen(false);
               }
             }}
-            placeholder="p. ej. Gráfico de ventas de 2026"
+            placeholder={L("p. ej. Gráfico de ventas de 2026")}
           />
           <Button
             variant="primary"
@@ -237,7 +238,7 @@ function AltTextButton({ alt, onSave }: { alt: string | null; onSave: (v: string
               setOpen(false);
             }}
           >
-            Guardar
+            {L("Guardar")}
           </Button>
         </div>
       </PopoverContent>

@@ -35,6 +35,7 @@ import { useAI } from "@/components/ai/aiStore";
 import { Button, IconButton, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 
+import { L } from "@/lib/i18n";
 /** Espacio entre hojas en la vista de páginas (px). */
 const PAGE_GAP = 24;
 
@@ -50,13 +51,13 @@ function HfZone({ zone, height, texts, onEdit }: { zone: "header" | "footer"; he
         onEdit(zone, e.currentTarget);
       }}
     >
-      {zone === "footer" && <span className="hf-hint">Haz clic para escribir el pie de página</span>}
+      {zone === "footer" && <span className="hf-hint">{L("Haz clic para escribir el pie de página")}</span>}
       <span className="hf-row">
         <span className="hf-cell hf-left">{texts.left}</span>
         <span className="hf-cell hf-center">{texts.center}</span>
         <span className="hf-cell hf-right">{texts.right}</span>
       </span>
-      {zone === "header" && <span className="hf-hint">Haz clic para escribir el encabezado</span>}
+      {zone === "header" && <span className="hf-hint">{L("Haz clic para escribir el encabezado")}</span>}
     </div>
   );
 }
@@ -75,8 +76,8 @@ export default function DocumentApp({ id }: { id: string }) {
     return (
       <div className="grid h-full place-items-center">
         <div className="text-center">
-          <p className="mb-3 text-muted">Este documento no existe o está en la papelera.</p>
-          <Button variant="primary" onClick={() => navigate({ name: "home" })}>Volver al inicio</Button>
+          <p className="mb-3 text-muted">{L("Este documento no existe o está en la papelera.")}</p>
+          <Button variant="primary" onClick={() => navigate({ name: "home" })}>{L("Volver al inicio")}</Button>
         </div>
       </div>
     );
@@ -87,7 +88,7 @@ export default function DocumentApp({ id }: { id: string }) {
 function DocumentEditor({ doc }: { doc: DocRecord }) {
   // El contenido inicial se toma una sola vez; a partir de ahí manda el editor
   const [initial] = useState(doc.content);
-  const { editor, saveState, saveNow } = useDocEditor(doc.id, initial, "Empieza a escribir o pulsa el botón IA para que te ayude…");
+  const { editor, saveState, saveNow } = useDocEditor(doc.id, initial, L("Empieza a escribir o pulsa el botón IA para que te ayude…"));
   if (!editor) return null;
   return <DocumentShell doc={doc} editor={editor} saveState={saveState} saveNow={saveNow} />;
 }
@@ -199,7 +200,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       setDiskState("idle");
       if (failed.current) {
         failed.current = false;
-        toast(`Guardado de nuevo en «${fileName(d.filePath)}»`, "success");
+        toast(L("Guardado de nuevo en «{0}»", fileName(d.filePath)), "success");
       }
       return true;
     } catch (e) {
@@ -207,7 +208,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       // Solo se avisa una vez hasta que vuelva a funcionar
       if (!failed.current) {
         failed.current = true;
-        toast(`No se pudo guardar automáticamente en «${fileName(d.filePath)}»`, "error", {
+        toast(L("No se pudo guardar automáticamente en «{0}»", fileName(d.filePath)), "error", {
           detail: e instanceof Error ? e.message : String(e),
         });
       }
@@ -290,11 +291,11 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
     track: !!doc.track,
     setTrack: (on: boolean) => {
       void updateDoc(doc.id, { track: on });
-      toast(on ? "Control de cambios activado: lo que escribas o borres quedará marcado" : "Control de cambios desactivado", "success");
+      toast(on ? L("Control de cambios activado: lo que escribas o borres quedará marcado") : L("Control de cambios desactivado"), "success");
     },
     newComment: () => {
       const { from, to } = editor.state.selection;
-      if (from === to) return toast("Selecciona primero el texto que quieres comentar");
+      if (from === to) return toast(L("Selecciona primero el texto que quieres comentar"));
       const id = crypto.randomUUID();
       editor.chain().focus().setMark("comment", { id }).run();
       saveComments({ ...comments, [id]: { id, author, date: Date.now(), text: "" } });
@@ -420,7 +421,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       else if (e.key === "F12") { e.preventDefault(); files.saveAs(); }
       else if (mod && k === "o") {
         e.preventDefault();
-        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : "No se pudo abrir", "error"));
+        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : L("No se pudo abrir"), "error"));
         else navigate({ name: "home", section: "open" });
       }
       else if (mod && k === "p") { e.preventDefault(); window.print(); }
@@ -463,7 +464,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
         )}
         style={{ paddingRight: "calc(var(--wc) + 8px)" }}
       >
-        <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
+        <IconButton label={L("Volver al inicio")} onClick={() => navigate({ name: "home" })}>
           <ArrowLeft className="size-4" />
         </IconButton>
         <Logo className="size-6" />
@@ -473,30 +474,30 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
             setTitle(e.target.value);
             saveTitle(e.target.value);
           }}
-          placeholder="Documento sin título"
+          placeholder={L("Documento sin título")}
           className="h-8 min-w-0 flex-1 rounded-md bg-transparent px-2 text-[14px] font-semibold outline-none hover:bg-surface-2 focus:bg-surface-2"
-          aria-label="Título del documento"
+          aria-label={L("Título del documento")}
         />
         <SaveIndicator state={saveState} />
-        <IconButton label={doc.favorite ? "Quitar de favoritos" : "Añadir a favoritos"} onClick={() => updateDoc(doc.id, { favorite: doc.favorite ? 0 : 1 })}>
+        <IconButton label={doc.favorite ? L("Quitar de favoritos") : L("Añadir a favoritos")} onClick={() => updateDoc(doc.id, { favorite: doc.favorite ? 0 : 1 })}>
           <Star className={cn("size-4", doc.favorite === 1 && "fill-amber-400 text-amber-400")} />
         </IconButton>
-        <IconButton label={dark ? "Modo claro" : "Modo oscuro"} onClick={() => s.set("themeId", dark ? "light" : "dark")}>
+        <IconButton label={dark ? L("Modo claro") : L("Modo oscuro")} onClick={() => s.set("themeId", dark ? "light" : "dark")}>
           {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
         </IconButton>
-        <IconButton label="Configuración" onClick={() => openSettings()}>
+        <IconButton label={L("Configuración")} onClick={() => openSettings()}>
           <Settings className="size-4" />
         </IconButton>
         {doc.filePath && (
           <Tooltip
             label={
               diskState === "error"
-                ? `No se pudo guardar en ${doc.filePath}`
+                ? L("No se pudo guardar en {0}", doc.filePath)
                 : unsavedFile
                   ? autoSave
-                    ? `Guardando en ${doc.filePath}…`
-                    : `Cambios sin guardar en ${doc.filePath} (Ctrl+S)`
-                  : `Guardado en ${doc.filePath} · clic para ver la carpeta`
+                    ? L("Guardando en {0}…", doc.filePath)
+                    : L("Cambios sin guardar en {0} (Ctrl+S)", doc.filePath)
+                  : L("Guardado en {0} · clic para ver la carpeta", doc.filePath)
             }
           >
             <button
@@ -506,22 +507,22 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
               <FileText className="size-3.5 shrink-0" />
               <span className="truncate">{fileName(doc.filePath)}</span>
               {diskState === "saving" ? (
-                <Loader2 className="size-3 shrink-0 animate-spin" aria-label="Guardando en el archivo" />
+                <Loader2 className="size-3 shrink-0 animate-spin" aria-label={L("Guardando en el archivo")} />
               ) : diskState === "error" ? (
-                <span className="size-1.5 shrink-0 rounded-full bg-red-500" aria-label="Error al guardar en el archivo" />
+                <span className="size-1.5 shrink-0 rounded-full bg-red-500" aria-label={L("Error al guardar en el archivo")} />
               ) : (
-                unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Cambios sin guardar en el archivo" />
+                unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label={L("Cambios sin guardar en el archivo")} />
               )}
             </button>
           </Tooltip>
         )}
-        <Tooltip label={doc.filePath ? "Guardar en el archivo (Ctrl+S)" : "Guardar en un archivo (Ctrl+S)"}>
+        <Tooltip label={doc.filePath ? L("Guardar en el archivo (Ctrl+S)") : L("Guardar en un archivo (Ctrl+S)")}>
           <Button size="sm" variant="outline" icon={<Save className="size-3.5" />} onClick={files.save}>
-            {isDesktop() ? "Guardar" : "Descargar"}
+            {isDesktop() ? L("Guardar") : L("Descargar")}
           </Button>
         </Tooltip>
         <Button size="sm" variant={panelOpen ? "secondary" : "primary"} icon={<Sparkles className="size-3.5" />} onClick={() => setPanelOpen(!panelOpen)}>
-          IA
+          {L("IA")}
         </Button>
       </header>
 
@@ -595,7 +596,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
           <AIResultCard editor={editor} />
           {focus && (
             <Button size="sm" variant="outline" className="no-print absolute right-5 bottom-5 shadow-soft" icon={<Minimize2 className="size-3.5" />} onClick={() => s.set("viewMode", "page")}>
-              Salir del modo enfoque
+              {L("Salir del modo enfoque")}
             </Button>
           )}
         </div>

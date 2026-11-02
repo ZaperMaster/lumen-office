@@ -1,5 +1,6 @@
 import { key, newWorkbook, type CellStyle, type Sheet, type Workbook } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /* Plantillas de hojas de cálculo */
 
 export interface SheetTemplate {
@@ -34,15 +35,15 @@ function setStyle(s: Sheet, r: number, c: number, st: CellStyle) {
 export const SHEET_TEMPLATES: SheetTemplate[] = [
   {
     id: "blank",
-    name: "Libro en blanco",
-    description: "Empieza desde cero",
+    name: L("Libro en blanco"),
+    description: L("Empieza desde cero"),
     tint: "#ffffff",
     build: () => ({ title: "", wb: newWorkbook() }),
   },
   {
     id: "budget",
-    name: "Presupuesto mensual",
-    description: "Ingresos, gastos y ahorro",
+    name: L("Presupuesto mensual"),
+    description: L("Ingresos, gastos y ahorro"),
     tint: "#e6f4ea",
     build: () => {
       const wb = newWorkbook();
@@ -82,8 +83,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "expenses",
-    name: "Control de gastos",
-    description: "Registro con categorías y totales",
+    name: L("Control de gastos"),
+    description: L("Registro con categorías y totales"),
     tint: "#fff4e5",
     build: () => {
       const wb = newWorkbook();
@@ -122,8 +123,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "invoice",
-    name: "Factura",
-    description: "Con IVA y total automático",
+    name: L("Factura"),
+    description: L("Con IVA y total automático"),
     tint: "#e8f0fe",
     build: () => {
       const wb = newWorkbook();
@@ -167,8 +168,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "grades",
-    name: "Notas de clase",
-    description: "Medias y aprobados automáticos",
+    name: L("Notas de clase"),
+    description: L("Medias y aprobados automáticos"),
     tint: "#f3e8fd",
     build: () => {
       const wb = newWorkbook();
@@ -197,8 +198,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "tasks",
-    name: "Seguimiento de tareas",
-    description: "Estados con lista desplegable y colores",
+    name: L("Seguimiento de tareas"),
+    description: L("Estados con lista desplegable y colores"),
     tint: "#eef1ff",
     build: () => {
       const wb = newWorkbook();
@@ -237,8 +238,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "loan",
-    name: "Calculadora de préstamo",
-    description: "Cuota mensual y total de intereses",
+    name: L("Calculadora de préstamo"),
+    description: L("Cuota mensual y total de intereses"),
     tint: "#e8f7f7",
     build: () => {
       const wb = newWorkbook();
@@ -268,8 +269,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "inventory",
-    name: "Inventario",
-    description: "Existencias, valor y avisos de stock",
+    name: L("Inventario"),
+    description: L("Existencias, valor y avisos de stock"),
     tint: "#fdf0e6",
     build: () => {
       const wb = newWorkbook();
@@ -303,8 +304,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "schedule",
-    name: "Horario semanal",
-    description: "Clases o turnos de lunes a viernes",
+    name: L("Horario semanal"),
+    description: L("Clases o turnos de lunes a viernes"),
     tint: "#f1f8ff",
     build: () => {
       const wb = newWorkbook();
@@ -327,8 +328,8 @@ export const SHEET_TEMPLATES: SheetTemplate[] = [
   },
   {
     id: "hours",
-    name: "Registro de horas",
-    description: "Horas trabajadas y total a cobrar",
+    name: L("Registro de horas"),
+    description: L("Horas trabajadas y total a cobrar"),
     tint: "#f5f0ff",
     build: () => {
       const wb = newWorkbook();

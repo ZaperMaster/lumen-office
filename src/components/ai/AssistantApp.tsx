@@ -9,6 +9,7 @@ import { useSettings } from "@/store/settings";
 import { IconButton } from "@/components/ui";
 import { currentModelName } from "@/lib/ai";
 
+import { L } from "@/lib/i18n";
 export default function AssistantApp() {
   const navigate = useApp((s) => s.navigate);
   const openSettings = useApp((s) => s.openSettings);
@@ -17,24 +18,24 @@ export default function AssistantApp() {
 
   const createDocument = async (md: string) => {
     const heading = md.match(/^#\s+(.+)$/m)?.[1];
-    const doc = await createDoc("document", { title: heading ?? "Documento de la IA", content: markdownToJSON(md) });
+    const doc = await createDoc("document", { title: heading ?? L("Documento de la IA"), content: markdownToJSON(md) });
     openDoc(doc);
   };
 
   return (
     <div className="flex h-full flex-col bg-surface">
       <header data-tauri-drag-region className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3" style={{ paddingRight: "calc(var(--wc) + 8px)" }}>
-        <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
+        <IconButton label={L("Volver al inicio")} onClick={() => navigate({ name: "home" })}>
           <ArrowLeft className="size-4" />
         </IconButton>
         <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
           <Sparkles className="size-4" />
         </span>
-        <span className="text-[14px] font-semibold">Asistente IA</span>
+        <span className="text-[14px] font-semibold">{L("Asistente IA")}</span>
         {aiEngine === "api" ? (
-          <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-600">Tu API</span>
+          <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[11px] font-medium text-sky-600">{L("Tu API")}</span>
         ) : (
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600">Local · sin conexión</span>
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600">{L("Local · sin conexión")}</span>
         )}
         <div className="ml-auto flex items-center gap-1">
           {aiEngine === "webllm" ? (
@@ -42,7 +43,7 @@ export default function AssistantApp() {
               value={localModel}
               onChange={(e) => set("localModel", e.target.value)}
               className="h-8 rounded-md border border-border bg-surface px-2 text-[12.5px]"
-              aria-label="Modelo local"
+              aria-label={L("Modelo local")}
             >
               {LOCAL_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -53,7 +54,7 @@ export default function AssistantApp() {
           ) : (
             <span className="text-[12.5px] text-muted">{currentModelName()}</span>
           )}
-          <IconButton label="Configurar la IA" onClick={() => openSettings("ai")}>
+          <IconButton label={L("Configurar la IA")} onClick={() => openSettings("ai")}>
             <Settings2 className="size-4" />
           </IconButton>
         </div>

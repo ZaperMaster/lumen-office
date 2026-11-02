@@ -7,6 +7,7 @@ import { useApp } from "@/store/app";
 import { useConfirm } from "@/store/confirm";
 import { useSettings } from "@/store/settings";
 
+import { L } from "@/lib/i18n";
 /*
  * Guardado de hojas de cálculo y presentaciones, igual que los documentos:
  *  - En la base interna, medio segundo después de cada cambio.
@@ -100,14 +101,14 @@ export function useOfficeDoc<T>({
       setDiskState("idle");
       if (failed.current) {
         failed.current = false;
-        toast(`Guardado de nuevo en «${fileName(d.filePath)}»`, "success");
+        toast(L("Guardado de nuevo en «{0}»", fileName(d.filePath)), "success");
       }
       return true;
     } catch (e) {
       setDiskState("error");
       if (!failed.current) {
         failed.current = true;
-        toast(`No se pudo guardar automáticamente en «${fileName(d.filePath)}»`, "error", { detail: e instanceof Error ? e.message : String(e) });
+        toast(L("No se pudo guardar automáticamente en «{0}»", fileName(d.filePath)), "error", { detail: e instanceof Error ? e.message : String(e) });
       }
       return false;
     }

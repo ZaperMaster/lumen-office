@@ -1,3 +1,4 @@
+import { L } from "@/lib/i18n";
 /*
  * Modelo de las hojas de cálculo.
  *
@@ -231,10 +232,10 @@ export function newSheet(name: string): Sheet {
 }
 
 export function newWorkbook(): Workbook {
-  return { sheets: [newSheet("Hoja1")], active: 0 };
+  return { sheets: [newSheet(`${L("Hoja")}1`)], active: 0 };
 }
 
-export function uniqueSheetName(wb: Workbook, base = "Hoja"): string {
+export function uniqueSheetName(wb: Workbook, base = L("Hoja")): string {
   for (let i = 1; ; i++) {
     const name = `${base}${i}`;
     if (!wb.sheets.some((s) => s.name.toLowerCase() === name.toLowerCase())) return name;

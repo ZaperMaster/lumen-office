@@ -4,6 +4,7 @@ import { CaseSensitive, ChevronDown, ChevronUp, Replace, X } from "lucide-react"
 import type { SearchStorage } from "@/components/editor/extensions";
 import { Button, IconButton, Input } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 export function FindBar({ editor, withReplace, onClose }: { editor: Editor; withReplace: boolean; onClose: () => void }) {
   const [term, setTerm] = useState(() => {
     const { from, to, empty } = editor.state.selection;
@@ -37,7 +38,7 @@ export function FindBar({ editor, withReplace, onClose }: { editor: Editor; with
   return (
     <div className="no-print absolute top-3 right-6 z-30 w-[380px] animate-pop-in rounded-[calc(var(--radius)+2px)] border border-border bg-surface p-2.5 shadow-soft">
       <div className="flex items-center gap-1.5">
-        <IconButton size="sm" label={showReplace ? "Ocultar reemplazar" : "Mostrar reemplazar"} onClick={() => setShowReplace((v) => !v)}>
+        <IconButton size="sm" label={showReplace ? L("Ocultar reemplazar") : L("Mostrar reemplazar")} onClick={() => setShowReplace((v) => !v)}>
           <Replace className="size-4" />
         </IconButton>
         <div className="relative flex-1">
@@ -53,23 +54,23 @@ export function FindBar({ editor, withReplace, onClose }: { editor: Editor; with
               }
               if (e.key === "Escape") onClose();
             }}
-            placeholder="Buscar en el documento"
+            placeholder={L("Buscar en el documento")}
             className="h-8 pr-16 text-[13px]"
           />
           <span className="absolute top-1/2 right-2.5 -translate-y-1/2 text-[11.5px] text-muted">
-            {term ? (info.count ? `${info.index + 1} de ${info.count}` : "Sin resultados") : ""}
+            {term ? (info.count ? `${info.index + 1} de ${info.count}` : L("Sin resultados")) : ""}
           </span>
         </div>
-        <IconButton size="sm" label="Coincidir mayúsculas" active={info.caseSensitive} onClick={() => editor.commands.setCaseSensitive(!info.caseSensitive)}>
+        <IconButton size="sm" label={L("Coincidir mayúsculas")} active={info.caseSensitive} onClick={() => editor.commands.setCaseSensitive(!info.caseSensitive)}>
           <CaseSensitive className="size-4" />
         </IconButton>
-        <IconButton size="sm" label="Anterior" shortcut="Shift+Enter" disabled={!info.count} onClick={() => editor.commands.previousSearchResult()}>
+        <IconButton size="sm" label={L("Anterior")} shortcut="Shift+Enter" disabled={!info.count} onClick={() => editor.commands.previousSearchResult()}>
           <ChevronUp className="size-4" />
         </IconButton>
-        <IconButton size="sm" label="Siguiente" shortcut="Enter" disabled={!info.count} onClick={() => editor.commands.nextSearchResult()}>
+        <IconButton size="sm" label={L("Siguiente")} shortcut={L("Enter")} disabled={!info.count} onClick={() => editor.commands.nextSearchResult()}>
           <ChevronDown className="size-4" />
         </IconButton>
-        <IconButton size="sm" label="Cerrar" shortcut="Esc" onClick={onClose}>
+        <IconButton size="sm" label={L("Cerrar")} shortcut={L("Esc")} onClick={onClose}>
           <X className="size-4" />
         </IconButton>
       </div>
@@ -82,14 +83,14 @@ export function FindBar({ editor, withReplace, onClose }: { editor: Editor; with
               if (e.key === "Enter") editor.commands.replaceCurrent();
               if (e.key === "Escape") onClose();
             }}
-            placeholder="Reemplazar por"
+            placeholder={L("Reemplazar por")}
             className="h-8 flex-1 text-[13px]"
           />
           <Button size="sm" variant="outline" disabled={!info.count} onClick={() => editor.commands.replaceCurrent()}>
-            Reemplazar
+            {L("Reemplazar")}
           </Button>
           <Button size="sm" variant="outline" disabled={!info.count} onClick={() => editor.commands.replaceAll()}>
-            Todo
+            {L("Todo")}
           </Button>
         </div>
       )}

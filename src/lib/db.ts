@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type { JSONContent } from "@tiptap/react";
 import type { PageLayout } from "@/lib/pageLayout";
 
+import { L } from "@/lib/i18n";
 export type DocKind = "document" | "note" | "sheet" | "slides";
 
 export interface DocRecord {
@@ -127,7 +128,7 @@ export async function duplicateDoc(id: string): Promise<DocRecord | null> {
   const src = await db.docs.get(id);
   if (!src) return null;
   return createDoc(src.kind, {
-    title: `${src.title || "Sin título"} (copia)`,
+    title: L("{0} (copia)", src.title || L("Sin título")),
     content: structuredClone(src.content),
     color: src.color,
     tags: [...src.tags],
@@ -165,16 +166,16 @@ export function displayTitle(doc: Pick<DocRecord, "title" | "text" | "kind">): s
 }
 
 const KIND_UNTITLED: Record<DocKind, string> = {
-  document: "Documento sin título",
-  note: "Nota sin título",
-  sheet: "Hoja de cálculo sin título",
-  slides: "Presentación sin título",
+  document: L("Documento sin título"),
+  note: L("Nota sin título"),
+  sheet: L("Hoja de cálculo sin título"),
+  slides: L("Presentación sin título"),
 };
 
 export const KIND_LABEL: Record<DocKind, string> = {
   document: "Documento",
-  note: "Nota",
-  sheet: "Hoja de cálculo",
+  note: L("Nota"),
+  sheet: L("Hoja de cálculo"),
   slides: "Presentación",
 };
 

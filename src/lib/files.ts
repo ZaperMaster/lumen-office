@@ -5,6 +5,7 @@ import { safeFileName } from "@/lib/fileName";
 import { useApp } from "@/store/app";
 import type { PageLayout } from "@/lib/pageLayout";
 
+import { L } from "@/lib/i18n";
 /*
  * Archivos en el disco, como en Word:
  *  - Guardar: si el documento ya tiene archivo, lo reemplaza; si no, pregunta dónde guardarlo.
@@ -14,14 +15,14 @@ import type { PageLayout } from "@/lib/pageLayout";
  */
 
 export const FORMATS: Record<FileFormat, { label: string; ext: string; mime: string }> = {
-  docx: { label: "Documento de Word", ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
-  lumen: { label: "Documento de Lumen (sin pérdidas)", ext: "lumen", mime: "application/json" },
-  md: { label: "Markdown", ext: "md", mime: "text/markdown;charset=utf-8" },
-  html: { label: "Página web", ext: "html", mime: "text/html;charset=utf-8" },
-  txt: { label: "Texto sin formato", ext: "txt", mime: "text/plain;charset=utf-8" },
-  xlsx: { label: "Libro de Excel", ext: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
-  csv: { label: "CSV (valores separados por punto y coma)", ext: "csv", mime: "text/csv;charset=utf-8" },
-  pptx: { label: "Presentación de PowerPoint", ext: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation" },
+  docx: { label: L("Documento de Word"), ext: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+  lumen: { label: L("Documento de Lumen (sin pérdidas)"), ext: "lumen", mime: "application/json" },
+  md: { label: L("Markdown"), ext: "md", mime: "text/markdown;charset=utf-8" },
+  html: { label: L("Página web"), ext: "html", mime: "text/html;charset=utf-8" },
+  txt: { label: L("Texto sin formato"), ext: "txt", mime: "text/plain;charset=utf-8" },
+  xlsx: { label: L("Libro de Excel"), ext: "xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+  csv: { label: L("CSV (valores separados por punto y coma)"), ext: "csv", mime: "text/csv;charset=utf-8" },
+  pptx: { label: L("Presentación de PowerPoint"), ext: "pptx", mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation" },
 };
 
 /** Formatos para «Guardar» y «Guardar como», en orden de preferencia. */
@@ -84,7 +85,7 @@ async function chooseSavePath(title: string, formats: FileFormat[], currentPath?
   const { save } = await import("@tauri-apps/plugin-dialog");
   const base = currentPath ? currentPath.replace(/\.[^.\\/]+$/, "") : safeFileName(title);
   const path = await save({
-    title: "Guardar documento",
+    title: L("Guardar documento"),
     defaultPath: `${base}.${FORMATS[formats[0]].ext}`,
     filters: formats.map((f) => ({ name: FORMATS[f].label, extensions: [FORMATS[f].ext] })),
   });
@@ -106,17 +107,17 @@ export async function revealInFolder(path: string) {
 function savedToast(message: string, path: string) {
   useApp.getState().toast(message, "success", {
     detail: path,
-    action: { label: "Mostrar en la carpeta", onClick: () => void revealInFolder(path).catch(() => {}) },
+    action: { label: L("Mostrar en la carpeta"), onClick: () => void revealInFolder(path).catch(() => {}) },
   });
 }
 
 function errorToast(e: unknown) {
   const msg = e instanceof Error ? e.message : String(e);
   const friendly = /denied|not allowed|forbidden|permission/i.test(msg)
-    ? "No hay permiso para escribir en esa carpeta. Elige otra ubicación."
+    ? L("No hay permiso para escribir en esa carpeta. Elige otra ubicación.")
     : /used by another|being used|EBUSY|sharing violation/i.test(msg)
-      ? "El archivo está abierto en otro programa (por ejemplo, Word). Ciérralo e inténtalo de nuevo."
-      : `No se pudo guardar el archivo. ${msg}`;
+      ? L("El archivo está abierto en otro programa (por ejemplo, Word). Ciérralo e inténtalo de nuevo.")
+      : L("No se pudo guardar el archivo. {0}", msg);
   useApp.getState().toast(friendly, "error");
 }
 
@@ -130,7 +131,7 @@ function errorToast(e: unknown) {
  * Lanza el error si falla (lo usa también el autoguardado, que no muestra avisos).
  */
 export async function writeLinkedFile(doc: Pick<DocRecord, "id" | "filePath" | "fileFormat">, src: DocSource | FileSource): Promise<void> {
-  if (!doc.filePath || !doc.fileFormat) throw new Error("El documento no está vinculado a un archivo.");
+  if (!doc.filePath || !doc.fileFormat) throw new Error(L("El documento no está vinculado a un archivo."));
   const startedAt = Date.now();
   await writeFile(doc.filePath, await buildBytes(doc.fileFormat, src));
   // Sin pasar por updateDoc: guardar en disco no es modificar el documento
@@ -150,7 +151,7 @@ export async function saveDocument(
   if (!doc.filePath || !doc.fileFormat) return saveDocumentAs(doc, src, order);
   try {
     await writeLinkedFile(doc, src);
-    savedToast(`Guardado en «${fileName(doc.filePath)}»`, doc.filePath);
+    savedToast(L("Guardado en «{0}»", fileName(doc.filePath)), doc.filePath);
     return doc.filePath;
   } catch (e) {
     errorToast(e);
@@ -207,7 +208,7 @@ export async function saveDocumentAs(
     const startedAt = Date.now();
     await writeFile(path, await buildBytes(format, src));
     await db.docs.update(doc.id, { filePath: path, fileFormat: format, savedAt: startedAt });
-    savedToast(`Guardado en «${fileName(path)}»`, path);
+    savedToast(L("Guardado en «{0}»", fileName(path)), path);
     return path;
   } catch (e) {
     errorToast(e);
@@ -222,7 +223,7 @@ export async function exportDocument(format: FileFormat, src: DocSource | FileSo
   if (!path) return null;
   try {
     await writeFile(path, await buildBytes(format, src));
-    savedToast(`Exportado como ${FORMATS[format].label.toLowerCase()}`, path);
+    savedToast(L("Exportado como {0}", FORMATS[format].label.toLowerCase()), path);
     return path;
   } catch (e) {
     errorToast(e);
@@ -234,7 +235,7 @@ export async function exportDocument(format: FileFormat, src: DocSource | FileSo
 async function downloadCopy(format: FileFormat, src: DocSource | FileSource): Promise<null> {
   const name = `${safeFileName(src.title)}.${FORMATS[format].ext}`;
   saveAs(new Blob([(await buildBytes(format, src)) as BlobPart], { type: FORMATS[format].mime }), name);
-  useApp.getState().toast(`Descargado «${name}»`, "success", { detail: "En tu carpeta de Descargas" });
+  useApp.getState().toast(L("Descargado «{0}»", name), "success", { detail: L("En tu carpeta de Descargas") });
   return null;
 }
 

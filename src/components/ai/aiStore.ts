@@ -4,6 +4,7 @@ import { AI_ACTIONS, runAction, type AIAction } from "@/lib/ai";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/io";
 import { DOMSerializer } from "@tiptap/pm/model";
 
+import { L } from "@/lib/i18n";
 interface AIRun {
   status: "idle" | "running" | "done" | "error";
   label: string;
@@ -75,7 +76,7 @@ export const useAI = create<AIStore>((set, get) => ({
     get().controller?.abort();
     const sel = selectionMarkdown(editor);
     if (!sel.text) {
-      set({ ...initial, panelOpen: get().panelOpen, status: "error", label: action.label, error: "Selecciona algo de texto primero." });
+      set({ ...initial, panelOpen: get().panelOpen, status: "error", label: action.label, error: L("Selecciona algo de texto primero.") });
       return;
     }
     const controller = new AbortController();

@@ -1,3 +1,4 @@
+import { L } from "@/lib/i18n";
 /*
  * Operaciones sobre imágenes con <canvas>: recortar y girar.
  * Devuelven una nueva imagen en data URL, así el documento sigue siendo autónomo.
@@ -17,7 +18,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     // Necesario para poder leer los píxeles de imágenes de internet
     if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("No se pudo cargar la imagen."));
+    img.onerror = () => reject(new Error(L("No se pudo cargar la imagen.")));
     img.src = src;
   });
 }
@@ -30,7 +31,7 @@ function toDataUrl(canvas: HTMLCanvasElement, type: string): string {
   try {
     return canvas.toDataURL(type, 0.92);
   } catch {
-    throw new Error("Esta imagen viene de una web que no permite editarla. Descárgala e insértala desde tu equipo.");
+    throw new Error(L("Esta imagen viene de una web que no permite editarla. Descárgala e insértala desde tu equipo."));
   }
 }
 

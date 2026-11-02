@@ -4,6 +4,7 @@ import type { CellStyle } from "@/lib/sheet/model";
 import { FontPicker, FontSizePicker } from "@/components/editor/controls";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* Formato de celdas (Ctrl+1): número, alineación, fuente, bordes y relleno en una sola ventana. */
 
 export type BorderMode = "keep" | "none" | "outer" | "all" | "bottom" | "top";
@@ -15,12 +16,12 @@ const FILL_COLORS = [
 ];
 
 const BORDER_OPTIONS: [BorderMode, string][] = [
-  ["keep", "Dejar como están"],
-  ["none", "Sin bordes"],
-  ["outer", "Contorno"],
-  ["all", "Todos los bordes"],
-  ["bottom", "Solo abajo"],
-  ["top", "Solo arriba"],
+  ["keep", L("Dejar como están")],
+  ["none", L("Sin bordes")],
+  ["outer", L("Contorno")],
+  ["all", L("Todos los bordes")],
+  ["bottom", L("Solo abajo")],
+  ["top", L("Solo arriba")],
 ];
 
 export function FormatCellsDialog({
@@ -46,11 +47,11 @@ export function FormatCellsDialog({
   const hasDec = ["number", "thousands", "currency", "percent", "scientific"].includes(fmt);
   const example = NUM_FORMATS.find((f) => f.id === fmt)?.example;
   const tabs = [
-    { id: "num", label: "Número" },
-    { id: "align", label: "Alineación" },
-    { id: "font", label: "Fuente" },
-    { id: "border", label: "Bordes" },
-    { id: "fill", label: "Relleno" },
+    { id: "num", label: L("Número") },
+    { id: "align", label: L("Alineación") },
+    { id: "font", label: L("Fuente") },
+    { id: "border", label: L("Bordes") },
+    { id: "fill", label: L("Relleno") },
   ] as const;
   const option = (on: boolean) => cn("rounded-md border px-3 py-1.5 text-left text-[12.5px]", on ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2");
 
@@ -58,12 +59,12 @@ export function FormatCellsDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Formato de celdas"
+      title={L("Formato de celdas")}
       className="w-[min(94vw,600px)]"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={() => onApply(st, border, merge)}>Aceptar</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+          <Button variant="primary" onClick={() => onApply(st, border, merge)}>{L("Aceptar")}</Button>
         </>
       }
     >
@@ -86,16 +87,16 @@ export function FormatCellsDialog({
           </div>
           <div className="flex flex-col gap-3">
             <div className="sheet-paper rounded-[var(--radius)] border border-border bg-paper px-3 py-3 text-paper-text">
-              <div className="mb-1 text-[11px] opacity-60">Vista previa</div>
+              <div className="mb-1 text-[11px] opacity-60">{L("Vista previa")}</div>
               <div className="text-[18px] tabular-nums">{preview(st) || "—"}</div>
             </div>
             {hasDec && (
               <label className="flex items-center justify-between text-[12.5px] font-medium">
-                Decimales
+                {L("Decimales")}
                 <Input type="number" min={0} max={10} value={st.dec ?? 2} onChange={(e) => set({ dec: Math.max(0, Math.min(10, Number(e.target.value))) })} className="h-8 w-20" />
               </label>
             )}
-            {example && <p className="text-[12px] text-muted">Ejemplo: {example}</p>}
+            {example && <p className="text-[12px] text-muted">{L("Ejemplo:")}{" "} {example}</p>}
           </div>
         </div>
       )}
@@ -103,21 +104,21 @@ export function FormatCellsDialog({
       {tab === "align" && (
         <div className="grid grid-cols-2 gap-5">
           <div className="flex flex-col gap-1">
-            <div className="mb-1 text-[11.5px] font-semibold tracking-wide text-muted uppercase">Horizontal</div>
-            {([[undefined, "General (según el valor)"], ["left", "Izquierda"], ["center", "Centro"], ["right", "Derecha"]] as const).map(([v, l]) => (
+            <div className="mb-1 text-[11.5px] font-semibold tracking-wide text-muted uppercase">{L("Horizontal")}</div>
+            {([[undefined, L("General (según el valor)")], ["left", L("Izquierda")], ["center", L("Centro")], ["right", L("Derecha")]] as const).map(([v, l]) => (
               <button key={l} onClick={() => set({ align: v })} className={option(st.align === v)}>{l}</button>
             ))}
           </div>
           <div className="flex flex-col gap-1">
-            <div className="mb-1 text-[11.5px] font-semibold tracking-wide text-muted uppercase">Vertical</div>
-            {([["top", "Arriba"], ["middle", "Centro"], [undefined, "Abajo"]] as const).map(([v, l]) => (
+            <div className="mb-1 text-[11.5px] font-semibold tracking-wide text-muted uppercase">{L("Vertical")}</div>
+            {([["top", L("Arriba")], ["middle", L("Centro")], [undefined, L("Abajo")]] as const).map(([v, l]) => (
               <button key={l} onClick={() => set({ valign: v })} className={option(st.valign === v)}>{l}</button>
             ))}
             <label className="mt-3 flex cursor-pointer items-center gap-2 text-[12.5px]">
-              <input type="checkbox" checked={!!st.wrap} onChange={(e) => set({ wrap: e.target.checked || undefined })} /> Ajustar el texto (varias líneas)
+              <input type="checkbox" checked={!!st.wrap} onChange={(e) => set({ wrap: e.target.checked || undefined })} /> {" "}{L("Ajustar el texto (varias líneas)")}
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-[12.5px]">
-              <input type="checkbox" checked={merge} onChange={(e) => setMerge(e.target.checked)} /> Combinar celdas
+              <input type="checkbox" checked={merge} onChange={(e) => setMerge(e.target.checked)} /> {" "}{L("Combinar celdas")}
             </label>
           </div>
         </div>
@@ -126,20 +127,20 @@ export function FormatCellsDialog({
       {tab === "font" && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <FontPicker value={st.font ?? null} onChange={(css) => set({ font: css })} className="w-[220px]" placeholder="Predeterminada" />
+            <FontPicker value={st.font ?? null} onChange={(css) => set({ font: css })} className="w-[220px]" placeholder={L("Predeterminada")} />
             <FontSizePicker value={st.fs ?? 11} onChange={(pt) => set({ fs: pt === 11 ? undefined : pt })} />
           </div>
           <div className="flex flex-wrap gap-4 text-[12.5px]">
-            {([["b", "Negrita"], ["i", "Cursiva"], ["u", "Subrayado"], ["s", "Tachado"]] as const).map(([k, l]) => (
+            {([["b", L("Negrita")], ["i", L("Cursiva")], ["u", L("Subrayado")], ["s", L("Tachado")]] as const).map(([k, l]) => (
               <label key={k} className="flex cursor-pointer items-center gap-2">
                 <input type="checkbox" checked={!!st[k]} onChange={(e) => set({ [k]: e.target.checked || undefined })} /> {l}
               </label>
             ))}
           </div>
           <label className="flex items-center gap-3 text-[12.5px] font-medium">
-            Color
+            {L("Color")}
             <input type="color" value={st.color ?? "#1c1e24"} onChange={(e) => set({ color: e.target.value })} className="h-8 w-12 cursor-pointer rounded border border-border" />
-            <button onClick={() => set({ color: undefined })} className="text-[12px] text-accent hover:underline">Automático</button>
+            <button onClick={() => set({ color: undefined })} className="text-[12px] text-accent hover:underline">{L("Automático")}</button>
           </label>
           <div className="sheet-paper rounded-[var(--radius)] border border-border bg-paper px-3 py-3 text-paper-text">
             <span
@@ -152,7 +153,7 @@ export function FormatCellsDialog({
                 color: st.color,
               }}
             >
-              AaBbCc 123
+              {L("AaBbCc 123")}
             </span>
           </div>
         </div>
@@ -195,9 +196,9 @@ export function FormatCellsDialog({
             ))}
           </div>
           <label className="flex items-center gap-3 text-[12.5px] font-medium">
-            Otro color
+            {L("Otro color")}
             <input type="color" value={st.bg ?? "#ffffff"} onChange={(e) => set({ bg: e.target.value })} className="h-8 w-12 cursor-pointer rounded border border-border" />
-            <button onClick={() => set({ bg: undefined })} className="text-[12px] text-accent hover:underline">Sin relleno</button>
+            <button onClick={() => set({ bg: undefined })} className="text-[12px] text-accent hover:underline">{L("Sin relleno")}</button>
           </label>
         </div>
       )}

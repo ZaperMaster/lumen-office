@@ -2,11 +2,12 @@ import { useRef, useState } from "react";
 import type { CropRect } from "@/lib/imageOps";
 import { Button, Dialog, Segmented, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 type Handle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw" | "move";
 type Aspect = "free" | "1" | "4/3" | "16/9" | "3/4";
 
 const ASPECTS: { value: Aspect; label: string }[] = [
-  { value: "free", label: "Libre" },
+  { value: "free", label: L("Libre") },
   { value: "1", label: "1:1" },
   { value: "4/3", label: "4:3" },
   { value: "16/9", label: "16:9" },
@@ -112,17 +113,17 @@ export function CropDialog({
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Recortar imagen"
-      description="Arrastra el marco o sus esquinas para elegir la zona que quieres conservar."
+      title={L("Recortar imagen")}
+      description={L("Arrastra el marco o sus esquinas para elegir la zona que quieres conservar.")}
       className="w-[min(92vw,760px)]"
       footer={
         <>
           <Button variant="ghost" onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })}>
-            Restablecer
+            {L("Restablecer")}
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => onOpenChange(false)}>{L("Cancelar")}</Button>
           <Button variant="primary" onClick={() => onApply(rect)}>
-            Recortar
+            {L("Recortar")}
           </Button>
         </>
       }

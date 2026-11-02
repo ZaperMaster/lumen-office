@@ -6,6 +6,7 @@ import { LinkButton } from "@/components/editor/Ribbon";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
 import { Menu, MenuTrigger, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Barra flotante que aparece al seleccionar texto. */
 export function SelectionBubble({ editor }: { editor: Editor }) {
   const f = useEditorFlags(editor);
@@ -41,18 +42,18 @@ export function SelectionBubble({ editor }: { editor: Editor }) {
               className="flex h-7 items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2.5 text-[12.5px] font-medium text-white hover:brightness-110"
             >
               <Sparkles className="size-3.5" />
-              IA
+              {L("IA")}
             </button>
           </MenuTrigger>
           <AIActionsMenuContent editor={editor} />
         </Menu>
         <span className="mx-0.5 h-5 w-px bg-border" />
-        {btn(f.bold, () => editor.chain().focus().toggleBold().run(), <Bold className="size-4" />, "Negrita")}
-        {btn(f.italic, () => editor.chain().focus().toggleItalic().run(), <Italic className="size-4" />, "Cursiva")}
-        {btn(f.underline, () => editor.chain().focus().toggleUnderline().run(), <Underline className="size-4" />, "Subrayado")}
-        {btn(f.strike, () => editor.chain().focus().toggleStrike().run(), <Strikethrough className="size-4" />, "Tachado")}
-        {btn(f.code, () => editor.chain().focus().toggleCode().run(), <Code className="size-4" />, "Código")}
-        {btn(f.highlight, () => editor.chain().focus().toggleHighlight({ color: "#fff59d" }).run(), <Highlighter className="size-4" />, "Resaltar")}
+        {btn(f.bold, () => editor.chain().focus().toggleBold().run(), <Bold className="size-4" />, L("Negrita"))}
+        {btn(f.italic, () => editor.chain().focus().toggleItalic().run(), <Italic className="size-4" />, L("Cursiva"))}
+        {btn(f.underline, () => editor.chain().focus().toggleUnderline().run(), <Underline className="size-4" />, L("Subrayado"))}
+        {btn(f.strike, () => editor.chain().focus().toggleStrike().run(), <Strikethrough className="size-4" />, L("Tachado"))}
+        {btn(f.code, () => editor.chain().focus().toggleCode().run(), <Code className="size-4" />, L("Código"))}
+        {btn(f.highlight, () => editor.chain().focus().toggleHighlight({ color: "#fff59d" }).run(), <Highlighter className="size-4" />, L("Resaltar"))}
         <LinkButton editor={editor} />
       </div>
     </BubbleMenu>

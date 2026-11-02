@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button, Dialog } from "@/components/ui";
 import type { SlideTable } from "@/lib/slides/model";
 
+import { L } from "@/lib/i18n";
 export const SAMPLE_TABLE: SlideTable = {
   header: true,
   rows: [
@@ -30,13 +31,13 @@ export function TableDialog({ initial, onClose, onSave, insert }: { initial: Sli
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title={insert ? "Insertar tabla" : "Editar tabla"}
+      title={insert ? L("Insertar tabla") : L("Editar tabla")}
       className="!w-[min(94vw,760px)]"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
           <Button variant="primary" onClick={() => { onSave({ ...t, rows: t.rows.map((r) => Array.from({ length: cols }, (_, j) => r[j] ?? "")) }); onClose(); }}>
-            {insert ? "Insertar" : "Guardar"}
+            {insert ? L("Insertar") : L("Guardar")}
           </Button>
         </>
       }
@@ -53,7 +54,7 @@ export function TableDialog({ initial, onClose, onSave, insert }: { initial: Sli
                 ))}
                 <td>
                   {t.rows.length > 1 && (
-                    <button title="Quitar fila" className="text-muted hover:text-red-500" onClick={() => setT((p) => ({ ...p, rows: p.rows.filter((_, i) => i !== ri) }))}>
+                    <button title={L("Quitar fila")} className="text-muted hover:text-red-500" onClick={() => setT((p) => ({ ...p, rows: p.rows.filter((_, i) => i !== ri) }))}>
                       <Trash2 className="size-3.5" />
                     </button>
                   )}
@@ -64,7 +65,7 @@ export function TableDialog({ initial, onClose, onSave, insert }: { initial: Sli
               {Array.from({ length: cols }, (_, ci) => (
                 <td key={ci} className="text-center">
                   {cols > 1 && (
-                    <button title="Quitar columna" className="text-muted hover:text-red-500" onClick={() => setT((p) => ({ ...p, rows: p.rows.map((r) => r.filter((_, j) => j !== ci)) }))}>
+                    <button title={L("Quitar columna")} className="text-muted hover:text-red-500" onClick={() => setT((p) => ({ ...p, rows: p.rows.map((r) => r.filter((_, j) => j !== ci)) }))}>
                       <Trash2 className="size-3.5" />
                     </button>
                   )}
@@ -75,12 +76,12 @@ export function TableDialog({ initial, onClose, onSave, insert }: { initial: Sli
         </table>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button size="sm" icon={<Plus />} onClick={() => setT((p) => ({ ...p, rows: [...p.rows, Array(cols).fill("")] }))}>Fila</Button>
-        <Button size="sm" icon={<Plus />} onClick={() => setT((p) => ({ ...p, rows: p.rows.map((r) => [...r, ""]) }))}>Columna</Button>
+        <Button size="sm" icon={<Plus />} onClick={() => setT((p) => ({ ...p, rows: [...p.rows, Array(cols).fill("")] }))}>{L("Fila")}</Button>
+        <Button size="sm" icon={<Plus />} onClick={() => setT((p) => ({ ...p, rows: p.rows.map((r) => [...r, ""]) }))}>{L("Columna")}</Button>
         <label className="ml-2 flex items-center gap-2 text-[12.5px]">
-          <input type="checkbox" checked={t.header} onChange={(e) => setT((p) => ({ ...p, header: e.target.checked }))} /> Primera fila como encabezado
+          <input type="checkbox" checked={t.header} onChange={(e) => setT((p) => ({ ...p, header: e.target.checked }))} /> {" "}{L("Primera fila como encabezado")}
         </label>
-        <span className="text-[11.5px] text-muted">También puedes pegar una tabla copiada de una hoja de cálculo.</span>
+        <span className="text-[11.5px] text-muted">{L("También puedes pegar una tabla copiada de una hoja de cálculo.")}</span>
       </div>
     </Dialog>
   );

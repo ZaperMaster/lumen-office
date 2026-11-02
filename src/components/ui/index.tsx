@@ -3,6 +3,7 @@ import { DropdownMenu, Popover as RPopover, Tooltip as RTooltip, Dialog as RDial
 import { clsx } from "clsx";
 import { Check, ChevronRight, X } from "lucide-react";
 
+import { L } from "@/lib/i18n";
 export const cn = clsx;
 
 /* ------------------------------------------------------------------ */
@@ -246,7 +247,7 @@ export function Dialog({
                 <RDialog.Description className="sr-only">{title}</RDialog.Description>
               )}
             </div>
-            <RDialog.Close className="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label="Cerrar">
+            <RDialog.Close className="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("Cerrar")}>
               <X className="size-4" />
             </RDialog.Close>
           </div>

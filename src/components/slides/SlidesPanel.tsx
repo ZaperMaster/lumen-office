@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Circle, FlipHorizontal, FlipVertical, ImagePlus, Pl
 import { ANIMS, TRANSITIONS, TRIGGERS, animLabel, htmlText, type Anim, type AnimTrigger, type Slide, type SlideEl, type Theme, type Transition } from "@/lib/slides/model";
 import { Button, Slider, Switch, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /*
  * Panel lateral de formato de las presentaciones: posición y tamaño, relleno,
  * contorno, esquinas, sombra, imagen, animaciones y fondo de la diapositiva.
@@ -12,20 +13,20 @@ import { Button, Slider, Switch, cn } from "@/components/ui";
 /** Estilos rápidos para imágenes. */
 const RESET_LOOK: Partial<SlideEl> = { bright: undefined, contrast: undefined, saturate: undefined, gray: undefined, sepia: undefined, blurPx: undefined };
 const IMAGE_PRESETS: { label: string; look: Partial<SlideEl> }[] = [
-  { label: "Original", look: {} },
-  { label: "Blanco y negro", look: { gray: true, contrast: 110 } },
-  { label: "Sepia", look: { sepia: true } },
-  { label: "Vívido", look: { saturate: 160, contrast: 110 } },
-  { label: "Cálido", look: { saturate: 125, bright: 105, sepia: undefined, contrast: 105 } },
-  { label: "Suave", look: { saturate: 70, bright: 112, contrast: 90 } },
+  { label: L("Original"), look: {} },
+  { label: L("Blanco y negro"), look: { gray: true, contrast: 110 } },
+  { label: L("Sepia"), look: { sepia: true } },
+  { label: L("Vívido"), look: { saturate: 160, contrast: 110 } },
+  { label: L("Cálido"), look: { saturate: 125, bright: 105, sepia: undefined, contrast: 105 } },
+  { label: L("Suave"), look: { saturate: 70, bright: 112, contrast: 90 } },
 ];
 const FRAMES: { label: string; look: Partial<SlideEl> }[] = [
-  { label: "Sin marco", look: {} },
-  { label: "Polaroid", look: { frame: 14, shadow: true } },
-  { label: "Inclinada", look: { frame: 10, shadow: true, rot: -4 } },
-  { label: "Redondeada", look: { radius: 24, shadow: true } },
-  { label: "Círculo", look: { circle: true, shadow: true } },
-  { label: "Sombra", look: { shadow: true } },
+  { label: L("Sin marco"), look: {} },
+  { label: L("Polaroid"), look: { frame: 14, shadow: true } },
+  { label: L("Inclinada"), look: { frame: 10, shadow: true, rot: -4 } },
+  { label: L("Redondeada"), look: { radius: 24, shadow: true } },
+  { label: L("Círculo"), look: { circle: true, shadow: true } },
+  { label: L("Sombra"), look: { shadow: true } },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -110,7 +111,7 @@ export function SlidesPanel({
   const one = selected.length === 1 ? selected[0] : null;
   const animated = slide.els.filter((e) => e.anim && e.anim !== "none");
   const name = (e: SlideEl) =>
-    e.type === "image" ? "Imagen" : htmlText(e.html).slice(0, 26) || (e.type === "shape" ? "Forma" : "Cuadro de texto");
+    e.type === "image" ? L("Imagen") : htmlText(e.html).slice(0, 26) || (e.type === "shape" ? L("Forma") : L("Cuadro de texto"));
 
   /** Cambia el orden de aparición moviendo el elemento en la lista. */
   const moveAnim = (id: string, dir: -1 | 1) =>
@@ -129,79 +130,79 @@ export function SlidesPanel({
   return (
     <aside className="no-print flex w-[268px] shrink-0 flex-col overflow-y-auto border-l border-border bg-surface" onMouseDown={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <span className="text-[13px] font-semibold">{one ? "Formato del elemento" : selected.length > 1 ? `${selected.length} elementos` : `Diapositiva ${index + 1}`}</span>
-        <button onClick={onClose} className="grid size-6 place-items-center rounded-md text-muted hover:bg-surface-2" aria-label="Cerrar panel"><X className="size-4" /></button>
+        <span className="text-[13px] font-semibold">{one ? L("Formato del elemento") : selected.length > 1 ? `${selected.length} elementos` : L("Diapositiva {0}", index + 1)}</span>
+        <button onClick={onClose} className="grid size-6 place-items-center rounded-md text-muted hover:bg-surface-2" aria-label={L("Cerrar panel")}><X className="size-4" /></button>
       </div>
 
       {one && (
-        <Section title="Posición y tamaño">
+        <Section title={L("Posición y tamaño")}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             <Row label="X"><Num value={one.x} onChange={(v) => onEl({ x: v })} /></Row>
             <Row label="Y"><Num value={one.y} onChange={(v) => onEl({ y: v })} /></Row>
-            <Row label="Ancho"><Num value={one.w} min={10} onChange={(v) => onEl((e) => (e.type === "image" ? { ...e, w: v, h: (e.h * v) / e.w } : { ...e, w: v }))} /></Row>
-            <Row label="Alto"><Num value={one.h} min={10} onChange={(v) => onEl((e) => (e.type === "image" ? { ...e, h: v, w: (e.w * v) / e.h } : { ...e, h: v }))} /></Row>
+            <Row label={L("Ancho")}><Num value={one.w} min={10} onChange={(v) => onEl((e) => (e.type === "image" ? { ...e, w: v, h: (e.h * v) / e.w } : { ...e, w: v }))} /></Row>
+            <Row label={L("Alto")}><Num value={one.h} min={10} onChange={(v) => onEl((e) => (e.type === "image" ? { ...e, h: v, w: (e.w * v) / e.h } : { ...e, h: v }))} /></Row>
           </div>
-          <Row label="Giro"><Num value={one.rot ?? 0} min={-360} max={360} onChange={(v) => onEl({ rot: v || undefined })} suffix="°" /></Row>
-          {one.type === "image" && <p className="text-[11px] text-muted">Las imágenes conservan su proporción al cambiar el ancho o el alto.</p>}
+          <Row label={L("Giro")}><Num value={one.rot ?? 0} min={-360} max={360} onChange={(v) => onEl({ rot: v || undefined })} suffix="°" /></Row>
+          {one.type === "image" && <p className="text-[11px] text-muted">{L("Las imágenes conservan su proporción al cambiar el ancho o el alto.")}</p>}
         </Section>
       )}
 
       {selected.length > 0 && (
-        <Section title="Estilo">
+        <Section title={L("Estilo")}>
           {(one?.type !== "image" || !one) && (
             <ColorRow
-              label="Relleno"
+              label={L("Relleno")}
               value={one?.fill}
               onChange={(c) => onEl({ fill: c })}
               onClear={() => onEl((e) => ({ ...e, fill: e.type === "shape" ? "transparent" : undefined }))}
-              clearLabel="Sin relleno"
+              clearLabel={L("Sin relleno")}
             />
           )}
-          <ColorRow label="Contorno" value={one?.strokeW ? one.stroke ?? t.accent : undefined} onChange={(c) => onEl((e) => ({ ...e, stroke: c, strokeW: e.strokeW || 3 }))} onClear={() => onEl({ strokeW: 0 })} clearLabel="Sin contorno" />
+          <ColorRow label={L("Contorno")} value={one?.strokeW ? one.stroke ?? t.accent : undefined} onChange={(c) => onEl((e) => ({ ...e, stroke: c, strokeW: e.strokeW || 3 }))} onClear={() => onEl({ strokeW: 0 })} clearLabel={L("Sin contorno")} />
           {!!one?.strokeW && (
-            <Row label="Grosor">
-              <Slider value={one.strokeW} min={1} max={20} onChange={(v) => onEl({ strokeW: v })} className="w-[120px]" label="Grosor del contorno" />
+            <Row label={L("Grosor")}>
+              <Slider value={one.strokeW} min={1} max={20} onChange={(v) => onEl({ strokeW: v })} className="w-[120px]" label={L("Grosor del contorno")} />
             </Row>
           )}
           {(one?.type === "image" || one?.type === "text" || one?.shape === "rect") && (
-            <Row label="Esquinas">
-              <Slider value={one.radius ?? 0} min={0} max={Math.round(Math.min(one.w, one.h) / 2)} onChange={(v) => onEl({ radius: v || undefined })} className="w-[120px]" label="Esquinas redondeadas" />
+            <Row label={L("Esquinas")}>
+              <Slider value={one.radius ?? 0} min={0} max={Math.round(Math.min(one.w, one.h) / 2)} onChange={(v) => onEl({ radius: v || undefined })} className="w-[120px]" label={L("Esquinas redondeadas")} />
             </Row>
           )}
-          <Row label="Opacidad">
-            <Slider value={Math.round((one?.opacity ?? 1) * 100)} min={10} max={100} step={5} onChange={(v) => onEl({ opacity: v >= 100 ? undefined : v / 100 })} className="w-[120px]" label="Opacidad" />
+          <Row label={L("Opacidad")}>
+            <Slider value={Math.round((one?.opacity ?? 1) * 100)} min={10} max={100} step={5} onChange={(v) => onEl({ opacity: v >= 100 ? undefined : v / 100 })} className="w-[120px]" label={L("Opacidad")} />
           </Row>
-          <Row label="Sombra">
-            <Switch checked={!!one?.shadow} onChange={(v) => onEl({ shadow: v || undefined })} label="Sombra" />
+          <Row label={L("Sombra")}>
+            <Switch checked={!!one?.shadow} onChange={(v) => onEl({ shadow: v || undefined })} label={L("Sombra")} />
           </Row>
           {(one?.type === "text" || one?.type === "shape") && (
-            <Row label="Interlineado">
-              <Slider value={Math.round((one.lineHeight ?? 1.22) * 100)} min={90} max={220} step={5} onChange={(v) => onEl({ lineHeight: v / 100 })} className="w-[120px]" label="Interlineado" />
+            <Row label={L("Interlineado")}>
+              <Slider value={Math.round((one.lineHeight ?? 1.22) * 100)} min={90} max={220} step={5} onChange={(v) => onEl({ lineHeight: v / 100 })} className="w-[120px]" label={L("Interlineado")} />
             </Row>
           )}
         </Section>
       )}
 
       {one?.type === "image" && (
-        <Section title="Imagen">
-          <Button size="sm" variant="outline" icon={<ImagePlus className="size-3.5" />} onClick={onReplaceImage}>Cambiar imagen</Button>
+        <Section title={L("Imagen")}>
+          <Button size="sm" variant="outline" icon={<ImagePlus className="size-3.5" />} onClick={onReplaceImage}>{L("Cambiar imagen")}</Button>
           <div className="flex gap-1">
-            {([["fill", "Estirar"], ["cover", "Rellenar"], ["contain", "Encajar"]] as const).map(([v, l]) => (
+            {([["fill", L("Estirar")], ["cover", L("Rellenar")], ["contain", L("Encajar")]] as const).map(([v, l]) => (
               <button key={v} onClick={() => onEl({ fit: v === "fill" ? undefined : v })} className={cn("flex-1 rounded-md border px-2 py-1 text-[12px]", (one.fit ?? "fill") === v ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}>
                 {l}
               </button>
             ))}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant={one.flipH ? "secondary" : "ghost"} icon={<FlipHorizontal className="size-3.5" />} onClick={() => onEl({ flipH: !one.flipH || undefined })}>Voltear</Button>
-            <Button size="sm" variant={one.flipV ? "secondary" : "ghost"} icon={<FlipVertical className="size-3.5" />} onClick={() => onEl({ flipV: !one.flipV || undefined })}>Vertical</Button>
-            <Button size="sm" variant={one.circle ? "secondary" : "ghost"} icon={<Circle className="size-3.5" />} onClick={() => onEl({ circle: !one.circle || undefined })}>Círculo</Button>
+            <Button size="sm" variant={one.flipH ? "secondary" : "ghost"} icon={<FlipHorizontal className="size-3.5" />} onClick={() => onEl({ flipH: !one.flipH || undefined })}>{L("Voltear")}</Button>
+            <Button size="sm" variant={one.flipV ? "secondary" : "ghost"} icon={<FlipVertical className="size-3.5" />} onClick={() => onEl({ flipV: !one.flipV || undefined })}>{L("Vertical")}</Button>
+            <Button size="sm" variant={one.circle ? "secondary" : "ghost"} icon={<Circle className="size-3.5" />} onClick={() => onEl({ circle: !one.circle || undefined })}>{L("Círculo")}</Button>
           </div>
         </Section>
       )}
 
       {one?.type === "image" && (
-        <Section title="Estilo de la imagen">
+        <Section title={L("Estilo de la imagen")}>
           <div className="grid grid-cols-3 gap-1">
             {IMAGE_PRESETS.map((p) => (
               <button key={p.label} onClick={() => onEl((e) => ({ ...e, ...RESET_LOOK, ...p.look }))} className="rounded-md border border-border px-1 py-1 text-[11.5px] hover:border-accent hover:bg-surface-2">
@@ -209,7 +210,7 @@ export function SlidesPanel({
               </button>
             ))}
           </div>
-          <div className="mt-1 text-[11.5px] font-medium text-muted">Marco</div>
+          <div className="mt-1 text-[11.5px] font-medium text-muted">{L("Marco")}</div>
           <div className="grid grid-cols-3 gap-1">
             {FRAMES.map((p) => (
               <button key={p.label} onClick={() => onEl((e) => ({ ...e, frame: undefined, shadow: undefined, rot: undefined, radius: undefined, circle: undefined, ...p.look }))} className="rounded-md border border-border px-1 py-1 text-[11.5px] hover:border-accent hover:bg-surface-2">
@@ -221,20 +222,20 @@ export function SlidesPanel({
       )}
 
       {one?.type === "image" && (
-        <Section title="Ajustes">
-          <Row label="Brillo"><Slider value={one.bright ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ bright: v === 100 ? undefined : v })} className="w-[120px]" label="Brillo" /></Row>
-          <Row label="Contraste"><Slider value={one.contrast ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ contrast: v === 100 ? undefined : v })} className="w-[120px]" label="Contraste" /></Row>
-          <Row label="Saturación"><Slider value={one.saturate ?? 100} min={0} max={200} step={5} onChange={(v) => onEl({ saturate: v === 100 ? undefined : v })} className="w-[120px]" label="Saturación" /></Row>
-          <Row label="Desenfoque"><Slider value={one.blurPx ?? 0} min={0} max={12} onChange={(v) => onEl({ blurPx: v || undefined })} className="w-[120px]" label="Desenfoque" /></Row>
+        <Section title={L("Ajustes")}>
+          <Row label={L("Brillo")}><Slider value={one.bright ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ bright: v === 100 ? undefined : v })} className="w-[120px]" label={L("Brillo")} /></Row>
+          <Row label={L("Contraste")}><Slider value={one.contrast ?? 100} min={30} max={180} step={5} onChange={(v) => onEl({ contrast: v === 100 ? undefined : v })} className="w-[120px]" label={L("Contraste")} /></Row>
+          <Row label={L("Saturación")}><Slider value={one.saturate ?? 100} min={0} max={200} step={5} onChange={(v) => onEl({ saturate: v === 100 ? undefined : v })} className="w-[120px]" label={L("Saturación")} /></Row>
+          <Row label={L("Desenfoque")}><Slider value={one.blurPx ?? 0} min={0} max={12} onChange={(v) => onEl({ blurPx: v || undefined })} className="w-[120px]" label={L("Desenfoque")} /></Row>
           <div className="flex gap-3 text-[12px]">
-            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.gray} onChange={(e) => onEl({ gray: e.target.checked || undefined })} /> Blanco y negro</label>
-            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.sepia} onChange={(e) => onEl({ sepia: e.target.checked || undefined })} /> Sepia</label>
+            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.gray} onChange={(e) => onEl({ gray: e.target.checked || undefined })} /> {" "}{L("Blanco y negro")}</label>
+            <label className="flex items-center gap-1.5"><input type="checkbox" checked={!!one.sepia} onChange={(e) => onEl({ sepia: e.target.checked || undefined })} /> {" "}{L("Sepia")}</label>
           </div>
         </Section>
       )}
 
       {one?.type === "image" && (
-        <Section title="Recortar">
+        <Section title={L("Recortar")}>
           {(["t", "b", "l", "r"] as const).map((side) => (
             <Row key={side} label={{ t: "Arriba", b: "Abajo", l: "Izquierda", r: "Derecha" }[side]}>
               <Slider
@@ -246,17 +247,17 @@ export function SlidesPanel({
                   return { ...e, crop: crop.t || crop.r || crop.b || crop.l ? crop : undefined };
                 })}
                 className="w-[120px]"
-                label={`Recortar ${side}`}
+                label={L("Recortar {0}", side)}
               />
             </Row>
           ))}
-          {one.crop && <button onClick={() => onEl({ crop: undefined })} className="self-end text-[11.5px] text-accent hover:underline">Quitar recorte</button>}
+          {one.crop && <button onClick={() => onEl({ crop: undefined })} className="self-end text-[11.5px] text-accent hover:underline">{L("Quitar recorte")}</button>}
         </Section>
       )}
 
       {one && (
-        <Section title="Animación">
-          <Row label="Efecto">
+        <Section title={L("Animación")}>
+          <Row label={L("Efecto")}>
             <select
               value={one.anim ?? "none"}
               onChange={(e) => {
@@ -266,31 +267,31 @@ export function SlidesPanel({
               }}
               className="h-7 max-w-[150px] rounded-md border border-border bg-surface px-1.5 text-[12px]"
             >
-              <option value="none">Ninguna</option>
-              <optgroup label="Entrada">
+              <option value="none">{L("Ninguna")}</option>
+              <optgroup label={L("Entrada")}>
                 {ANIMS.filter((a) => a.group === "Entrada").map((a) => <option key={a.id} value={a.id}>{a.icon} {a.label}</option>)}
               </optgroup>
-              <optgroup label="Énfasis">
+              <optgroup label={L("Énfasis")}>
                 {ANIMS.filter((a) => a.group === "Énfasis").map((a) => <option key={a.id} value={a.id}>{a.icon} {a.label}</option>)}
               </optgroup>
             </select>
           </Row>
           {one.anim && one.anim !== "none" && (
             <>
-              <Row label="Inicio">
+              <Row label={L("Inicio")}>
                 <select value={one.animTrigger ?? "after"} onChange={(e) => onEl({ animTrigger: e.target.value as AnimTrigger })} className="h-7 max-w-[150px] rounded-md border border-border bg-surface px-1.5 text-[12px]">
                   {TRIGGERS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
                 </select>
               </Row>
-              <Row label="Duración"><Num value={one.animDur ?? 0.6} min={0.1} max={10} step={0.1} onChange={(v) => onEl({ animDur: Math.max(0.1, v) })} suffix="s" /></Row>
-              <Row label="Retraso"><Num value={one.animDelay ?? 0} min={0} max={30} step={0.1} onChange={(v) => onEl({ animDelay: Math.max(0, v) })} suffix="s" /></Row>
+              <Row label={L("Duración")}><Num value={one.animDur ?? 0.6} min={0.1} max={10} step={0.1} onChange={(v) => onEl({ animDur: Math.max(0.1, v) })} suffix="s" /></Row>
+              <Row label={L("Retraso")}><Num value={one.animDelay ?? 0} min={0} max={30} step={0.1} onChange={(v) => onEl({ animDelay: Math.max(0, v) })} suffix="s" /></Row>
             </>
           )}
         </Section>
       )}
 
-      <Section title={`Animaciones de esta diapositiva (${animated.length})`}>
-        {!animated.length && <p className="text-[12px] text-muted">Ninguna. Selecciona un elemento y elige cómo aparece.</p>}
+      <Section title={L("Animaciones de esta diapositiva ({0})", animated.length)}>
+        {!animated.length && <p className="text-[12px] text-muted">{L("Ninguna. Selecciona un elemento y elige cómo aparece.")}</p>}
         {animated.map((e, i) => (
           <div key={e.id} className={cn("flex items-center gap-2 rounded-md border px-2 py-1.5", one?.id === e.id ? "border-accent bg-accent-soft" : "border-border")}>
             <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-accent-fg">{i + 1}</span>
@@ -300,15 +301,15 @@ export function SlidesPanel({
                 {ANIMS.find((a) => a.id === e.anim)?.icon} {animLabel(e.anim)} · {TRIGGERS.find((t) => t.id === (e.animTrigger ?? "after"))?.label}
               </span>
             </button>
-            <button onClick={() => moveAnim(e.id, -1)} disabled={i === 0} className="text-muted hover:text-text disabled:opacity-30" aria-label="Antes"><ArrowUp className="size-3.5" /></button>
-            <button onClick={() => moveAnim(e.id, 1)} disabled={i === animated.length - 1} className="text-muted hover:text-text disabled:opacity-30" aria-label="Después"><ArrowDown className="size-3.5" /></button>
+            <button onClick={() => moveAnim(e.id, -1)} disabled={i === 0} className="text-muted hover:text-text disabled:opacity-30" aria-label={L("Antes")}><ArrowUp className="size-3.5" /></button>
+            <button onClick={() => moveAnim(e.id, 1)} disabled={i === animated.length - 1} className="text-muted hover:text-text disabled:opacity-30" aria-label={L("Después")}><ArrowDown className="size-3.5" /></button>
           </div>
         ))}
-        {animated.length > 0 && <Button size="sm" variant="outline" icon={<Play className="size-3.5" />} onClick={onPreview}>Vista previa</Button>}
+        {animated.length > 0 && <Button size="sm" variant="outline" icon={<Play className="size-3.5" />} onClick={onPreview}>{L("Vista previa")}</Button>}
       </Section>
 
-      <Section title="Diapositiva">
-        <Row label="Transición">
+      <Section title={L("Diapositiva")}>
+        <Row label={L("Transición")}>
           <select
             value={slide.transition ?? "none"}
             onChange={(e) => onSlide((s) => ({ ...s, transition: e.target.value as Transition }))}
@@ -317,15 +318,15 @@ export function SlidesPanel({
             {TRANSITIONS.map((x) => <option key={x.id} value={x.id}>{x.icon} {x.label}</option>)}
           </select>
         </Row>
-        <button onClick={onApplyTransitionAll} className="self-end text-[11.5px] text-accent hover:underline">Aplicar a todas</button>
-        <ColorRow label="Fondo" value={slide.bg} onChange={(c) => onSlide((s) => ({ ...s, bg: c }))} onClear={() => onSlide((s) => ({ ...s, bg: undefined }))} clearLabel="Del tema" />
+        <button onClick={onApplyTransitionAll} className="self-end text-[11.5px] text-accent hover:underline">{L("Aplicar a todas")}</button>
+        <ColorRow label={L("Fondo")} value={slide.bg} onChange={(c) => onSlide((s) => ({ ...s, bg: c }))} onClear={() => onSlide((s) => ({ ...s, bg: undefined }))} clearLabel={L("Del tema")} />
         <div className="flex gap-1.5">
-          <Button size="sm" variant="outline" icon={<ImagePlus className="size-3.5" />} onClick={onBgImage}>Imagen de fondo</Button>
-          {slide.bgImage && <Button size="sm" variant="ghost" icon={<Trash2 className="size-3.5" />} onClick={() => onSlide((s) => ({ ...s, bgImage: undefined }))}>Quitar</Button>}
+          <Button size="sm" variant="outline" icon={<ImagePlus className="size-3.5" />} onClick={onBgImage}>{L("Imagen de fondo")}</Button>
+          {slide.bgImage && <Button size="sm" variant="ghost" icon={<Trash2 className="size-3.5" />} onClick={() => onSlide((s) => ({ ...s, bgImage: undefined }))}>{L("Quitar")}</Button>}
         </div>
       </Section>
       <p className="flex items-center gap-1.5 px-4 py-3 text-[11px] text-muted">
-        <Sparkles className="size-3" /> Las estrellas en las miniaturas indican qué diapositivas tienen animaciones.
+        <Sparkles className="size-3" /> {" "}{L("Las estrellas en las miniaturas indican qué diapositivas tienen animaciones.")}
       </p>
     </aside>
   );

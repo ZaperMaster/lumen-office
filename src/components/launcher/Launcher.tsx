@@ -19,7 +19,9 @@ import { useLicense } from "@/lib/license";
 import { getTheme } from "@/lib/themes";
 import { Button, Input, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Segmented, Tooltip, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
+import { FirstRunLanguage } from "@/components/LanguagePicker";
 
+import { L } from "@/lib/i18n";
 type Section = NonNullable<Extract<Route, { name: "home" }>["section"]>;
 
 export function Launcher() {
@@ -30,6 +32,7 @@ export function Launcher() {
   return (
     <div className="flex h-full bg-bg">
       <Rail section={section} onChange={(s) => navigate({ name: "home", section: s })} />
+      <FirstRunLanguage />
       <main className="relative min-w-0 flex-1 overflow-y-auto">
         {/* Franja superior para mover la ventana (la app no usa la barra de título de Windows) */}
         <div data-tauri-drag-region className="no-print sticky top-0 z-10 -mb-9 h-9" />
@@ -53,18 +56,18 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
   const { themeId, set } = useSettings();
   const dark = getTheme(themeId).dark;
   const items: { id: Section; label: string; icon: ReactNode }[] = [
-    { id: "home", label: "Inicio", icon: <Home className="size-[18px]" /> },
-    { id: "new", label: "Nuevo", icon: <FilePlus2 className="size-[18px]" /> },
-    { id: "open", label: "Abrir", icon: <FolderOpen className="size-[18px]" /> },
-    { id: "trash", label: "Papelera", icon: <Trash2 className="size-[18px]" /> },
+    { id: "home", label: L("Inicio"), icon: <Home className="size-[18px]" /> },
+    { id: "new", label: L("Nuevo"), icon: <FilePlus2 className="size-[18px]" /> },
+    { id: "open", label: L("Abrir"), icon: <FolderOpen className="size-[18px]" /> },
+    { id: "trash", label: L("Papelera"), icon: <Trash2 className="size-[18px]" /> },
   ];
   return (
     <aside className="flex w-[220px] shrink-0 flex-col border-r border-border bg-surface px-3 py-5">
       <div data-tauri-drag-region className="mb-7 flex items-center gap-2.5 px-2">
         <Logo className="size-8" />
         <div>
-          <div className="text-[15px] font-bold leading-tight">Lumen</div>
-          <div className="text-[11px] text-muted">Office</div>
+          <div className="text-[15px] font-bold leading-tight">{L("Lumen")}</div>
+          <div className="text-[11px] text-muted">{L("Office")}</div>
         </div>
       </div>
       <nav className="flex flex-col gap-0.5">
@@ -89,14 +92,14 @@ function Rail({ section, onChange }: { section: Section; onChange: (s: Section) 
           className="flex h-9 items-center gap-3 rounded-[var(--radius)] px-3 text-[13.5px] font-medium text-muted hover:bg-surface-2 hover:text-text"
         >
           {dark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-          {dark ? "Modo claro" : "Modo oscuro"}
+          {dark ? L("Modo claro") : L("Modo oscuro")}
         </button>
         <button
           onClick={() => openSettings()}
           className="flex h-9 items-center gap-3 rounded-[var(--radius)] px-3 text-[13.5px] font-medium text-muted hover:bg-surface-2 hover:text-text"
         >
           <Settings className="size-[18px]" />
-          Configuración
+          {L("Configuración")}
         </button>
       </div>
     </aside>
@@ -124,40 +127,40 @@ function HomeSection() {
   const tools: Tool[] = [
     {
       id: "document",
-      name: "Documento",
-      description: "Procesador de textos con páginas, estilos, tablas e IA.",
+      name: L("Documento"),
+      description: L("Procesador de textos con páginas, estilos, tablas e IA."),
       icon: <FileText className="size-6" />,
       gradient: "linear-gradient(135deg,#3b82f6,#6366f1)",
       action: () => newDocument(),
     },
     {
       id: "notes",
-      name: "Notas",
-      description: "Bloc de notas rápido con búsqueda, colores y fijadas.",
+      name: L("Notas"),
+      description: L("Bloc de notas rápido con búsqueda, colores y fijadas."),
       icon: <StickyNote className="size-6" />,
       gradient: "linear-gradient(135deg,#f59e0b,#f97316)",
       action: () => navigate({ name: "notes" }),
     },
     {
       id: "assistant",
-      name: "Asistente IA",
-      description: "Escribe, resume y traduce con IA local, sin conexión.",
+      name: L("Asistente IA"),
+      description: L("Escribe, resume y traduce con IA local, sin conexión."),
       icon: <Sparkles className="size-6" />,
       gradient: "linear-gradient(135deg,#8b5cf6,#d946ef)",
       action: () => navigate({ name: "assistant" }),
     },
     {
       id: "sheets",
-      name: "Hojas de cálculo",
-      description: "Fórmulas, gráficos y libros de Excel.",
+      name: L("Hojas de cálculo"),
+      description: L("Fórmulas, gráficos y libros de Excel."),
       icon: <Sheet className="size-6" />,
       gradient: "linear-gradient(135deg,#10b981,#059669)",
       action: () => newSheet(),
     },
     {
       id: "slides",
-      name: "Presentaciones",
-      description: "Diapositivas con temas, IA y PowerPoint.",
+      name: L("Presentaciones"),
+      description: L("Diapositivas con temas, IA y PowerPoint."),
       icon: <Presentation className="size-6" />,
       gradient: "linear-gradient(135deg,#ef4444,#f97316)",
       action: () => newSlides(),
@@ -172,7 +175,7 @@ function HomeSection() {
             {greeting()}
             {userName ? `, ${userName}` : ""}
           </h1>
-          <p className="mt-1 text-muted">¿Qué herramienta quieres usar hoy?</p>
+          <p className="mt-1 text-muted">{L("¿Qué herramienta quieres usar hoy?")}</p>
         </div>
         <QuickSearch />
       </header>
@@ -186,11 +189,11 @@ function HomeSection() {
       <SectionTitle
         action={
           <Button variant="ghost" size="sm" onClick={() => navigate({ name: "home", section: "new" })}>
-            Más plantillas
+            {L("Más plantillas")}
           </Button>
         }
       >
-        Empieza con una plantilla
+        {L("Empieza con una plantilla")}
       </SectionTitle>
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {TEMPLATES.slice(0, 6).map((t) => (
@@ -198,14 +201,14 @@ function HomeSection() {
         ))}
       </div>
 
-      <SectionTitle>Hojas de cálculo</SectionTitle>
+      <SectionTitle>{L("Hojas de cálculo")}</SectionTitle>
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {SHEET_TEMPLATES.slice(0, 6).map((t) => (
           <SheetTemplateCard key={t.id} tpl={t} />
         ))}
       </div>
 
-      <SectionTitle>Presentaciones</SectionTitle>
+      <SectionTitle>{L("Presentaciones")}</SectionTitle>
       <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
         {SLIDES_TEMPLATES.slice(0, 6).map((t) => (
           <SlidesTemplateCard key={t.id} tpl={t} />
@@ -238,7 +241,7 @@ function ToolCard({ tool }: { tool: Tool }) {
         <div className="flex items-center gap-2 text-[15px] font-semibold">
           {tool.name}
           {tool.soon && (
-            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10.5px] font-medium text-muted">Próximamente</span>
+            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10.5px] font-medium text-muted">{L("Próximamente")}</span>
           )}
         </div>
         <p className="mt-1 text-[12.5px] leading-snug text-muted">{tool.description}</p>
@@ -256,7 +259,7 @@ function TemplateCard({ tpl }: { tpl: Template }) {
       >
         <TemplatePreview tpl={tpl} />
         {tpl.kind === "note" && (
-          <span className="absolute top-2 right-2 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">Nota</span>
+          <span className="absolute top-2 right-2 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">{L("Nota")}</span>
         )}
       </div>
       <div className="truncate text-[13px] font-medium">{tpl.name}</div>
@@ -359,10 +362,10 @@ function QuickSearch() {
   return (
     <div className="relative w-[340px]">
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
-      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar en documentos, hojas y notas…" className="h-10 pl-9" />
+      <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Buscar en documentos, hojas y notas…")} className="h-10 pl-9" />
       {q && results && (
         <div className="absolute top-12 right-0 left-0 z-20 animate-pop-in rounded-[var(--radius)] border border-border bg-surface p-1 shadow-soft">
-          {results.length === 0 && <div className="px-3 py-2 text-[13px] text-muted">Sin resultados</div>}
+          {results.length === 0 && <div className="px-3 py-2 text-[13px] text-muted">{L("Sin resultados")}</div>}
           {results.map((d) => (
             <button key={d.id} onClick={() => openDoc(d)} className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-surface-2">
               <DocIcon doc={d} />
@@ -382,7 +385,7 @@ function QuickSearch() {
 
 type Filter = "all" | "document" | "sheet" | "slides" | "note" | "favorite";
 
-function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: string }) {
+function RecentList({ limit, title = L("Recientes") }: { limit?: number; title?: string }) {
   const [filter, setFilter] = useState<Filter>("all");
   const docs = useLiveQuery(async () => {
     const all = await db.docs.orderBy("openedAt").reverse().filter((d) => d.deletedAt === null).toArray();
@@ -399,12 +402,12 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
             value={filter}
             onChange={setFilter}
             options={[
-              { value: "all", label: "Todos" },
-              { value: "document", label: "Documentos" },
-              { value: "sheet", label: "Hojas" },
-              { value: "slides", label: "Presentaciones" },
-              { value: "note", label: "Notas" },
-              { value: "favorite", label: "Favoritos" },
+              { value: "all", label: L("Todos") },
+              { value: "document", label: L("Documentos") },
+              { value: "sheet", label: L("Hojas") },
+              { value: "slides", label: L("Presentaciones") },
+              { value: "note", label: L("Notas") },
+              { value: "favorite", label: L("Favoritos") },
             ]}
           />
         }
@@ -413,18 +416,18 @@ function RecentList({ limit, title = "Recientes" }: { limit?: number; title?: st
       </SectionTitle>
       <div className="overflow-hidden rounded-[calc(var(--radius)+4px)] border border-border bg-surface">
         <div className="grid grid-cols-[1fr_140px_160px_44px] items-center border-b border-border px-4 py-2 text-[11.5px] font-medium tracking-wide text-muted uppercase">
-          <span>Nombre</span>
-          <span>Tipo</span>
-          <span>Modificado</span>
+          <span>{L("Nombre")}</span>
+          <span>{L("Tipo")}</span>
+          <span>{L("Modificado")}</span>
           <span />
         </div>
         {docs?.length === 0 && (
           <div className="flex flex-col items-center gap-2 px-4 py-12 text-center text-muted">
             <Clock className="size-8 opacity-40" />
-            <p className="text-[13.5px]">Aún no hay nada aquí.</p>
+            <p className="text-[13.5px]">{L("Aún no hay nada aquí.")}</p>
             <div className="mt-2 flex gap-2">
-              <Button size="sm" variant="primary" onClick={() => newDocument()}>Nuevo documento</Button>
-              <Button size="sm" onClick={() => newNote()}>Nueva nota</Button>
+              <Button size="sm" variant="primary" onClick={() => newDocument()}>{L("Nuevo documento")}</Button>
+              <Button size="sm" onClick={() => newNote()}>{L("Nueva nota")}</Button>
             </div>
           </div>
         )}
@@ -463,29 +466,29 @@ function DocRow({ doc }: { doc: DocRecord }) {
             {doc.favorite === 1 && <Star className="size-3 fill-amber-400 text-amber-400" />}
             <span className="truncate">{displayTitle(doc)}</span>
           </div>
-          <div className="truncate text-[12px] text-muted">{doc.text.slice(0, 90) || "Vacío"}</div>
+          <div className="truncate text-[12px] text-muted">{doc.text.slice(0, 90) || L("Vacío")}</div>
         </div>
       </button>
       <span className="text-[12.5px] text-muted">{KIND_LABEL[doc.kind]}</span>
       <span className="text-[12.5px] text-muted">{relativeTime(doc.updatedAt)}</span>
       <Menu>
         <MenuTrigger asChild>
-          <button className="grid size-8 place-items-center rounded-md text-muted opacity-0 group-hover:opacity-100 hover:bg-surface-3 data-[state=open]:opacity-100" aria-label="Más acciones">
+          <button className="grid size-8 place-items-center rounded-md text-muted opacity-0 group-hover:opacity-100 hover:bg-surface-3 data-[state=open]:opacity-100" aria-label={L("Más acciones")}>
             <MoreHorizontal className="size-4" />
           </button>
         </MenuTrigger>
         <MenuContent align="end">
-          <MenuItem icon={<FolderOpen />} onSelect={() => openDoc(doc)}>Abrir</MenuItem>
+          <MenuItem icon={<FolderOpen />} onSelect={() => openDoc(doc)}>{L("Abrir")}</MenuItem>
           <MenuItem icon={doc.pinned ? <PinOff /> : <Pin />} onSelect={() => updateDoc(doc.id, { pinned: doc.pinned ? 0 : 1 })}>
-            {doc.pinned ? "Desfijar" : "Fijar arriba"}
+            {doc.pinned ? L("Desfijar") : L("Fijar arriba")}
           </MenuItem>
           <MenuItem icon={<Star />} onSelect={() => updateDoc(doc.id, { favorite: doc.favorite ? 0 : 1 })}>
-            {doc.favorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+            {doc.favorite ? L("Quitar de favoritos") : L("Añadir a favoritos")}
           </MenuItem>
-          <MenuItem icon={<Copy />} onSelect={async () => { await duplicateDoc(doc.id); toast("Copia creada", "success"); }}>Duplicar</MenuItem>
+          <MenuItem icon={<Copy />} onSelect={async () => { await duplicateDoc(doc.id); toast(L("Copia creada"), "success"); }}>{L("Duplicar")}</MenuItem>
           <MenuSeparator />
-          <MenuItem icon={<Trash2 />} danger onSelect={async () => { await trashDoc(doc.id); toast("Movido a la papelera"); }}>
-            Mover a la papelera
+          <MenuItem icon={<Trash2 />} danger onSelect={async () => { await trashDoc(doc.id); toast(L("Movido a la papelera")); }}>
+            {L("Mover a la papelera")}
           </MenuItem>
         </MenuContent>
       </Menu>
@@ -509,10 +512,10 @@ function TrialBadge() {
     >
       <span className="flex items-center gap-1.5 text-[12.5px] font-semibold">
         <KeyRound className="size-3.5" />
-        Prueba gratuita
+        {L("Prueba gratuita")}
       </span>
       <span className="text-[11.5px] text-muted">
-        {daysLeft === 1 ? "Queda 1 día" : `Quedan ${daysLeft} días`} · <span className="text-accent">Activar</span>
+        {daysLeft === 1 ? L("Queda 1 día") : L("Quedan {0} días", daysLeft)} · <span className="text-accent">{L("Activar")}</span>
       </span>
     </button>
   );
@@ -534,28 +537,28 @@ function SectionTitle({ children, action }: { children: ReactNode; action?: Reac
 function NewSection() {
   return (
     <>
-      <h1 className="mb-1 text-[26px] font-bold tracking-tight">Nuevo</h1>
-      <p className="mb-7 text-muted">Elige una plantilla o empieza en blanco.</p>
-      <SectionTitle>Documentos</SectionTitle>
+      <h1 className="mb-1 text-[26px] font-bold tracking-tight">{L("Nuevo")}</h1>
+      <p className="mb-7 text-muted">{L("Elige una plantilla o empieza en blanco.")}</p>
+      <SectionTitle>{L("Documentos")}</SectionTitle>
       <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         {TEMPLATES.filter((t) => t.kind === "document").map((t) => <TemplateCard key={t.id} tpl={t} />)}
       </div>
-      <SectionTitle>Hojas de cálculo</SectionTitle>
+      <SectionTitle>{L("Hojas de cálculo")}</SectionTitle>
       <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         {SHEET_TEMPLATES.map((t) => <SheetTemplateCard key={t.id} tpl={t} />)}
       </div>
-      <SectionTitle>Presentaciones</SectionTitle>
+      <SectionTitle>{L("Presentaciones")}</SectionTitle>
       <div className="mb-9 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         {SLIDES_TEMPLATES.map((t) => <SlidesTemplateCard key={t.id} tpl={t} />)}
       </div>
-      <SectionTitle>Notas</SectionTitle>
+      <SectionTitle>{L("Notas")}</SectionTitle>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
         <button onClick={() => newNote()} className="group text-left">
           <div className="mb-2 grid aspect-[3/4] place-items-center rounded-[var(--radius)] border border-border bg-[#fffbea] text-[#d4a72c] transition-all group-hover:-translate-y-0.5 group-hover:border-accent">
             <StickyNote className="size-8" />
           </div>
-          <div className="text-[13px] font-medium">Nota en blanco</div>
-          <div className="text-[11.5px] text-muted">Apunte rápido</div>
+          <div className="text-[13px] font-medium">{L("Nota en blanco")}</div>
+          <div className="text-[11.5px] text-muted">{L("Apunte rápido")}</div>
         </button>
         {TEMPLATES.filter((t) => t.kind === "note").map((t) => <TemplateCard key={t.id} tpl={t} />)}
       </div>
@@ -573,15 +576,15 @@ function OpenSection() {
       const doc = await importAnyFile(file);
       openDoc(doc);
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudo importar el archivo", "error");
+      toast(e instanceof Error ? e.message : L("No se pudo importar el archivo"), "error");
     }
   };
   return (
     <>
       <div className="mb-7 flex items-end justify-between">
         <div>
-          <h1 className="mb-1 text-[26px] font-bold tracking-tight">Abrir</h1>
-          <p className="text-muted">Todos tus documentos, hojas de cálculo, presentaciones y notas guardados en este equipo.</p>
+          <h1 className="mb-1 text-[26px] font-bold tracking-tight">{L("Abrir")}</h1>
+          <p className="text-muted">{L("Todos tus documentos, hojas de cálculo, presentaciones y notas guardados en este equipo.")}</p>
         </div>
         <Button
           variant="primary"
@@ -594,11 +597,11 @@ function OpenSection() {
               const doc = await files.openFileFromDisk();
               if (doc) openDoc(doc);
             } catch (e) {
-              toast(e instanceof Error ? e.message : "No se pudo abrir el archivo", "error");
+              toast(e instanceof Error ? e.message : L("No se pudo abrir el archivo"), "error");
             }
           }}
         >
-          Abrir archivo…
+          {L("Abrir archivo…")}
         </Button>
         <input ref={fileRef} type="file" accept={ACCEPTED_IMPORTS} hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
@@ -609,9 +612,9 @@ function OpenSection() {
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"
       >
         <Upload className="mb-2 size-6" />
-        <p className="text-[13.5px]">Arrastra aquí un archivo <b>.docx</b>, <b>.xlsx</b>, <b>.csv</b>, <b>.pptx</b>, <b>.lumen</b>, <b>.md</b>, <b>.html</b> o <b>.txt</b> para abrirlo</p>
+        <p className="text-[13.5px]">{L("Arrastra aquí un archivo")}{" "} <b>{L(".docx")}</b>, <b>{L(".xlsx")}</b>, <b>{L(".csv")}</b>, <b>{L(".pptx")}</b>, <b>{L(".lumen")}</b>, <b>{L(".md")}</b>, <b>{L(".html")}</b> o <b>{L(".txt")}</b> {" "}{L("para abrirlo")}</p>
       </div>
-      <RecentList title="Todos los archivos" />
+      <RecentList title={L("Todos los archivos")} />
     </>
   );
 }
@@ -621,40 +624,40 @@ function TrashSection() {
   const docs = useLiveQuery(() => db.docs.filter((d) => d.deletedAt !== null).reverse().sortBy("deletedAt"), []);
   const emptyTrash = async () => {
     if (!docs?.length) return;
-    if (!confirm(`¿Eliminar definitivamente ${docs.length} elemento(s)? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(L("¿Eliminar definitivamente {0} elemento(s)? Esta acción no se puede deshacer.", docs.length))) return;
     await db.docs.bulkDelete(docs.map((d) => d.id));
-    toast("Papelera vaciada", "success");
+    toast(L("Papelera vaciada"), "success");
   };
   return (
     <>
       <div className="mb-7 flex items-end justify-between">
         <div>
-          <h1 className="mb-1 text-[26px] font-bold tracking-tight">Papelera</h1>
-          <p className="text-muted">Recupera documentos borrados o elimínalos para siempre.</p>
+          <h1 className="mb-1 text-[26px] font-bold tracking-tight">{L("Papelera")}</h1>
+          <p className="text-muted">{L("Recupera documentos borrados o elimínalos para siempre.")}</p>
         </div>
         <Button variant="outline" icon={<Trash2 className="size-4" />} onClick={emptyTrash} disabled={!docs?.length}>
-          Vaciar papelera
+          {L("Vaciar papelera")}
         </Button>
       </div>
       <div className="overflow-hidden rounded-[calc(var(--radius)+4px)] border border-border bg-surface">
-        {docs?.length === 0 && <div className="px-4 py-12 text-center text-muted">La papelera está vacía.</div>}
+        {docs?.length === 0 && <div className="px-4 py-12 text-center text-muted">{L("La papelera está vacía.")}</div>}
         {docs?.map((d) => (
           <div key={d.id} className="flex items-center gap-3 border-b border-border px-4 py-2.5 last:border-0">
             <DocIcon doc={d} />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-medium">{displayTitle(d)}</div>
-              <div className="text-[12px] text-muted">Eliminado {relativeTime(d.deletedAt!)}</div>
+              <div className="text-[12px] text-muted">{L("Eliminado")}{" "} {relativeTime(d.deletedAt!)}</div>
             </div>
-            <Tooltip label="Restaurar">
-              <Button size="sm" variant="ghost" icon={<RotateCcw className="size-4" />} onClick={() => restoreDoc(d.id)}>Restaurar</Button>
+            <Tooltip label={L("Restaurar")}>
+              <Button size="sm" variant="ghost" icon={<RotateCcw className="size-4" />} onClick={() => restoreDoc(d.id)}>{L("Restaurar")}</Button>
             </Tooltip>
             <Button
               size="sm"
               variant="ghost"
               className="text-red-500"
-              onClick={() => { if (confirm("¿Eliminar definitivamente?")) deleteForever(d.id); }}
+              onClick={() => { if (confirm(L("¿Eliminar definitivamente?"))) deleteForever(d.id); }}
             >
-              Eliminar
+              {L("Eliminar")}
             </Button>
           </div>
         ))}

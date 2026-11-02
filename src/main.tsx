@@ -2,7 +2,12 @@ import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "@/lib/fonts";
 import "./index.css";
-import App from "./App";
+import { initLanguage } from "@/lib/i18n";
+
+// El idioma se carga antes que el resto de la app: algunas listas (temas,
+// animaciones…) se traducen al cargar sus módulos.
+initLanguage();
+const App = lazy(() => import("./App"));
 
 // La ventana del público de la vista del moderador solo muestra las diapositivas
 const audience = /^#audience=(.+)$/.exec(location.hash)?.[1];
@@ -15,7 +20,9 @@ createRoot(document.getElementById("root")!).render(
         <AudienceWindow docId={decodeURIComponent(audience)} />
       </Suspense>
     ) : (
-      <App />
+      <Suspense fallback={null}>
+        <App />
+      </Suspense>
     )}
   </StrictMode>,
 );

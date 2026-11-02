@@ -127,6 +127,25 @@ scripts/release.mjs            publicación de versiones
 src-tauri/                     app de escritorio (Rust)
 ```
 
+## Idiomas
+
+La app viene en **español**. La primera vez que se abre deja elegir idioma, y se puede cambiar en
+**Configuración → Idioma**. Los demás idiomas **no vienen dentro de la app**: se descargan de la web
+(`docs/lang/<código>.json`, unos 70 KB cada uno) solo cuando alguien los elige, y se guardan en el equipo.
+
+Cómo funciona en el código:
+
+- Los textos de la interfaz están en español dentro de `L("…")` (`src/lib/i18n.ts`). Ese texto es la clave: si un
+  idioma no tiene traducción para él, se ve en español.
+- `node scripts/i18n-wrap.mjs --catalog` genera `scripts/i18n/catalog.json` con todos los textos de la app.
+- Las traducciones de cada idioma están en `scripts/i18n/<código>/*.json` (`{ "texto en español": "traducción" }`).
+- `node scripts/i18n-pack.mjs <código> scripts/i18n/<código>/*.json` crea `docs/lang/<código>.json` y dice qué falta.
+- `docs/lang/index.json` es la lista de idiomas que ofrece la app. **Para añadir un idioma no hace falta publicar una
+  versión nueva**: basta con subir su paquete y añadirlo a esa lista.
+
+Las pruebas (`tests/i18n.test.ts`) comprueban que los paquetes no traducen textos que ya no existen y que conservan los
+marcadores `{0}`, `{1}`…
+
 ## Datos y privacidad
 
 Documentos, notas y ajustes se guardan en tu equipo. La app solo puede escribir en las carpetas que elijas en la

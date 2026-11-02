@@ -13,6 +13,7 @@ import { isDesktop } from "@/lib/files";
 import { refreshLicense, useLicense } from "@/lib/license";
 import { LicenseScreen } from "@/components/LicenseScreen";
 
+import { L } from "@/lib/i18n";
 // Espacio que las barras superiores dejan a los botones de la ventana (solo en la app de escritorio)
 document.documentElement.style.setProperty("--wc", isDesktop() ? `${WINDOW_CONTROLS_WIDTH}px` : "0px");
 
@@ -50,7 +51,7 @@ function CloseGuard() {
       void import("@/lib/officeImport")
         .then(({ importAnyFile }) => importAnyFile(file))
         .then((d) => import("@/lib/actions").then(({ openDoc }) => openDoc(d)))
-        .catch((err) => useApp.getState().toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error"));
+        .catch((err) => useApp.getState().toast(err instanceof Error ? err.message : L("No se pudo abrir el archivo"), "error"));
     };
     window.addEventListener("dragover", onOver);
     window.addEventListener("drop", onDrop);

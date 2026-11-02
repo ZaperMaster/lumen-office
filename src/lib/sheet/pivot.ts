@@ -2,6 +2,7 @@ import type { Evaluator, Scalar } from "@/lib/sheet/formula";
 import { formatValue } from "@/lib/sheet/format";
 import { colName, key, newSheet, uniqueSheetName, type Cell, type CellStyle, type Range, type Workbook } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /*
  * Tablas dinámicas: agrupan los datos por una columna (y opcionalmente por otra
  * en columnas) y resumen una tercera. Se crean con fórmulas …SI.CONJUNTO, así
@@ -11,11 +12,11 @@ import { colName, key, newSheet, uniqueSheetName, type Cell, type CellStyle, typ
 export type PivotFn = "SUMA" | "CONTAR" | "PROMEDIO" | "MAX" | "MIN";
 
 export const PIVOT_FNS: { id: PivotFn; label: string }[] = [
-  { id: "SUMA", label: "Suma" },
-  { id: "CONTAR", label: "Recuento" },
-  { id: "PROMEDIO", label: "Promedio" },
-  { id: "MAX", label: "Máximo" },
-  { id: "MIN", label: "Mínimo" },
+  { id: "SUMA", label: L("Suma") },
+  { id: "CONTAR", label: L("Recuento") },
+  { id: "PROMEDIO", label: L("Promedio") },
+  { id: "MAX", label: L("Máximo") },
+  { id: "MIN", label: L("Mínimo") },
 ];
 
 export interface PivotSpec {
@@ -63,7 +64,7 @@ export function buildPivot(wb: Workbook, ev: Evaluator, p: PivotSpec): Workbook 
   const valueFmt = src.cells[key(first, p.value)]?.s;
   const numStyle: CellStyle = p.fn === "CONTAR" ? {} : { fmt: valueFmt?.fmt, dec: valueFmt?.dec };
 
-  const s = newSheet(uniqueSheetName(wb, "Tabla dinámica "));
+  const s = newSheet(uniqueSheetName(wb, L("Tabla dinámica ")));
   const put = (r: number, c: number, cell: Cell) => (s.cells[key(r, c)] = cell);
   const fnLabel = PIVOT_FNS.find((f) => f.id === p.fn)!.label;
   // Fórmula del resumen con los criterios dados (referencias a celdas de la tabla)
@@ -101,7 +102,7 @@ export function buildPivot(wb: Workbook, ev: Evaluator, p: PivotSpec): Workbook 
   const cols = colItems.length ? colItems : [null];
   cols.forEach((ci, j) => put(top, 1 + j, { v: ci ? String(ci.raw ?? ci.text) : fnLabel, s: { ...HEAD, align: "center", fmt: ci ? src.cells[key(first, p.cols!)]?.s?.fmt : undefined } }));
   const totalCol = colItems.length ? 1 + cols.length : null;
-  if (totalCol !== null) put(top, totalCol, { v: "Total general", s: { ...HEAD, align: "center" } });
+  if (totalCol !== null) put(top, totalCol, { v: L("Total general"), s: { ...HEAD, align: "center" } });
 
   const labelFmt = src.cells[key(first, p.rows)]?.s?.fmt;
   rowItems.forEach((ri, i) => {
@@ -116,7 +117,7 @@ export function buildPivot(wb: Workbook, ev: Evaluator, p: PivotSpec): Workbook 
     if (totalCol !== null) put(r, totalCol, { v: formula([[p.rows, rowCell]]), s: { ...numStyle, b: true } });
   });
   const tr = top + 1 + rowItems.length;
-  put(tr, 0, { v: "Total general", s: TOTAL });
+  put(tr, 0, { v: L("Total general"), s: TOTAL });
   cols.forEach((ci, j) => put(tr, 1 + j, { v: grand(ci ? [[p.cols!, `${colName(1 + j)}$${top + 1}`]] : []), s: { ...TOTAL, ...numStyle } }));
   if (totalCol !== null) put(tr, totalCol, { v: grand([]), s: { ...TOTAL, ...numStyle } });
 

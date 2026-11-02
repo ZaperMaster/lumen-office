@@ -2,6 +2,7 @@ import { FErr, type Evaluator, type Scalar } from "@/lib/sheet/formula";
 import { formatValue, parseNumber } from "@/lib/sheet/format";
 import { key, parseRange, type CondRule, type Range, type Sheet, type SheetFilter, type Validation } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /*
  * Lo que cambia cómo se ve la hoja sin cambiar sus datos: filas ocultas por el
  * filtro y formato condicional.
@@ -55,17 +56,17 @@ export interface CondStyle {
 }
 
 export const COND_PRESETS: { id: string; label: string; bg: string; color: string }[] = [
-  { id: "red", label: "Relleno rojo claro con texto rojo oscuro", bg: "#ffc7ce", color: "#9c0006" },
-  { id: "yellow", label: "Relleno amarillo con texto amarillo oscuro", bg: "#ffeb9c", color: "#9c5700" },
-  { id: "green", label: "Relleno verde con texto verde oscuro", bg: "#c6efce", color: "#006100" },
-  { id: "blue", label: "Relleno azul claro", bg: "#dbeafe", color: "#1e3a8a" },
+  { id: "red", label: L("Relleno rojo claro con texto rojo oscuro"), bg: "#ffc7ce", color: "#9c0006" },
+  { id: "yellow", label: L("Relleno amarillo con texto amarillo oscuro"), bg: "#ffeb9c", color: "#9c5700" },
+  { id: "green", label: L("Relleno verde con texto verde oscuro"), bg: "#c6efce", color: "#006100" },
+  { id: "blue", label: L("Relleno azul claro"), bg: "#dbeafe", color: "#1e3a8a" },
 ];
 
 export const SCALE_PRESETS: { id: string; label: string; colors: string[] }[] = [
-  { id: "gyr", label: "Verde, amarillo y rojo", colors: ["#63be7b", "#ffeb84", "#f8696b"] },
-  { id: "ryg", label: "Rojo, amarillo y verde", colors: ["#f8696b", "#ffeb84", "#63be7b"] },
-  { id: "wg", label: "Blanco y verde", colors: ["#ffffff", "#63be7b"] },
-  { id: "wb", label: "Blanco y azul", colors: ["#ffffff", "#5a8ac6"] },
+  { id: "gyr", label: L("Verde, amarillo y rojo"), colors: ["#63be7b", "#ffeb84", "#f8696b"] },
+  { id: "ryg", label: L("Rojo, amarillo y verde"), colors: ["#f8696b", "#ffeb84", "#63be7b"] },
+  { id: "wg", label: L("Blanco y verde"), colors: ["#ffffff", "#63be7b"] },
+  { id: "wb", label: L("Blanco y azul"), colors: ["#ffffff", "#5a8ac6"] },
 ];
 
 export const BAR_COLORS = ["#638ec6", "#63c384", "#ff555a", "#ffb628", "#008aef", "#d6007b"];
@@ -196,19 +197,19 @@ export function condFormatter(s: Sheet, ev: Evaluator, si: number): ((r: number,
 }
 
 export const COND_LABELS: Record<CondRule["type"], string> = {
-  gt: "Mayor que",
-  lt: "Menor que",
+  gt: L("Mayor que"),
+  lt: L("Menor que"),
   between: "Entre",
   eq: "Igual a",
-  text: "Texto que contiene",
-  dup: "Valores duplicados",
-  unique: "Valores únicos",
-  top: "Los mejores",
-  bottom: "Los peores",
-  aboveAvg: "Por encima del promedio",
-  belowAvg: "Por debajo del promedio",
-  bars: "Barras de datos",
-  scale: "Escala de color",
+  text: L("Texto que contiene"),
+  dup: L("Valores duplicados"),
+  unique: L("Valores únicos"),
+  top: L("Los mejores"),
+  bottom: L("Los peores"),
+  aboveAvg: L("Por encima del promedio"),
+  belowAvg: L("Por debajo del promedio"),
+  bars: L("Barras de datos"),
+  scale: L("Escala de color"),
 };
 
 /* ------------------------------------------------------------------ */

@@ -1,6 +1,7 @@
 import { useSettings } from "@/store/settings";
 import { LOCAL_MODELS, loadEngine, loadRemote, type ChatMsg } from "@/lib/localModels";
 
+import { L } from "@/lib/i18n";
 /*
  * Tres motores de IA:
  *  - webllm: modelo local en la tarjeta gráfica (nada sale del equipo)
@@ -29,7 +30,7 @@ export function currentModelName(): string {
   if (s.aiEngine === "ollama") return s.ollamaModel ? `Ollama · ${s.ollamaModel}` : "Ollama";
   if (s.aiEngine === "api") {
     if (s.apiProvider === "anthropic") return `API · ${s.anthropicModel}`;
-    return s.openaiModel ? `API · ${s.openaiModel}` : "API (sin modelo)";
+    return s.openaiModel ? `API · ${s.openaiModel}` : L("API (sin modelo)");
   }
   return LOCAL_MODELS.find((m) => m.id === s.localModel)?.name ?? s.localModel;
 }
@@ -37,9 +38,9 @@ export function currentModelName(): string {
 function systemPrompt(extra?: string) {
   const { aiLanguage } = useSettings.getState();
   return [
-    "Eres el asistente de escritura de Lumen Office, un procesador de textos.",
-    `Responde siempre en ${aiLanguage}, salvo que se pida explícitamente otro idioma.`,
-    "Cuando el usuario pida transformar o generar texto, devuelve SOLO el texto resultante, usando Markdown (listas, **negrita**, *cursiva*, tablas) cuando el contenido lo necesite, sin introducciones, explicaciones ni comentarios, y sin envolverlo en bloques de código ```.",
+    L("Eres el asistente de escritura de Lumen Office, un procesador de textos."),
+    L("Responde siempre en {0}, salvo que se pida explícitamente otro idioma.", L(aiLanguage)),
+    L("Cuando el usuario pida transformar o generar texto, devuelve SOLO el texto resultante, usando Markdown (listas, **negrita**, *cursiva*, tablas) cuando el contenido lo necesite, sin introducciones, explicaciones ni comentarios, y sin envolverlo en bloques de código ```."),
     extra ?? "",
   ]
     .filter(Boolean)
@@ -126,18 +127,18 @@ const wrap = (instruction: string, text: string) =>
   `${instruction} Conserva la estructura del original: no añadas títulos, encabezados ni secciones que no estén en él.\n\n<texto>\n${text}\n</texto>`;
 
 export const AI_ACTIONS: AIAction[] = [
-  { id: "improve", label: "Mejorar redacción", group: "edit", prompt: (t) => wrap("Mejora la redacción, claridad y fluidez de este texto manteniendo su significado y su formato.", t) },
-  { id: "fix", label: "Corregir ortografía y gramática", group: "edit", temperature: 0.1, prompt: (t) => wrap("Corrige únicamente los errores de ortografía, gramática y puntuación de este texto. No cambies palabras que ya sean correctas, ni los tiempos verbales, ni el estilo, ni el contenido.", t) },
-  { id: "shorter", label: "Hacer más corto", group: "edit", prompt: (t) => wrap("Reescribe este texto para que tenga aproximadamente la mitad de longitud, conservando las ideas clave.", t) },
-  { id: "longer", label: "Hacer más largo", group: "edit", prompt: (t) => wrap("Amplía este texto con más detalle, ejemplos y matices, manteniendo el tono.", t) },
-  { id: "simplify", label: "Simplificar", group: "edit", prompt: (t) => wrap("Reescribe este texto con lenguaje sencillo y frases cortas, fácil de entender para cualquiera.", t) },
-  { id: "tone", label: "Cambiar tono", group: "transform", prompt: (t, tone) => wrap(`Reescribe este texto con un tono ${tone ?? "profesional"}.`, t) },
-  { id: "translate", label: "Traducir", group: "transform", temperature: 0.2, prompt: (t, lang) => wrap(`Traduce este texto al ${lang ?? "inglés"}, conservando el formato. Devuelve únicamente la traducción.`, t) },
-  { id: "bullets", label: "Convertir en lista", group: "transform", prompt: (t) => wrap("Convierte este texto en una lista de puntos clara y concisa.", t) },
-  { id: "table", label: "Convertir en tabla", group: "transform", temperature: 0.2, prompt: (t) => wrap("Organiza la información de este texto en una tabla Markdown con encabezados adecuados.", t) },
-  { id: "summarize", label: "Resumir", group: "generate", insertAfter: true, prompt: (t) => wrap("Escribe un resumen breve (un párrafo) de este texto. Empieza con «**Resumen:**».", t) },
-  { id: "continue", label: "Continuar escribiendo", group: "generate", insertAfter: true, prompt: (t) => wrap("Continúa este texto de forma natural con uno o dos párrafos más, con el mismo estilo. Devuelve solo la continuación.", t) },
-  { id: "explain", label: "Explicar", group: "generate", insertAfter: true, prompt: (t) => wrap("Explica de forma clara y breve qué significa este texto.", t) },
+  { id: "improve", label: L("Mejorar redacción"), group: "edit", prompt: (t) => wrap("Mejora la redacción, claridad y fluidez de este texto manteniendo su significado y su formato.", t) },
+  { id: "fix", label: L("Corregir ortografía y gramática"), group: "edit", temperature: 0.1, prompt: (t) => wrap("Corrige únicamente los errores de ortografía, gramática y puntuación de este texto. No cambies palabras que ya sean correctas, ni los tiempos verbales, ni el estilo, ni el contenido.", t) },
+  { id: "shorter", label: L("Hacer más corto"), group: "edit", prompt: (t) => wrap("Reescribe este texto para que tenga aproximadamente la mitad de longitud, conservando las ideas clave.", t) },
+  { id: "longer", label: L("Hacer más largo"), group: "edit", prompt: (t) => wrap("Amplía este texto con más detalle, ejemplos y matices, manteniendo el tono.", t) },
+  { id: "simplify", label: L("Simplificar"), group: "edit", prompt: (t) => wrap("Reescribe este texto con lenguaje sencillo y frases cortas, fácil de entender para cualquiera.", t) },
+  { id: "tone", label: L("Cambiar tono"), group: "transform", prompt: (t, tone) => wrap(`Reescribe este texto con un tono ${tone ?? "profesional"}.`, t) },
+  { id: "translate", label: L("Traducir"), group: "transform", temperature: 0.2, prompt: (t, lang) => wrap(`Traduce este texto al ${lang ?? "inglés"}, conservando el formato. Devuelve únicamente la traducción.`, t) },
+  { id: "bullets", label: L("Convertir en lista"), group: "transform", prompt: (t) => wrap("Convierte este texto en una lista de puntos clara y concisa.", t) },
+  { id: "table", label: L("Convertir en tabla"), group: "transform", temperature: 0.2, prompt: (t) => wrap("Organiza la información de este texto en una tabla Markdown con encabezados adecuados.", t) },
+  { id: "summarize", label: L("Resumir"), group: "generate", insertAfter: true, prompt: (t) => wrap("Escribe un resumen breve (un párrafo) de este texto. Empieza con «**Resumen:**».", t) },
+  { id: "continue", label: L("Continuar escribiendo"), group: "generate", insertAfter: true, prompt: (t) => wrap("Continúa este texto de forma natural con uno o dos párrafos más, con el mismo estilo. Devuelve solo la continuación.", t) },
+  { id: "explain", label: L("Explicar"), group: "generate", insertAfter: true, prompt: (t) => wrap("Explica de forma clara y breve qué significa este texto.", t) },
 ];
 
 export async function runAction(action: AIAction, text: string, arg: string | undefined, opts: Omit<StreamOptions, "messages">) {

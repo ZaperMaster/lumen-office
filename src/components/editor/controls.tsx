@@ -9,6 +9,7 @@ import { useSettings } from "@/store/settings";
 import { useApp } from "@/store/app";
 import { Input, Popover, PopoverClose, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 /*  Estado del editor (se recalcula en cada transacción)               */
 /* ------------------------------------------------------------------ */
@@ -72,7 +73,7 @@ export function FontPicker({
   value,
   onChange,
   className,
-  placeholder = "Fuente",
+  placeholder = L("Fuente"),
 }: {
   value: string | null;
   onChange: (css: string) => void;
@@ -92,14 +93,14 @@ export function FontPicker({
     const out: { label: string; fonts: FontDef[] }[] = [];
     if (!needle && recentFonts.length) {
       const recent = recentFonts.map((css) => all.find((f) => f.css === css)).filter(Boolean) as FontDef[];
-      if (recent.length) out.push({ label: "Recientes", fonts: recent });
+      if (recent.length) out.push({ label: L("Recientes"), fonts: recent });
     }
     (Object.keys(CATEGORY_LABELS) as FontCategory[]).forEach((cat) => {
       const fonts = all.filter((f) => f.source !== "local" && f.category === cat && match(f));
       if (fonts.length) out.push({ label: CATEGORY_LABELS[cat], fonts });
     });
     const local = all.filter((f) => f.source === "local" && match(f));
-    if (local.length) out.push({ label: "Instaladas en el equipo", fonts: local });
+    if (local.length) out.push({ label: L("Instaladas en el equipo"), fonts: local });
     return out;
   }, [all, q, recentFonts]);
 
@@ -114,15 +115,15 @@ export function FontPicker({
     try {
       const fonts = await loadLocalFonts();
       set("localFonts", fonts);
-      toast(`${fonts.length} fuentes del sistema añadidas`, "success");
+      toast(L("{0} fuentes del sistema añadidas", fonts.length), "success");
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudieron leer las fuentes", "error");
+      toast(e instanceof Error ? e.message : L("No se pudieron leer las fuentes"), "error");
     }
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <Tooltip label="Fuente">
+      <Tooltip label={L("Fuente")}>
         <PopoverTrigger asChild>
           <button
             className={cn(
@@ -139,7 +140,7 @@ export function FontPicker({
         <div className="border-b border-border p-2">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" />
-            <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar fuente…" className="h-8 pl-8 text-[13px]" />
+            <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Buscar fuente…")} className="h-8 pl-8 text-[13px]" />
           </div>
         </div>
         <div className="max-h-[360px] overflow-y-auto p-1">
@@ -161,11 +162,11 @@ export function FontPicker({
               ))}
             </div>
           ))}
-          {groups.length === 0 && <div className="px-3 py-4 text-center text-[13px] text-muted">No se encontraron fuentes</div>}
+          {groups.length === 0 && <div className="px-3 py-4 text-center text-[13px] text-muted">{L("No se encontraron fuentes")}</div>}
         </div>
         <div className="border-t border-border p-2">
           <button onClick={loadLocal} className="w-full rounded-md px-2 py-1.5 text-left text-[12.5px] text-accent hover:bg-surface-2">
-            {localFonts.length ? `Actualizar fuentes del equipo (${localFonts.length})` : "Cargar todas las fuentes del equipo…"}
+            {localFonts.length ? L("Actualizar fuentes del equipo ({0})", localFonts.length) : L("Cargar todas las fuentes del equipo…")}
           </button>
         </div>
       </PopoverContent>
@@ -195,7 +196,7 @@ export function FontSizePicker({ value, onChange }: { value: number; onChange: (
   return (
     <Popover>
       <div className="flex h-8 items-center rounded-md border border-border bg-surface hover:border-accent/50">
-        <Tooltip label="Tamaño de fuente">
+        <Tooltip label={L("Tamaño de fuente")}>
           <input
             value={draft ?? String(value).replace(".", ",")}
             onChange={(e) => setDraft(e.target.value)}
@@ -206,11 +207,11 @@ export function FontSizePicker({ value, onChange }: { value: number; onChange: (
               if (e.key === "ArrowDown") { e.preventDefault(); onChange(stepSize(value, -1)); }
             }}
             className="h-full w-10 bg-transparent pl-2 text-[13px] outline-none"
-            aria-label="Tamaño de fuente"
+            aria-label={L("Tamaño de fuente")}
           />
         </Tooltip>
         <PopoverTrigger asChild>
-          <button className="grid h-full w-5 place-items-center text-muted" aria-label="Lista de tamaños">
+          <button className="grid h-full w-5 place-items-center text-muted" aria-label={L("Lista de tamaños")}>
             <ChevronDown className="size-3.5" />
           </button>
         </PopoverTrigger>
@@ -260,7 +261,7 @@ export const HIGHLIGHT_COLORS = ["#fff59d", "#c5f6c7", "#b3e5fc", "#f8bbd0", "#e
 export function ColorPalette({
   onPick,
   onClear,
-  clearLabel = "Automático",
+  clearLabel = L("Automático"),
   colors,
 }: {
   onPick: (c: string) => void;
@@ -283,7 +284,7 @@ export function ColorPalette({
         </div>
       ) : (
         <>
-          <div className="mb-1 text-[10.5px] font-semibold tracking-wider text-muted uppercase">Colores del tema</div>
+          <div className="mb-1 text-[10.5px] font-semibold tracking-wider text-muted uppercase">{L("Colores del tema")}</div>
           <div className="flex flex-col gap-0.5">
             {PALETTE_ROWS.map((row, i) => (
               <div key={i} className={cn("grid grid-cols-10 gap-0.5", i === 0 && "mb-1")}>
@@ -291,17 +292,17 @@ export function ColorPalette({
               </div>
             ))}
           </div>
-          <div className="mt-2.5 mb-1 text-[10.5px] font-semibold tracking-wider text-muted uppercase">Colores estándar</div>
+          <div className="mt-2.5 mb-1 text-[10.5px] font-semibold tracking-wider text-muted uppercase">{L("Colores estándar")}</div>
           <div className="grid grid-cols-8 gap-1">
             {BASE_COLORS.map((c) => <Swatch key={c} color={c} onPick={onPick} big />)}
           </div>
         </>
       )}
       <div className="mt-3 flex items-center gap-2 border-t border-border pt-2.5">
-        <input type="color" value={custom} onChange={(e) => setCustom(e.target.value)} className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent" aria-label="Color personalizado" />
+        <input type="color" value={custom} onChange={(e) => setCustom(e.target.value)} className="h-7 w-9 cursor-pointer rounded border border-border bg-transparent" aria-label={L("Color personalizado")} />
         <PopoverClose asChild>
           <button onClick={() => onPick(custom)} className="flex-1 rounded-md px-2 py-1 text-left text-[12.5px] hover:bg-surface-2">
-            Usar color personalizado
+            {L("Usar color personalizado")}
           </button>
         </PopoverClose>
       </div>
@@ -350,7 +351,7 @@ export function ColorButton({
           </button>
         </Tooltip>
         <PopoverTrigger asChild>
-          <button className="grid h-8 w-4 place-items-center text-muted" aria-label={`Más colores: ${label}`}>
+          <button className="grid h-8 w-4 place-items-center text-muted" aria-label={L("Más colores: {0}", label)}>
             <ChevronDown className="size-3" />
           </button>
         </PopoverTrigger>
@@ -371,7 +372,7 @@ export function TableGridPicker({ onPick }: { onPick: (rows: number, cols: numbe
   const R = 8, C = 10;
   return (
     <div>
-      <div className="mb-2 text-[12.5px] font-medium">{hover[0] ? `Tabla de ${hover[1]} × ${hover[0]}` : "Insertar tabla"}</div>
+      <div className="mb-2 text-[12.5px] font-medium">{hover[0] ? L("Tabla de {0} × {1}", hover[1], hover[0]) : L("Insertar tabla")}</div>
       <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${C}, 18px)` }} onMouseLeave={() => setHover([0, 0])}>
         {Array.from({ length: R * C }, (_, i) => {
           const r = Math.floor(i / C) + 1, c = (i % C) + 1;
@@ -382,7 +383,7 @@ export function TableGridPicker({ onPick }: { onPick: (rows: number, cols: numbe
                 onMouseEnter={() => setHover([r, c])}
                 onClick={() => onPick(r, c)}
                 className={cn("size-[18px] rounded-[3px] border", on ? "border-accent bg-accent-soft" : "border-border bg-surface")}
-                aria-label={`${c} columnas por ${r} filas`}
+                aria-label={L("{0} columnas por {1} filas", c, r)}
               />
             </PopoverClose>
           );
@@ -397,13 +398,13 @@ export function TableGridPicker({ onPick }: { onPick: (rows: number, cols: numbe
 /* ------------------------------------------------------------------ */
 
 export const STYLES: { id: string; label: string; apply: (e: Editor) => void; active: (f: EditorFlags) => boolean; preview: string }[] = [
-  { id: "normal", label: "Normal", apply: (e) => e.chain().focus().setParagraph().run(), active: (f) => !f.heading && !f.blockquote && !f.codeBlock, preview: "text-[13px]" },
-  { id: "h1", label: "Título 1", apply: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(), active: (f) => f.heading === 1, preview: "text-[17px] font-bold" },
-  { id: "h2", label: "Título 2", apply: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (f) => f.heading === 2, preview: "text-[15px] font-semibold" },
-  { id: "h3", label: "Título 3", apply: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(), active: (f) => f.heading === 3, preview: "text-[14px] font-semibold" },
-  { id: "h4", label: "Título 4", apply: (e) => e.chain().focus().toggleHeading({ level: 4 }).run(), active: (f) => f.heading === 4, preview: "text-[13px] font-semibold" },
-  { id: "quote", label: "Cita", apply: (e) => e.chain().focus().toggleBlockquote().run(), active: (f) => f.blockquote, preview: "text-[13px] italic border-l-2 border-accent pl-1.5" },
-  { id: "code", label: "Código", apply: (e) => e.chain().focus().toggleCodeBlock().run(), active: (f) => f.codeBlock, preview: "font-mono text-[12px]" },
+  { id: "normal", label: L("Normal"), apply: (e) => e.chain().focus().setParagraph().run(), active: (f) => !f.heading && !f.blockquote && !f.codeBlock, preview: "text-[13px]" },
+  { id: "h1", label: L("Título 1"), apply: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(), active: (f) => f.heading === 1, preview: "text-[17px] font-bold" },
+  { id: "h2", label: L("Título 2"), apply: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (f) => f.heading === 2, preview: "text-[15px] font-semibold" },
+  { id: "h3", label: L("Título 3"), apply: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(), active: (f) => f.heading === 3, preview: "text-[14px] font-semibold" },
+  { id: "h4", label: L("Título 4"), apply: (e) => e.chain().focus().toggleHeading({ level: 4 }).run(), active: (f) => f.heading === 4, preview: "text-[13px] font-semibold" },
+  { id: "quote", label: L("Cita"), apply: (e) => e.chain().focus().toggleBlockquote().run(), active: (f) => f.blockquote, preview: "text-[13px] italic border-l-2 border-accent pl-1.5" },
+  { id: "code", label: L("Código"), apply: (e) => e.chain().focus().toggleCodeBlock().run(), active: (f) => f.codeBlock, preview: "font-mono text-[12px]" },
 ];
 
 export function StyleGallery({ editor, flags }: { editor: Editor; flags: EditorFlags }) {
@@ -418,7 +419,7 @@ export function StyleGallery({ editor, flags }: { editor: Editor; flags: EditorF
             s.active(flags) ? "border-accent bg-accent-soft" : "border-transparent bg-surface-2/60 hover:border-border hover:bg-surface-2",
           )}
         >
-          <span className={cn("truncate leading-tight", s.preview)}>AaBb</span>
+          <span className={cn("truncate leading-tight", s.preview)}>{L("AaBb")}</span>
           <span className="truncate text-[10.5px] text-muted">{s.label}</span>
         </button>
       ))}

@@ -1,3 +1,4 @@
+import { uiLocale } from "@/lib/i18n";
 import type { JSONContent } from "@tiptap/core";
 import {
   CommentRangeEnd, CommentRangeStart, CommentReference, DeletedTextRun, InsertedTextRun, FootnoteReferenceRun, SectionType,
@@ -320,7 +321,7 @@ async function blockToDocx(node: JSONContent, ctx: Ctx, extra: Partial<IParagrap
 function hfParagraph(hf: HeaderFooter, title: string, author: string, widthTwips: number, fontPt: number): Paragraph {
   const parts = (text: string) => {
     const out: (string | (typeof PageNumber)[keyof typeof PageNumber])[] = [];
-    const resolved = text.replaceAll("{titulo}", title || "Documento sin título").replaceAll("{fecha}", new Date().toLocaleDateString("es-ES")).replaceAll("{autor}", author);
+    const resolved = text.replaceAll("{titulo}", title || "Documento sin título").replaceAll("{fecha}", new Date().toLocaleDateString(uiLocale())).replaceAll("{autor}", author);
     for (const piece of resolved.split(/(\{paginas?\})/)) {
       if (piece === "{pagina}") out.push(PageNumber.CURRENT);
       else if (piece === "{paginas}") out.push(PageNumber.TOTAL_PAGES);

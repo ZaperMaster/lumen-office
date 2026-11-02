@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Dialog as RDialog } from "radix-ui";
 import { X } from "lucide-react";
 
+import { L } from "@/lib/i18n";
 /** Diálogo sin cabecera, para ventanas con su propia estructura (p. ej. Configuración). */
 export function RDialogRoot({
   open,
@@ -22,7 +23,7 @@ export function RDialogRoot({
           <RDialog.Title className="sr-only">{title}</RDialog.Title>
           <RDialog.Description className="sr-only">{title}</RDialog.Description>
           {children}
-          <RDialog.Close className="absolute top-3 right-3 rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label="Cerrar">
+          <RDialog.Close className="absolute top-3 right-3 rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("Cerrar")}>
             <X className="size-4" />
           </RDialog.Close>
         </RDialog.Content>

@@ -3,6 +3,7 @@ import { FileDown, Printer } from "lucide-react";
 import { parseRange, type PrintSetup } from "@/lib/sheet/model";
 import { Button, Dialog, Input, Switch, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* Configurar página de una hoja: orientación, márgenes, ajustar al ancho, títulos y área. */
 export function PrintSetupDialog({
   initial,
@@ -28,51 +29,51 @@ export function PrintSetupDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Configurar página"
-      description="Cómo se imprime esta hoja (y cómo sale en el PDF)."
+      title={L("Configurar página")}
+      description={L("Cómo se imprime esta hoja (y cómo sale en el PDF).")}
       className="w-[min(94vw,520px)]"
       footer={
         <>
-          <Button variant="ghost" className="mr-auto" onClick={() => onSave(p)} disabled={!areaOk}>Guardar</Button>
-          <Button variant="outline" icon={<FileDown className="size-4" />} onClick={() => onPdf(p)} disabled={!areaOk}>Guardar como PDF</Button>
-          <Button variant="primary" icon={<Printer className="size-4" />} onClick={() => onPrint(p)} disabled={!areaOk}>Imprimir</Button>
+          <Button variant="ghost" className="mr-auto" onClick={() => onSave(p)} disabled={!areaOk}>{L("Guardar")}</Button>
+          <Button variant="outline" icon={<FileDown className="size-4" />} onClick={() => onPdf(p)} disabled={!areaOk}>{L("Guardar como PDF")}</Button>
+          <Button variant="primary" icon={<Printer className="size-4" />} onClick={() => onPrint(p)} disabled={!areaOk}>{L("Imprimir")}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
         <div>
-          <div className="mb-1.5 text-[12.5px] font-medium">Orientación</div>
+          <div className="mb-1.5 text-[12.5px] font-medium">{L("Orientación")}</div>
           <div className="flex gap-2">
-            <button onClick={() => set({ landscape: false })} className={opt(!p.landscape)}>Vertical</button>
-            <button onClick={() => set({ landscape: true })} className={opt(!!p.landscape)}>Horizontal</button>
+            <button onClick={() => set({ landscape: false })} className={opt(!p.landscape)}>{L("Vertical")}</button>
+            <button onClick={() => set({ landscape: true })} className={opt(!!p.landscape)}>{L("Horizontal")}</button>
           </div>
         </div>
         <div>
-          <div className="mb-1.5 text-[12.5px] font-medium">Márgenes</div>
+          <div className="mb-1.5 text-[12.5px] font-medium">{L("Márgenes")}</div>
           <div className="flex gap-2">
-            {([["narrow", "Estrechos"], ["normal", "Normales"], ["wide", "Anchos"]] as const).map(([v, l]) => (
+            {([["narrow", L("Estrechos")], ["normal", L("Normales")], ["wide", L("Anchos")]] as const).map(([v, l]) => (
               <button key={v} onClick={() => set({ margins: v })} className={opt((p.margins ?? "normal") === v)}>{l}</button>
             ))}
           </div>
         </div>
         <label className="flex items-center justify-between text-[12.5px] font-medium">
-          Ajustar todas las columnas en una página de ancho
+          {L("Ajustar todas las columnas en una página de ancho")}
           <Switch checked={!!p.fitWidth} onChange={(v) => set({ fitWidth: v })} />
         </label>
         <label className="flex items-center justify-between text-[12.5px] font-medium">
-          Imprimir las líneas de la cuadrícula
+          {L("Imprimir las líneas de la cuadrícula")}
           <Switch checked={p.gridlines !== false} onChange={(v) => set({ gridlines: v })} />
         </label>
         <label className="flex items-center justify-between text-[12.5px] font-medium">
-          Filas de títulos que se repiten en cada página
+          {L("Filas de títulos que se repiten en cada página")}
           <Input type="number" min={0} max={20} value={p.repeatRows ?? 0} onChange={(e) => set({ repeatRows: Math.max(0, Math.min(20, Number(e.target.value) || 0)) })} className="h-8 w-20" />
         </label>
         <div>
           <div className="mb-1.5 flex items-center justify-between text-[12.5px] font-medium">
-            Área de impresión
-            <button onClick={() => set({ area: selection })} className="text-[12px] font-normal text-accent hover:underline">Usar la selección ({selection})</button>
+            {L("Área de impresión")}
+            <button onClick={() => set({ area: selection })} className="text-[12px] font-normal text-accent hover:underline">{L("Usar la selección (")}{selection})</button>
           </div>
-          <Input value={p.area ?? ""} onChange={(e) => set({ area: e.target.value.toUpperCase() || undefined })} placeholder="Todo lo que tiene datos" className={cn("h-9 font-mono", !areaOk && "border-red-400")} />
+          <Input value={p.area ?? ""} onChange={(e) => set({ area: e.target.value.toUpperCase() || undefined })} placeholder={L("Todo lo que tiene datos")} className={cn("h-9 font-mono", !areaOk && "border-red-400")} />
         </div>
       </div>
     </Dialog>

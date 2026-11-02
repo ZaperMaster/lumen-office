@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react";
 import type { DocKind } from "@/lib/db";
 
+import { L } from "@/lib/i18n";
 /* Pequeños ayudantes para construir contenido Tiptap */
 const t = (text: string, marks?: JSONContent["marks"]): JSONContent => ({ type: "text", text, ...(marks ? { marks } : {}) });
 const b = (text: string) => t(text, [{ type: "bold" }]);
@@ -56,16 +57,16 @@ export interface Template {
 export const TEMPLATES: Template[] = [
   {
     id: "blank",
-    name: "Documento en blanco",
-    description: "Empieza desde cero",
+    name: L("Documento en blanco"),
+    description: L("Empieza desde cero"),
     kind: "document",
     tint: "#ffffff",
     build: () => ({ title: "", content: doc(p()) }),
   },
   {
     id: "letter",
-    name: "Carta formal",
-    description: "Remitente, destinatario y firma",
+    name: L("Carta formal"),
+    description: L("Remitente, destinatario y firma"),
     kind: "document",
     tint: "#eef4ff",
     build: () => ({
@@ -94,8 +95,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "resume",
-    name: "Currículum",
-    description: "CV moderno con secciones",
+    name: L("Currículum"),
+    description: L("CV moderno con secciones"),
     kind: "document",
     tint: "#f0f9f4",
     build: () => ({
@@ -123,8 +124,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "report",
-    name: "Informe",
-    description: "Portada, índice y conclusiones",
+    name: L("Informe"),
+    description: L("Portada, índice y conclusiones"),
     kind: "document",
     tint: "#fff6e9",
     build: () => ({
@@ -154,8 +155,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "meeting",
-    name: "Acta de reunión",
-    description: "Asistentes, puntos y acuerdos",
+    name: L("Acta de reunión"),
+    description: L("Asistentes, puntos y acuerdos"),
     kind: "document",
     tint: "#f3efff",
     build: () => ({
@@ -176,8 +177,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "essay",
-    name: "Ensayo",
-    description: "Formato académico",
+    name: L("Ensayo"),
+    description: L("Formato académico"),
     kind: "document",
     tint: "#fbf3ea",
     build: () => ({
@@ -201,8 +202,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "cover",
-    name: "Carta de presentación",
-    description: "Para acompañar el currículum",
+    name: L("Carta de presentación"),
+    description: L("Para acompañar el currículum"),
     kind: "document",
     tint: "#eaf6ff",
     build: () => ({
@@ -228,8 +229,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "proposal",
-    name: "Propuesta comercial",
-    description: "Servicios, plazos y presupuesto",
+    name: L("Propuesta comercial"),
+    description: L("Servicios, plazos y presupuesto"),
     kind: "document",
     tint: "#eefbf3",
     build: () => ({
@@ -264,8 +265,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "invoice-doc",
-    name: "Factura",
-    description: "Datos fiscales, conceptos e IVA",
+    name: L("Factura"),
+    description: L("Datos fiscales, conceptos e IVA"),
     kind: "document",
     tint: "#f4f1ff",
     build: () => ({
@@ -296,8 +297,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "project-plan",
-    name: "Plan de proyecto",
-    description: "Objetivos, tareas y riesgos",
+    name: L("Plan de proyecto"),
+    description: L("Objetivos, tareas y riesgos"),
     kind: "document",
     tint: "#fff4e6",
     build: () => ({
@@ -328,8 +329,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "newsletter",
-    name: "Boletín",
-    description: "Noticias para tu equipo o clientes",
+    name: L("Boletín"),
+    description: L("Noticias para tu equipo o clientes"),
     kind: "document",
     tint: "#ffeef0",
     build: () => ({
@@ -356,8 +357,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "certificate",
-    name: "Diploma",
-    description: "Certificado de reconocimiento",
+    name: L("Diploma"),
+    description: L("Certificado de reconocimiento"),
     kind: "document",
     tint: "#fff9e6",
     build: () => ({
@@ -381,8 +382,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "recipe",
-    name: "Receta",
-    description: "Ingredientes y pasos",
+    name: L("Receta"),
+    description: L("Ingredientes y pasos"),
     kind: "document",
     tint: "#fff1e8",
     build: () => ({
@@ -401,8 +402,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "class-notes",
-    name: "Apuntes de clase",
-    description: "Conceptos, ejemplos y resumen",
+    name: L("Apuntes de clase"),
+    description: L("Conceptos, ejemplos y resumen"),
     kind: "document",
     tint: "#eef6ff",
     build: () => ({
@@ -425,8 +426,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "todo",
-    name: "Lista de tareas",
-    description: "Checklist para el día",
+    name: L("Lista de tareas"),
+    description: L("Checklist para el día"),
     kind: "note",
     tint: "#eafaf3",
     build: () => ({
@@ -441,8 +442,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "journal",
-    name: "Diario",
-    description: "Entrada diaria",
+    name: L("Diario"),
+    description: L("Entrada diaria"),
     kind: "note",
     tint: "#fff1f4",
     build: () => ({
@@ -459,8 +460,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "shopping",
-    name: "Lista de la compra",
-    description: "Por secciones del súper",
+    name: L("Lista de la compra"),
+    description: L("Por secciones del súper"),
     kind: "note",
     tint: "#effbea",
     build: () => ({
@@ -479,8 +480,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "ideas",
-    name: "Lluvia de ideas",
-    description: "Ideas, pros y contras",
+    name: L("Lluvia de ideas"),
+    description: L("Ideas, pros y contras"),
     kind: "note",
     tint: "#fff8e1",
     build: () => ({
@@ -499,8 +500,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "week",
-    name: "Plan semanal",
-    description: "Objetivos y tareas por día",
+    name: L("Plan semanal"),
+    description: L("Objetivos y tareas por día"),
     kind: "note",
     tint: "#eef1ff",
     build: () => ({

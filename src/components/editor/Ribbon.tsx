@@ -28,6 +28,7 @@ import {
   PopoverClose, PopoverContent, PopoverTrigger, SubMenu, Tooltip, cn,
 } from "@/components/ui";
 
+import { L, uiLocale } from "@/lib/i18n";
 type Tab = "home" | "insert" | "layout" | "review" | "view" | "ai" | "table";
 
 /** Acciones de encabezado, pie y numeración que ofrece el documento. */
@@ -63,13 +64,13 @@ export function Ribbon({ editor, files, layout, review, onFind, onWordCount }: R
   const activeTab: Tab = tab === "table" && !flags.table ? "home" : tab;
 
   const tabs: { id: Tab; label: string; contextual?: boolean }[] = [
-    { id: "home", label: "Inicio" },
-    { id: "insert", label: "Insertar" },
-    { id: "layout", label: "Diseño" },
-    { id: "review", label: "Revisar" },
-    { id: "view", label: "Vista" },
-    { id: "ai", label: "IA" },
-    ...(flags.table ? [{ id: "table" as Tab, label: "Tabla", contextual: true }] : []),
+    { id: "home", label: L("Inicio") },
+    { id: "insert", label: L("Insertar") },
+    { id: "layout", label: L("Diseño") },
+    { id: "review", label: L("Revisar") },
+    { id: "view", label: L("Vista") },
+    { id: "ai", label: L("IA") },
+    ...(flags.table ? [{ id: "table" as Tab, label: L("Tabla"), contextual: true }] : []),
   ];
 
   return (
@@ -96,7 +97,7 @@ export function Ribbon({ editor, files, layout, review, onFind, onWordCount }: R
           </button>
         ))}
         <div className="ml-auto pb-1">
-          <IconButton size="sm" label={ribbonCollapsed ? "Mostrar cinta" : "Ocultar cinta"} onClick={() => set("ribbonCollapsed", !ribbonCollapsed)}>
+          <IconButton size="sm" label={ribbonCollapsed ? L("Mostrar cinta") : L("Ocultar cinta")} onClick={() => set("ribbonCollapsed", !ribbonCollapsed)}>
             {ribbonCollapsed ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
           </IconButton>
         </div>
@@ -183,7 +184,7 @@ function FileMenu({ files }: { files: FileActions }) {
       const doc = await openFileFromDisk();
       if (doc) openDoc(doc);
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudo abrir el archivo", "error");
+      toast(e instanceof Error ? e.message : L("No se pudo abrir el archivo"), "error");
     }
   };
 
@@ -191,38 +192,38 @@ function FileMenu({ files }: { files: FileActions }) {
     <>
       <Menu>
         <MenuTrigger asChild>
-          <button className="mb-0.5 h-7 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:brightness-110">Archivo</button>
+          <button className="mb-0.5 h-7 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:brightness-110">{L("Archivo")}</button>
         </MenuTrigger>
         <MenuContent className="w-[270px]">
-          <MenuItem icon={<House />} onSelect={() => navigate({ name: "home" })}>Inicio</MenuItem>
+          <MenuItem icon={<House />} onSelect={() => navigate({ name: "home" })}>{L("Inicio")}</MenuItem>
           <MenuSeparator />
-          <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>Nuevo documento</MenuItem>
-          <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>Nueva hoja de cálculo</MenuItem>
-          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>Nueva presentación</MenuItem>
-          <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>Nueva nota</MenuItem>
-          <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>Abrir archivo…</MenuItem>
-          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Documentos recientes</MenuItem>
+          <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>{L("Nuevo documento")}</MenuItem>
+          <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>{L("Nueva hoja de cálculo")}</MenuItem>
+          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>{L("Nueva presentación")}</MenuItem>
+          <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>{L("Nueva nota")}</MenuItem>
+          <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>{L("Abrir archivo…")}</MenuItem>
+          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>{L("Documentos recientes")}</MenuItem>
           <MenuSeparator />
           <MenuItem icon={<Save />} shortcut="Ctrl+S" onSelect={files.save}>
-            {files.filePath ? "Guardar" : desktop ? "Guardar…" : "Descargar (.docx)"}
+            {files.filePath ? L("Guardar") : desktop ? L("Guardar…") : L("Descargar (.docx)")}
           </MenuItem>
           {desktop && (
-            <MenuItem icon={<SaveAll />} shortcut="F12" onSelect={files.saveAs}>Guardar como…</MenuItem>
+            <MenuItem icon={<SaveAll />} shortcut="F12" onSelect={files.saveAs}>{L("Guardar como…")}</MenuItem>
           )}
-          <SubMenu label="Exportar una copia" icon={<FileDown />}>
-            <MenuItem icon={<FileText />} onSelect={() => files.exportAs("docx")}>Word (.docx)</MenuItem>
-            <MenuItem icon={<FileType2 />} onSelect={files.pdf}>PDF (.pdf)</MenuItem>
-            <MenuItem icon={<FileJson />} onSelect={() => files.exportAs("lumen")}>Lumen, sin pérdidas (.lumen)</MenuItem>
-            <MenuItem icon={<FileCode2 />} onSelect={() => files.exportAs("md")}>Markdown (.md)</MenuItem>
-            <MenuItem icon={<Monitor />} onSelect={() => files.exportAs("html")}>Página web (.html)</MenuItem>
-            <MenuItem icon={<Type />} onSelect={() => files.exportAs("txt")}>Texto sin formato (.txt)</MenuItem>
+          <SubMenu label={L("Exportar una copia")} icon={<FileDown />}>
+            <MenuItem icon={<FileText />} onSelect={() => files.exportAs("docx")}>{L("Word (.docx)")}</MenuItem>
+            <MenuItem icon={<FileType2 />} onSelect={files.pdf}>{L("PDF (.pdf)")}</MenuItem>
+            <MenuItem icon={<FileJson />} onSelect={() => files.exportAs("lumen")}>{L("Lumen, sin pérdidas (.lumen)")}</MenuItem>
+            <MenuItem icon={<FileCode2 />} onSelect={() => files.exportAs("md")}>{L("Markdown (.md)")}</MenuItem>
+            <MenuItem icon={<Monitor />} onSelect={() => files.exportAs("html")}>{L("Página web (.html)")}</MenuItem>
+            <MenuItem icon={<Type />} onSelect={() => files.exportAs("txt")}>{L("Texto sin formato (.txt)")}</MenuItem>
           </SubMenu>
-          <MenuItem icon={<FileType2 />} onSelect={files.pdf}>Guardar como PDF…</MenuItem>
-          <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={() => printDocument()}>Imprimir…</MenuItem>
+          <MenuItem icon={<FileType2 />} onSelect={files.pdf}>{L("Guardar como PDF…")}</MenuItem>
+          <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={() => printDocument()}>{L("Imprimir…")}</MenuItem>
           {files.filePath && desktop && (
             <>
               <MenuSeparator />
-              <MenuItem icon={<FolderSearch />} onSelect={() => void revealInFolder(files.filePath!)}>Mostrar en la carpeta</MenuItem>
+              <MenuItem icon={<FolderSearch />} onSelect={() => void revealInFolder(files.filePath!)}>{L("Mostrar en la carpeta")}</MenuItem>
             </>
           )}
         </MenuContent>
@@ -240,7 +241,7 @@ function FileMenu({ files }: { files: FileActions }) {
             const { importAnyFile } = await import("@/lib/officeImport");
             openDoc(await importAnyFile(f));
           } catch (err) {
-            toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error");
+            toast(err instanceof Error ? err.message : L("No se pudo abrir el archivo"), "error");
           }
         }}
       />
@@ -265,56 +266,56 @@ function HomeTab({ editor, flags }: { editor: Editor; flags: ReturnType<typeof u
       const text = await navigator.clipboard.readText();
       c().insertContent(text).run();
     } catch {
-      toast("Usa Ctrl+V para pegar", "info");
+      toast(L("Usa Ctrl+V para pegar"), "info");
     }
   };
 
   return (
     <>
-      <Group label="Portapapeles">
-        <Big icon={<ClipboardPaste />} label="Pegar" onClick={paste} title="Pegar (Ctrl+V)" />
+      <Group label={L("Portapapeles")}>
+        <Big icon={<ClipboardPaste />} label={L("Pegar")} onClick={paste} title={L("Pegar (Ctrl+V)")} />
         <Col>
-          <IconButton size="sm" label="Cortar" shortcut="Ctrl+X" onClick={() => { editor.commands.focus(); document.execCommand("cut"); }}>{I(Scissors)}</IconButton>
-          <IconButton size="sm" label="Copiar" shortcut="Ctrl+C" onClick={() => { editor.commands.focus(); document.execCommand("copy"); }}>{I(Copy)}</IconButton>
+          <IconButton size="sm" label={L("Cortar")} shortcut="Ctrl+X" onClick={() => { editor.commands.focus(); document.execCommand("cut"); }}>{I(Scissors)}</IconButton>
+          <IconButton size="sm" label={L("Copiar")} shortcut="Ctrl+C" onClick={() => { editor.commands.focus(); document.execCommand("copy"); }}>{I(Copy)}</IconButton>
         </Col>
         <Col>
-          <IconButton size="sm" label="Deshacer" shortcut="Ctrl+Z" disabled={!flags.canUndo} onClick={() => c().undo().run()}>{I(Undo2)}</IconButton>
-          <IconButton size="sm" label="Rehacer" shortcut="Ctrl+Y" disabled={!flags.canRedo} onClick={() => c().redo().run()}>{I(Redo2)}</IconButton>
+          <IconButton size="sm" label={L("Deshacer")} shortcut="Ctrl+Z" disabled={!flags.canUndo} onClick={() => c().undo().run()}>{I(Undo2)}</IconButton>
+          <IconButton size="sm" label={L("Rehacer")} shortcut="Ctrl+Y" disabled={!flags.canRedo} onClick={() => c().redo().run()}>{I(Redo2)}</IconButton>
         </Col>
       </Group>
 
-      <Group label="Fuente">
+      <Group label={L("Fuente")}>
         <Col>
           <Row>
             <FontPicker value={flags.fontFamily ?? fontFamily} onChange={(css) => c().setFontFamily(css).run()} />
             <FontSizePicker value={size} onChange={(pt) => c().setFontSize(`${pt}pt`).run()} />
-            <IconButton size="sm" label="Aumentar tamaño" shortcut="Ctrl+]" onClick={() => c().setFontSize(`${stepSize(size, 1)}pt`).run()}>
+            <IconButton size="sm" label={L("Aumentar tamaño")} shortcut="Ctrl+]" onClick={() => c().setFontSize(`${stepSize(size, 1)}pt`).run()}>
               <span className="text-[13px] font-semibold">A<sup>+</sup></span>
             </IconButton>
-            <IconButton size="sm" label="Reducir tamaño" shortcut="Ctrl+[" onClick={() => c().setFontSize(`${stepSize(size, -1)}pt`).run()}>
+            <IconButton size="sm" label={L("Reducir tamaño")} shortcut="Ctrl+[" onClick={() => c().setFontSize(`${stepSize(size, -1)}pt`).run()}>
               <span className="text-[12px] font-semibold">A<sup>−</sup></span>
             </IconButton>
-            <IconButton size="sm" label="Borrar formato" onClick={() => c().unsetAllMarks().unsetFontFamily().unsetFontSize().run()}>{I(Eraser)}</IconButton>
+            <IconButton size="sm" label={L("Borrar formato")} onClick={() => c().unsetAllMarks().unsetFontFamily().unsetFontSize().run()}>{I(Eraser)}</IconButton>
           </Row>
           <Row>
-            <IconButton size="sm" label="Negrita" shortcut="Ctrl+B" active={flags.bold} onClick={() => c().toggleBold().run()}>{I(Bold)}</IconButton>
-            <IconButton size="sm" label="Cursiva" shortcut="Ctrl+I" active={flags.italic} onClick={() => c().toggleItalic().run()}>{I(Italic)}</IconButton>
-            <IconButton size="sm" label="Subrayado" shortcut="Ctrl+U" active={flags.underline} onClick={() => c().toggleUnderline().run()}>{I(Underline)}</IconButton>
-            <IconButton size="sm" label="Tachado" shortcut="Ctrl+Shift+S" active={flags.strike} onClick={() => c().toggleStrike().run()}>{I(Strikethrough)}</IconButton>
-            <IconButton size="sm" label="Subíndice" shortcut="Ctrl+," active={flags.subscript} onClick={() => c().toggleSubscript().run()}>{I(Subscript)}</IconButton>
-            <IconButton size="sm" label="Superíndice" shortcut="Ctrl+." active={flags.superscript} onClick={() => c().toggleSuperscript().run()}>{I(Superscript)}</IconButton>
-            <IconButton size="sm" label="Código en línea" shortcut="Ctrl+E" active={flags.code} onClick={() => c().toggleCode().run()}>{I(Code)}</IconButton>
+            <IconButton size="sm" label={L("Negrita")} shortcut="Ctrl+B" active={flags.bold} onClick={() => c().toggleBold().run()}>{I(Bold)}</IconButton>
+            <IconButton size="sm" label={L("Cursiva")} shortcut="Ctrl+I" active={flags.italic} onClick={() => c().toggleItalic().run()}>{I(Italic)}</IconButton>
+            <IconButton size="sm" label={L("Subrayado")} shortcut="Ctrl+U" active={flags.underline} onClick={() => c().toggleUnderline().run()}>{I(Underline)}</IconButton>
+            <IconButton size="sm" label={L("Tachado")} shortcut="Ctrl+Shift+S" active={flags.strike} onClick={() => c().toggleStrike().run()}>{I(Strikethrough)}</IconButton>
+            <IconButton size="sm" label={L("Subíndice")} shortcut="Ctrl+," active={flags.subscript} onClick={() => c().toggleSubscript().run()}>{I(Subscript)}</IconButton>
+            <IconButton size="sm" label={L("Superíndice")} shortcut="Ctrl+." active={flags.superscript} onClick={() => c().toggleSuperscript().run()}>{I(Superscript)}</IconButton>
+            <IconButton size="sm" label={L("Código en línea")} shortcut="Ctrl+E" active={flags.code} onClick={() => c().toggleCode().run()}>{I(Code)}</IconButton>
             <ColorButton
-              label="Color de resaltado"
+              label={L("Color de resaltado")}
               icon={<Highlighter />}
               color={hlColor}
               colors={HIGHLIGHT_COLORS}
-              clearLabel="Sin resaltado"
+              clearLabel={L("Sin resaltado")}
               onApply={(col) => { setHlColor(col); c().toggleHighlight({ color: col }).run(); }}
               onClear={() => c().unsetHighlight().run()}
             />
             <ColorButton
-              label="Color de fuente"
+              label={L("Color de fuente")}
               icon={<Baseline />}
               color={textColor}
               onApply={(col) => { setTextColor(col); c().setColor(col).run(); }}
@@ -324,38 +325,38 @@ function HomeTab({ editor, flags }: { editor: Editor; flags: ReturnType<typeof u
         </Col>
       </Group>
 
-      <Group label="Párrafo">
+      <Group label={L("Párrafo")}>
         <Col>
           <Row>
-            <IconButton size="sm" label="Viñetas" active={flags.bulletList} onClick={() => c().toggleBulletList().run()}>{I(List)}</IconButton>
-            <IconButton size="sm" label="Numeración" active={flags.orderedList} onClick={() => c().toggleOrderedList().run()}>{I(ListOrdered)}</IconButton>
-            <IconButton size="sm" label="Lista de tareas" active={flags.taskList} onClick={() => c().toggleTaskList().run()}>{I(ListChecks)}</IconButton>
-            <IconButton size="sm" label="Disminuir sangría" shortcut="Shift+Tab" onClick={() => (flags.bulletList || flags.orderedList || flags.taskList ? c().liftListItem(flags.taskList ? "taskItem" : "listItem").run() : c().outdent().run())}>{I(IndentDecrease)}</IconButton>
-            <IconButton size="sm" label="Aumentar sangría" shortcut="Tab" onClick={() => (flags.bulletList || flags.orderedList || flags.taskList ? c().sinkListItem(flags.taskList ? "taskItem" : "listItem").run() : c().indent().run())}>{I(IndentIncrease)}</IconButton>
+            <IconButton size="sm" label={L("Viñetas")} active={flags.bulletList} onClick={() => c().toggleBulletList().run()}>{I(List)}</IconButton>
+            <IconButton size="sm" label={L("Numeración")} active={flags.orderedList} onClick={() => c().toggleOrderedList().run()}>{I(ListOrdered)}</IconButton>
+            <IconButton size="sm" label={L("Lista de tareas")} active={flags.taskList} onClick={() => c().toggleTaskList().run()}>{I(ListChecks)}</IconButton>
+            <IconButton size="sm" label={L("Disminuir sangría")} shortcut="Shift+Tab" onClick={() => (flags.bulletList || flags.orderedList || flags.taskList ? c().liftListItem(flags.taskList ? "taskItem" : "listItem").run() : c().outdent().run())}>{I(IndentDecrease)}</IconButton>
+            <IconButton size="sm" label={L("Aumentar sangría")} shortcut={L("Tab")} onClick={() => (flags.bulletList || flags.orderedList || flags.taskList ? c().sinkListItem(flags.taskList ? "taskItem" : "listItem").run() : c().indent().run())}>{I(IndentIncrease)}</IconButton>
           </Row>
           <Row>
-            <IconButton size="sm" label="Alinear a la izquierda" shortcut="Ctrl+Shift+L" active={flags.alignLeft} onClick={() => c().setTextAlign("left").run()}>{I(AlignLeft)}</IconButton>
-            <IconButton size="sm" label="Centrar" shortcut="Ctrl+Shift+E" active={flags.alignCenter} onClick={() => c().setTextAlign("center").run()}>{I(AlignCenter)}</IconButton>
-            <IconButton size="sm" label="Alinear a la derecha" shortcut="Ctrl+Shift+R" active={flags.alignRight} onClick={() => c().setTextAlign("right").run()}>{I(AlignRight)}</IconButton>
-            <IconButton size="sm" label="Justificar" shortcut="Ctrl+Shift+J" active={flags.alignJustify} onClick={() => c().setTextAlign("justify").run()}>{I(AlignJustify)}</IconButton>
+            <IconButton size="sm" label={L("Alinear a la izquierda")} shortcut="Ctrl+Shift+L" active={flags.alignLeft} onClick={() => c().setTextAlign("left").run()}>{I(AlignLeft)}</IconButton>
+            <IconButton size="sm" label={L("Centrar")} shortcut="Ctrl+Shift+E" active={flags.alignCenter} onClick={() => c().setTextAlign("center").run()}>{I(AlignCenter)}</IconButton>
+            <IconButton size="sm" label={L("Alinear a la derecha")} shortcut="Ctrl+Shift+R" active={flags.alignRight} onClick={() => c().setTextAlign("right").run()}>{I(AlignRight)}</IconButton>
+            <IconButton size="sm" label={L("Justificar")} shortcut="Ctrl+Shift+J" active={flags.alignJustify} onClick={() => c().setTextAlign("justify").run()}>{I(AlignJustify)}</IconButton>
             <LineHeightMenu editor={editor} current={flags.lineHeight} />
-            <IconButton size="sm" label="Cita" active={flags.blockquote} onClick={() => c().toggleBlockquote().run()}>{I(Quote)}</IconButton>
+            <IconButton size="sm" label={L("Cita")} active={flags.blockquote} onClick={() => c().toggleBlockquote().run()}>{I(Quote)}</IconButton>
           </Row>
         </Col>
       </Group>
 
-      <Group label="Estilos">
+      <Group label={L("Estilos")}>
         <StyleGallery editor={editor} flags={flags} />
       </Group>
 
-      <Group label="IA">
+      <Group label={L("IA")}>
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[60px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
                 <Sparkles className="size-4" />
               </span>
-              Escribir con IA
+              {L("Escribir con IA")}
             </button>
           </MenuTrigger>
           <AIActionsMenuContent editor={editor} />
@@ -369,23 +370,23 @@ function LineHeightMenu({ editor, current }: { editor: Editor; current: string |
   const values = ["1", "1.15", "1.5", "2", "2.5", "3"];
   return (
     <Menu>
-      <Tooltip label="Interlineado">
+      <Tooltip label={L("Interlineado")}>
         <MenuTrigger asChild>
-          <button className="flex h-7 items-center rounded-md px-1 text-text hover:bg-surface-2" aria-label="Interlineado">
+          <button className="flex h-7 items-center rounded-md px-1 text-text hover:bg-surface-2" aria-label={L("Interlineado")}>
             <AlignVerticalSpaceAround className="size-4" />
             <ChevronDown className="size-3 text-muted" />
           </button>
         </MenuTrigger>
       </Tooltip>
       <MenuContent className="min-w-[150px]">
-        <MenuLabel>Interlineado</MenuLabel>
+        <MenuLabel>{L("Interlineado")}</MenuLabel>
         {values.map((v) => (
           <MenuCheckItem key={v} checked={current === v} onSelect={() => editor.chain().focus().setParagraphLineHeight(v).run()}>
             {v.replace(".", ",")}
           </MenuCheckItem>
         ))}
         <MenuSeparator />
-        <MenuItem onSelect={() => editor.chain().focus().setParagraphLineHeight(null).run()}>Predeterminado</MenuItem>
+        <MenuItem onSelect={() => editor.chain().focus().setParagraphLineHeight(null).run()}>{L("Predeterminado")}</MenuItem>
       </MenuContent>
     </Menu>
   );
@@ -396,12 +397,12 @@ function LineHeightMenu({ editor, current }: { editor: Editor; current: string |
 /* ------------------------------------------------------------------ */
 
 const PAGE_NUMBER_POSITIONS: { label: string; zone: "header" | "footer"; slot: Slot }[] = [
-  { label: "Abajo · centro", zone: "footer", slot: "center" },
-  { label: "Abajo · derecha", zone: "footer", slot: "right" },
-  { label: "Abajo · izquierda", zone: "footer", slot: "left" },
-  { label: "Arriba · derecha", zone: "header", slot: "right" },
-  { label: "Arriba · centro", zone: "header", slot: "center" },
-  { label: "Arriba · izquierda", zone: "header", slot: "left" },
+  { label: L("Abajo · centro"), zone: "footer", slot: "center" },
+  { label: L("Abajo · derecha"), zone: "footer", slot: "right" },
+  { label: L("Abajo · izquierda"), zone: "footer", slot: "left" },
+  { label: L("Arriba · derecha"), zone: "header", slot: "right" },
+  { label: L("Arriba · centro"), zone: "header", slot: "center" },
+  { label: L("Arriba · izquierda"), zone: "header", slot: "left" },
 ];
 
 const SYMBOLS = "© ® ™ € £ ¥ ¢ $ ° ± × ÷ ≠ ≈ ≤ ≥ ∞ √ ∑ π Ω α β γ δ µ → ← ↑ ↓ ↔ ⇒ • · … — – « » ¿ ¡ § ¶ † ‡ ✓ ✗ ★ ☆ ♥ ♦ ♣ ♠ ½ ¼ ¾ ² ³ ‰".split(" ");
@@ -430,7 +431,7 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
     editor.state.doc.descendants((n) => {
       if (n.type.name === "heading" && n.textContent.trim()) items.push({ level: n.attrs.level as number, text: n.textContent.trim() });
     });
-    if (!items.length) return toast("Primero pon títulos en el documento (estilos Título 1, 2 y 3) para crear el índice");
+    if (!items.length) return toast(L("Primero pon títulos en el documento (estilos Título 1, 2 y 3) para crear el índice"));
     const min = Math.min(...items.map((i) => i.level));
     c()
       .insertContent([
@@ -443,7 +444,7 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
         { type: "horizontalRule" },
       ])
       .run();
-    toast("Índice insertado. Si cambias los títulos, vuelve a insertarlo.", "success");
+    toast(L("Índice insertado. Si cambias los títulos, vuelve a insertarlo."), "success");
   };
 
   /** Portada al principio del documento, seguida de un salto de página. */
@@ -456,12 +457,12 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
         { type: "paragraph" },
         { type: "paragraph" },
         { type: "paragraph" },
-        { type: "heading", attrs: { level: 1, textAlign: "center" }, content: [{ type: "text", text: "Título del documento" }] },
-        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: "Subtítulo", marks: [{ type: "italic" }] }] },
+        { type: "heading", attrs: { level: 1, textAlign: "center" }, content: [{ type: "text", text: L("Título del documento") }] },
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: L("Subtítulo"), marks: [{ type: "italic" }] }] },
         { type: "paragraph" },
         { type: "paragraph" },
         { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: userName || "Autor" }] },
-        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: now.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) }] },
+        { type: "paragraph", attrs: { textAlign: "center" }, content: [{ type: "text", text: now.toLocaleDateString(uiLocale(), { day: "numeric", month: "long", year: "numeric" }) }] },
         { type: "pageBreak" },
       ])
       .run();
@@ -469,20 +470,20 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
 
   return (
     <>
-      <Group label="Páginas">
-        <Big icon={<BookOpen />} label="Portada" onClick={insertCover} title="Añade una portada al principio del documento" />
-        <Big icon={<ListTree />} label="Índice" onClick={insertToc} title="Tabla de contenido con los títulos del documento" />
-        <Big icon={<SeparatorHorizontal />} label="Salto de página" onClick={() => c().setPageBreak().run()} title="Salto de página (Ctrl+Enter)" />
-        <Big icon={<Minus />} label="Línea horizontal" onClick={() => c().setHorizontalRule().run()} />
+      <Group label={L("Páginas")}>
+        <Big icon={<BookOpen />} label={L("Portada")} onClick={insertCover} title={L("Añade una portada al principio del documento")} />
+        <Big icon={<ListTree />} label={L("Índice")} onClick={insertToc} title={L("Tabla de contenido con los títulos del documento")} />
+        <Big icon={<SeparatorHorizontal />} label={L("Salto de página")} onClick={() => c().setPageBreak().run()} title={L("Salto de página (Ctrl+Enter)")} />
+        <Big icon={<Minus />} label={L("Línea horizontal")} onClick={() => c().setHorizontalRule().run()} />
       </Group>
-      <Group label="Encabezado y pie">
-        <Big icon={<PanelTop />} label="Encabezado" onClick={() => layout.edit("header")} title="Texto en la parte de arriba de cada página" />
-        <Big icon={<PanelBottom />} label="Pie de página" onClick={() => layout.edit("footer")} title="Texto en la parte de abajo de cada página" />
+      <Group label={L("Encabezado y pie")}>
+        <Big icon={<PanelTop />} label={L("Encabezado")} onClick={() => layout.edit("header")} title={L("Texto en la parte de arriba de cada página")} />
+        <Big icon={<PanelBottom />} label={L("Pie de página")} onClick={() => layout.edit("footer")} title={L("Texto en la parte de abajo de cada página")} />
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <Hash className="size-[22px]" />
-              Número de página
+              {L("Número de página")}
             </button>
           </MenuTrigger>
           <MenuContent className="w-[260px]">
@@ -496,19 +497,19 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
               </SubMenu>
             ))}
             <MenuSeparator />
-            <MenuItem icon={<Settings2 />} onSelect={() => layout.edit("footer")}>Formato y primera página…</MenuItem>
+            <MenuItem icon={<Settings2 />} onSelect={() => layout.edit("footer")}>{L("Formato y primera página…")}</MenuItem>
             <MenuItem icon={<Trash2 />} danger disabled={!layout.hasPageNumbers} onSelect={layout.removePageNumbers}>
-              Quitar números de página
+              {L("Quitar números de página")}
             </MenuItem>
           </MenuContent>
         </Menu>
       </Group>
-      <Group label="Tablas">
+      <Group label={L("Tablas")}>
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <Table2 className="size-[22px]" />
-              Tabla
+              {L("Tabla")}
             </button>
           </PopoverTrigger>
           <PopoverContent>
@@ -516,21 +517,21 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
           </PopoverContent>
         </Popover>
       </Group>
-      <Group label="Ilustraciones">
-        <Big icon={<ImagePlus />} label="Imagen" onClick={() => fileRef.current?.click()} title="Insertar imagen desde el equipo" />
+      <Group label={L("Ilustraciones")}>
+        <Big icon={<ImagePlus />} label={L("Imagen")} onClick={() => fileRef.current?.click()} title={L("Insertar imagen desde el equipo")} />
         <Popover>
           <PopoverTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <FileImage className="size-[22px]" />
-              Imagen web
+              {L("Imagen web")}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-[320px]">
-            <div className="mb-2 text-[12.5px] font-medium">Insertar imagen desde una URL</div>
+            <div className="mb-2 text-[12.5px] font-medium">{L("Insertar imagen desde una URL")}</div>
             <div className="flex gap-2">
               <Input value={imgUrl} onChange={(e) => setImgUrl(e.target.value)} placeholder="https://…" />
               <PopoverClose asChild>
-                <Button variant="primary" onClick={() => { if (imgUrl) c().setImage({ src: imgUrl }).run(); setImgUrl(""); }}>Insertar</Button>
+                <Button variant="primary" onClick={() => { if (imgUrl) c().setImage({ src: imgUrl }).run(); setImgUrl(""); }}>{L("Insertar")}</Button>
               </PopoverClose>
             </div>
           </PopoverContent>
@@ -547,13 +548,13 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
           }}
         />
       </Group>
-      <Group label="Elementos">
-        <Big icon={<ChartColumnBig />} label="Gráfico" onClick={() => setChartOpen(true)} title="Gráfico de columnas, barras, líneas o circular con tus datos" />
+      <Group label={L("Elementos")}>
+        <Big icon={<ChartColumnBig />} label={L("Gráfico")} onClick={() => setChartOpen(true)} title={L("Gráfico de columnas, barras, líneas o circular con tus datos")} />
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <SquareDashedText className="size-[22px]" />
-              Cuadro de texto
+              {L("Cuadro de texto")}
             </button>
           </MenuTrigger>
           <MenuContent>
@@ -564,41 +565,41 @@ function InsertTab({ editor, layout }: { editor: Editor; layout: LayoutActions }
               </MenuItem>
             ))}
             <MenuSeparator />
-            <MenuItem icon={<Trash2 />} disabled={!editor.isActive("callout")} onSelect={() => c().unsetCallout().run()}>Quitar el cuadro</MenuItem>
+            <MenuItem icon={<Trash2 />} disabled={!editor.isActive("callout")} onSelect={() => c().unsetCallout().run()}>{L("Quitar el cuadro")}</MenuItem>
           </MenuContent>
         </Menu>
-        <Big icon={<TextQuote />} label="Nota al pie" onClick={() => c().insertFootnote().run()} title="Nota numerada que aparece al final del documento (en Word, al pie de la página)" />
+        <Big icon={<TextQuote />} label={L("Nota al pie")} onClick={() => c().insertFootnote().run()} title={L("Nota numerada que aparece al final del documento (en Word, al pie de la página)")} />
         {chartOpen && <ChartDialog insert initial={SAMPLE_CHART} onClose={() => setChartOpen(false)} onSave={(ch) => c().insertDocChart(ch).run()} />}
       </Group>
-      <Group label="Vínculos">
+      <Group label={L("Vínculos")}>
         <LinkButton editor={editor} big />
       </Group>
-      <Group label="Texto">
-        <Big icon={<SquareCode />} label="Bloque de código" onClick={() => c().toggleCodeBlock().run()} />
-        <Big icon={<Quote />} label="Cita" onClick={() => c().toggleBlockquote().run()} />
+      <Group label={L("Texto")}>
+        <Big icon={<SquareCode />} label={L("Bloque de código")} onClick={() => c().toggleCodeBlock().run()} />
+        <Big icon={<Quote />} label={L("Cita")} onClick={() => c().toggleBlockquote().run()} />
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <CalendarDays className="size-[22px]" />
-              Fecha y hora
+              {L("Fecha y hora")}
             </button>
           </MenuTrigger>
           <MenuContent>
             {[
-              now.toLocaleDateString("es-ES"),
-              now.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }),
-              now.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
-              now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-              now.toLocaleString("es-ES"),
+              now.toLocaleDateString(uiLocale()),
+              now.toLocaleDateString(uiLocale(), { day: "numeric", month: "long", year: "numeric" }),
+              now.toLocaleDateString(uiLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+              now.toLocaleTimeString(uiLocale(), { hour: "2-digit", minute: "2-digit" }),
+              now.toLocaleString(uiLocale()),
             ].map((f) => (
               <MenuItem key={f} onSelect={() => c().insertContent(f).run()}>{f}</MenuItem>
             ))}
           </MenuContent>
         </Menu>
       </Group>
-      <Group label="Símbolos">
-        <CharGrid icon={<Omega className="size-[22px]" />} label="Símbolo" chars={SYMBOLS} onPick={(s) => c().insertContent(s).run()} />
-        <CharGrid icon={<Smile className="size-[22px]" />} label="Emoji" chars={EMOJIS} onPick={(s) => c().insertContent(s).run()} />
+      <Group label={L("Símbolos")}>
+        <CharGrid icon={<Omega className="size-[22px]" />} label={L("Símbolo")} chars={SYMBOLS} onPick={(s) => c().insertContent(s).run()} />
+        <CharGrid icon={<Smile className="size-[22px]" />} label={L("Emoji")} chars={EMOJIS} onPick={(s) => c().insertContent(s).run()} />
       </Group>
     </>
   );
@@ -652,23 +653,23 @@ export function LinkButton({ editor, big }: { editor: Editor; big?: boolean }) {
         {big ? (
           <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
             <Link2 className="size-[22px]" />
-            Vínculo
+            {L("Vínculo")}
           </button>
         ) : (
-          <button className={cn("grid h-7 w-7 place-items-center rounded-md hover:bg-surface-2", editor.isActive("link") && "bg-accent-soft text-accent")} aria-label="Vínculo">
+          <button className={cn("grid h-7 w-7 place-items-center rounded-md hover:bg-surface-2", editor.isActive("link") && "bg-accent-soft text-accent")} aria-label={L("Vínculo")}>
             <Link2 className="size-4" />
           </button>
         )}
       </PopoverTrigger>
       <PopoverContent className="w-[340px]">
-        <div className="mb-2 text-[12.5px] font-medium">Dirección del vínculo</div>
+        <div className="mb-2 text-[12.5px] font-medium">{L("Dirección del vínculo")}</div>
         <div className="flex gap-2">
           <Input autoFocus value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && apply()} placeholder="https://ejemplo.com" />
-          <Button variant="primary" onClick={apply}>Aplicar</Button>
+          <Button variant="primary" onClick={apply}>{L("Aplicar")}</Button>
         </div>
         {editor.isActive("link") && (
           <button onClick={() => { editor.chain().focus().extendMarkRange("link").unsetLink().run(); setOpen(false); }} className="mt-2 text-[12px] text-red-500 hover:underline">
-            Quitar vínculo
+            {L("Quitar vínculo")}
           </button>
         )}
       </PopoverContent>
@@ -684,12 +685,12 @@ function LayoutTab({ editor }: { editor: Editor }) {
   const s = useSettings();
   return (
     <>
-      <Group label="Configurar página">
+      <Group label={L("Configurar página")}>
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <Rows3 className="size-[22px]" />
-              Márgenes
+              {L("Márgenes")}
             </button>
           </MenuTrigger>
           <MenuContent>
@@ -702,7 +703,7 @@ function LayoutTab({ editor }: { editor: Editor }) {
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <FileText className="size-[22px]" />
-              Tamaño
+              {L("Tamaño")}
             </button>
           </MenuTrigger>
           <MenuContent>
@@ -713,51 +714,51 @@ function LayoutTab({ editor }: { editor: Editor }) {
         </Menu>
         <Big
           icon={<FileText className={cn(s.orientation === "landscape" && "rotate-90")} />}
-          label={s.orientation === "portrait" ? "Vertical" : "Horizontal"}
+          label={s.orientation === "portrait" ? L("Vertical") : L("Horizontal")}
           onClick={() => s.set("orientation", s.orientation === "portrait" ? "landscape" : "portrait")}
-          title="Cambiar orientación"
+          title={L("Cambiar orientación")}
         />
-        <Big icon={<SeparatorHorizontal />} label="Salto" onClick={() => editor.chain().focus().setPageBreak().run()} title="Insertar salto de página" />
+        <Big icon={<SeparatorHorizontal />} label={L("Salto")} onClick={() => editor.chain().focus().setPageBreak().run()} title={L("Insertar salto de página")} />
         <Menu>
           <MenuTrigger asChild>
-            <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2" title="Sin texto seleccionado se aplica a todo el documento">
+            <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2" title={L("Sin texto seleccionado se aplica a todo el documento")}>
               <Columns2 className="size-[22px]" />
-              Columnas
+              {L("Columnas")}
             </button>
           </MenuTrigger>
           <MenuContent>
             {[1, 2, 3].map((n) => (
               <MenuCheckItem key={n} checked={(editor.isActive("columns") ? (editor.getAttributes("columns").count as number) : 1) === n} onSelect={() => editor.chain().focus().setColumns(n).run()}>
-                {n === 1 ? "Una" : n === 2 ? "Dos" : "Tres"}
+                {n === 1 ? L("Una") : n === 2 ? L("Dos") : L("Tres")}
               </MenuCheckItem>
             ))}
           </MenuContent>
         </Menu>
       </Group>
-      <Group label="Texto predeterminado">
+      <Group label={L("Texto predeterminado")}>
         <Col>
           <Row>
             <FontPicker value={s.fontFamily} onChange={(css) => s.set("fontFamily", css)} className="w-[160px]" />
             <FontSizePicker value={s.fontSize} onChange={(pt) => s.set("fontSize", pt)} />
           </Row>
           <Row>
-            <span className="px-1 text-[11.5px] text-muted">Interlineado</span>
+            <span className="px-1 text-[11.5px] text-muted">{L("Interlineado")}</span>
             <select value={s.lineHeight} onChange={(e) => s.set("lineHeight", Number(e.target.value))} className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12.5px]">
               {[1, 1.15, 1.3, 1.5, 1.75, 2].map((v) => <option key={v} value={v}>{String(v).replace(".", ",")}</option>)}
             </select>
-            <span className="px-1 text-[11.5px] text-muted">Espaciado</span>
+            <span className="px-1 text-[11.5px] text-muted">{L("Espaciado")}</span>
             <select value={s.paraSpacing} onChange={(e) => s.set("paraSpacing", Number(e.target.value))} className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12.5px]">
-              {[0, 0.3, 0.6, 1, 1.5].map((v) => <option key={v} value={v}>{v === 0 ? "Ninguno" : `${String(v).replace(".", ",")} líneas`}</option>)}
+              {[0, 0.3, 0.6, 1, 1.5].map((v) => <option key={v} value={v}>{v === 0 ? L("Ninguno") : L("{0} líneas", String(v).replace(".", ","))}</option>)}
             </select>
           </Row>
         </Col>
       </Group>
-      <Group label="Fondo">
+      <Group label={L("Fondo")}>
         <Big
           icon={<PanelTop />}
-          label={s.paperMode === "white" ? "Hoja blanca" : "Color del tema"}
+          label={s.paperMode === "white" ? L("Hoja blanca") : L("Color del tema")}
           onClick={() => s.set("paperMode", s.paperMode === "white" ? "theme" : "white")}
-          title="Alternar entre hoja blanca y el color del tema"
+          title={L("Alternar entre hoja blanca y el color del tema")}
         />
       </Group>
     </>
@@ -773,32 +774,32 @@ function ReviewTab({ editor, review, onFind, onWordCount }: { editor: Editor; re
   const run = useAI((s) => s.run);
   return (
     <>
-      <Group label="Buscar">
-        <Big icon={<Search />} label="Buscar" onClick={() => onFind(false)} title="Buscar (Ctrl+F)" />
-        <Big icon={<Replace />} label="Reemplazar" onClick={() => onFind(true)} title="Reemplazar (Ctrl+H)" />
+      <Group label={L("Buscar")}>
+        <Big icon={<Search />} label={L("Buscar")} onClick={() => onFind(false)} title={L("Buscar (Ctrl+F)")} />
+        <Big icon={<Replace />} label={L("Reemplazar")} onClick={() => onFind(true)} title={L("Reemplazar (Ctrl+H)")} />
       </Group>
-      <Group label="Revisión">
-        <Big icon={<SpellCheck />} label="Ortografía" active={spellcheck} onClick={() => set("spellcheck", !spellcheck)} title="Subrayar errores ortográficos" />
-        <Big icon={<CaseSensitive />} label="Autoformato" active={smartTyping} onClick={() => set("smartTyping", !smartTyping)} title="Comillas tipográficas, guiones y símbolos automáticos" />
-        <Big icon={<WholeWord />} label="Contar palabras" onClick={onWordCount} />
+      <Group label={L("Revisión")}>
+        <Big icon={<SpellCheck />} label={L("Ortografía")} active={spellcheck} onClick={() => set("spellcheck", !spellcheck)} title={L("Subrayar errores ortográficos")} />
+        <Big icon={<CaseSensitive />} label={L("Autoformato")} active={smartTyping} onClick={() => set("smartTyping", !smartTyping)} title={L("Comillas tipográficas, guiones y símbolos automáticos")} />
+        <Big icon={<WholeWord />} label={L("Contar palabras")} onClick={onWordCount} />
       </Group>
-      <Group label="Comentarios">
-        <Big icon={<MessageSquarePlus />} label="Nuevo comentario" onClick={review.newComment} title="Comenta el texto seleccionado" />
-        <Big icon={<PanelRight />} label="Panel de revisión" active={review.panelOpen} onClick={review.togglePanel} title="Comentarios y cambios propuestos" />
+      <Group label={L("Comentarios")}>
+        <Big icon={<MessageSquarePlus />} label={L("Nuevo comentario")} onClick={review.newComment} title={L("Comenta el texto seleccionado")} />
+        <Big icon={<PanelRight />} label={L("Panel de revisión")} active={review.panelOpen} onClick={review.togglePanel} title={L("Comentarios y cambios propuestos")} />
       </Group>
-      <Group label="Seguimiento">
-        <Big icon={<FilePen />} label="Control de cambios" active={review.track} onClick={() => review.setTrack(!review.track)} title="Lo que escribas o borres queda marcado para aceptarlo o rechazarlo" />
-        <Big icon={<CheckCheck />} label="Aceptar todo" onClick={() => editor.chain().focus().acceptAllChanges().run()} />
-        <Big icon={<XCircle />} label="Rechazar todo" onClick={() => editor.chain().focus().rejectAllChanges().run()} />
+      <Group label={L("Seguimiento")}>
+        <Big icon={<FilePen />} label={L("Control de cambios")} active={review.track} onClick={() => review.setTrack(!review.track)} title={L("Lo que escribas o borres queda marcado para aceptarlo o rechazarlo")} />
+        <Big icon={<CheckCheck />} label={L("Aceptar todo")} onClick={() => editor.chain().focus().acceptAllChanges().run()} />
+        <Big icon={<XCircle />} label={L("Rechazar todo")} onClick={() => editor.chain().focus().rejectAllChanges().run()} />
       </Group>
-      <Group label="Revisión con IA">
-        <Big icon={<Wand2 />} label="Corregir" onClick={() => run(editor, "fix")} title="Corrige ortografía y gramática del texto seleccionado" />
-        <Big icon={<ScanText />} label="Mejorar" onClick={() => run(editor, "improve")} title="Mejora la redacción del texto seleccionado" />
+      <Group label={L("Revisión con IA")}>
+        <Big icon={<Wand2 />} label={L("Corregir")} onClick={() => run(editor, "fix")} title={L("Corrige ortografía y gramática del texto seleccionado")} />
+        <Big icon={<ScanText />} label={L("Mejorar")} onClick={() => run(editor, "improve")} title={L("Mejora la redacción del texto seleccionado")} />
         <Menu>
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <Languages className="size-[22px]" />
-              Traducir
+              {L("Traducir")}
             </button>
           </MenuTrigger>
           <MenuContent>
@@ -820,30 +821,30 @@ function ViewTab() {
   const s = useSettings();
   const { panelOpen, setPanelOpen } = useAI();
   const modes: { id: ViewMode; label: string; icon: ReactNode }[] = [
-    { id: "page", label: "Diseño de impresión", icon: <FileText /> },
-    { id: "web", label: "Diseño web", icon: <Monitor /> },
-    { id: "focus", label: "Modo enfoque", icon: <Focus /> },
+    { id: "page", label: L("Diseño de impresión"), icon: <FileText /> },
+    { id: "web", label: L("Diseño web"), icon: <Monitor /> },
+    { id: "focus", label: L("Modo enfoque"), icon: <Focus /> },
   ];
   const zoomTo = (z: number) => s.set("zoom", Math.max(50, Math.min(200, z)));
   return (
     <>
-      <Group label="Vistas">
+      <Group label={L("Vistas")}>
         {modes.map((m) => (
           <Big key={m.id} icon={m.icon} label={m.label} active={s.viewMode === m.id} onClick={() => s.set("viewMode", m.id)} />
         ))}
       </Group>
-      <Group label="Zoom">
-        <Big icon={<Minus />} label="Alejar" onClick={() => zoomTo(s.zoom - 10)} />
-        <Big icon={<span className="text-[15px] font-semibold">100%</span>} label="Restablecer" onClick={() => zoomTo(100)} />
-        <Big icon={<Plus />} label="Acercar" onClick={() => zoomTo(s.zoom + 10)} />
+      <Group label={L("Zoom")}>
+        <Big icon={<Minus />} label={L("Alejar")} onClick={() => zoomTo(s.zoom - 10)} />
+        <Big icon={<span className="text-[15px] font-semibold">100%</span>} label={L("Restablecer")} onClick={() => zoomTo(100)} />
+        <Big icon={<Plus />} label={L("Acercar")} onClick={() => zoomTo(s.zoom + 10)} />
       </Group>
-      <Group label="Ventana">
-        <Big icon={<PanelRight />} label="Panel de IA" active={panelOpen} onClick={() => setPanelOpen(!panelOpen)} />
+      <Group label={L("Ventana")}>
+        <Big icon={<PanelRight />} label={L("Panel de IA")} active={panelOpen} onClick={() => setPanelOpen(!panelOpen)} />
         <Big
           icon={<Maximize />}
-          label="Pantalla completa"
+          label={L("Pantalla completa")}
           onClick={() => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen())}
-          title="Pantalla completa (F11)"
+          title={L("Pantalla completa (F11)")}
         />
       </Group>
     </>
@@ -859,10 +860,10 @@ function AITab({ editor }: { editor: Editor }) {
   const { run, setPanelOpen, panelOpen } = useAI();
   return (
     <>
-      <Group label="Asistente">
+      <Group label={L("Asistente")}>
         <Big
           icon={<span className="grid size-[26px] place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white"><Sparkles className="size-4" /></span>}
-          label="Chat con IA"
+          label={L("Chat con IA")}
           active={panelOpen}
           onClick={() => setPanelOpen(!panelOpen)}
         />
@@ -870,28 +871,28 @@ function AITab({ editor }: { editor: Editor }) {
           <MenuTrigger asChild>
             <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
               <Wand2 className="size-[22px]" />
-              Todas las acciones
+              {L("Todas las acciones")}
             </button>
           </MenuTrigger>
           <AIActionsMenuContent editor={editor} />
         </Menu>
       </Group>
-      <Group label="Editar selección">
-        <Big icon={<Wand2 />} label="Mejorar" onClick={() => run(editor, "improve")} />
-        <Big icon={<SpellCheck />} label="Corregir" onClick={() => run(editor, "fix")} />
-        <Big icon={<Scissors />} label="Acortar" onClick={() => run(editor, "shorter")} />
-        <Big icon={<Plus />} label="Ampliar" onClick={() => run(editor, "longer")} />
+      <Group label={L("Editar selección")}>
+        <Big icon={<Wand2 />} label={L("Mejorar")} onClick={() => run(editor, "improve")} />
+        <Big icon={<SpellCheck />} label={L("Corregir")} onClick={() => run(editor, "fix")} />
+        <Big icon={<Scissors />} label={L("Acortar")} onClick={() => run(editor, "shorter")} />
+        <Big icon={<Plus />} label={L("Ampliar")} onClick={() => run(editor, "longer")} />
       </Group>
-      <Group label="Generar">
-        <Big icon={<Heading1 />} label="Resumir" onClick={() => run(editor, "summarize")} />
-        <Big icon={<ListChecks />} label="En lista" onClick={() => run(editor, "bullets")} />
-        <Big icon={<Table2 />} label="En tabla" onClick={() => run(editor, "table")} />
-        <Big icon={<Sparkles />} label="Continuar" onClick={() => run(editor, "continue")} />
+      <Group label={L("Generar")}>
+        <Big icon={<Heading1 />} label={L("Resumir")} onClick={() => run(editor, "summarize")} />
+        <Big icon={<ListChecks />} label={L("En lista")} onClick={() => run(editor, "bullets")} />
+        <Big icon={<Table2 />} label={L("En tabla")} onClick={() => run(editor, "table")} />
+        <Big icon={<Sparkles />} label={L("Continuar")} onClick={() => run(editor, "continue")} />
       </Group>
       <div className="flex items-center px-3 text-[12px] leading-snug text-muted">
-        Selecciona texto y elige una acción.
+        {L("Selecciona texto y elige una acción.")}
         <br />
-        Verás el resultado antes de aplicarlo.
+        {L("Verás el resultado antes de aplicarlo.")}
       </div>
     </>
   );
@@ -905,23 +906,23 @@ function TableTab({ editor }: { editor: Editor }) {
   const c = () => editor.chain().focus();
   return (
     <>
-      <Group label="Filas">
-        <Big icon={<ArrowUpToLine />} label="Insertar arriba" onClick={() => c().addRowBefore().run()} />
-        <Big icon={<ArrowDownToLine />} label="Insertar debajo" onClick={() => c().addRowAfter().run()} />
-        <Big icon={<Trash2 />} label="Eliminar fila" onClick={() => c().deleteRow().run()} />
+      <Group label={L("Filas")}>
+        <Big icon={<ArrowUpToLine />} label={L("Insertar arriba")} onClick={() => c().addRowBefore().run()} />
+        <Big icon={<ArrowDownToLine />} label={L("Insertar debajo")} onClick={() => c().addRowAfter().run()} />
+        <Big icon={<Trash2 />} label={L("Eliminar fila")} onClick={() => c().deleteRow().run()} />
       </Group>
-      <Group label="Columnas">
-        <Big icon={<ArrowLeftToLine />} label="Insertar a la izq." onClick={() => c().addColumnBefore().run()} />
-        <Big icon={<ArrowRightToLine />} label="Insertar a la der." onClick={() => c().addColumnAfter().run()} />
-        <Big icon={<Trash2 />} label="Eliminar columna" onClick={() => c().deleteColumn().run()} />
+      <Group label={L("Columnas")}>
+        <Big icon={<ArrowLeftToLine />} label={L("Insertar a la izq.")} onClick={() => c().addColumnBefore().run()} />
+        <Big icon={<ArrowRightToLine />} label={L("Insertar a la der.")} onClick={() => c().addColumnAfter().run()} />
+        <Big icon={<Trash2 />} label={L("Eliminar columna")} onClick={() => c().deleteColumn().run()} />
       </Group>
-      <Group label="Celdas">
-        <Big icon={<Merge />} label="Combinar" onClick={() => c().mergeCells().run()} />
-        <Big icon={<Split />} label="Dividir" onClick={() => c().splitCell().run()} />
-        <Big icon={<Columns3 />} label="Fila de encabezado" onClick={() => c().toggleHeaderRow().run()} />
+      <Group label={L("Celdas")}>
+        <Big icon={<Merge />} label={L("Combinar")} onClick={() => c().mergeCells().run()} />
+        <Big icon={<Split />} label={L("Dividir")} onClick={() => c().splitCell().run()} />
+        <Big icon={<Columns3 />} label={L("Fila de encabezado")} onClick={() => c().toggleHeaderRow().run()} />
       </Group>
-      <Group label="Tabla">
-        <Big icon={<Trash2 className="text-red-500" />} label="Eliminar tabla" onClick={() => c().deleteTable().run()} />
+      <Group label={L("Tabla")}>
+        <Big icon={<Trash2 className="text-red-500" />} label={L("Eliminar tabla")} onClick={() => c().deleteTable().run()} />
       </Group>
     </>
   );

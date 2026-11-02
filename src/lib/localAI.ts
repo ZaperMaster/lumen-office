@@ -2,6 +2,7 @@ import { CreateWebWorkerMLCEngine, deleteModelAllInfoInCache, type ChatCompletio
 import { refreshCached, useLocalAI, webgpuAvailable, type ChatMsg } from "@/lib/localModels";
 import { useSettings } from "@/store/settings";
 
+import { L } from "@/lib/i18n";
 /** Tamaño de contexto (tokens) con el que se carga el modelo. */
 const CONTEXT_WINDOW = 8192;
 
@@ -14,11 +15,11 @@ let busy = 0;
 
 function translateProgress(text: string): string {
   const mb = text.match(/(\d+)\s*MB/)?.[1];
-  if (/from cache|Loading model from/i.test(text)) return mb ? `Cargando el modelo desde el disco… ${mb} MB` : "Cargando el modelo desde el disco…";
-  if (/Fetching param|fetch params|fetched/i.test(text)) return mb ? `Descargando el modelo… ${mb} MB` : "Descargando el modelo…";
-  if (/Loading GPU shader|Compiling/i.test(text)) return "Preparando la tarjeta gráfica…";
-  if (/Finish loading/i.test(text)) return "Modelo listo";
-  return "Cargando el modelo…";
+  if (/from cache|Loading model from/i.test(text)) return mb ? L("Cargando el modelo desde el disco… {0} MB", mb) : L("Cargando el modelo desde el disco…");
+  if (/Fetching param|fetch params|fetched/i.test(text)) return mb ? L("Descargando el modelo… {0} MB", mb) : L("Descargando el modelo…");
+  if (/Loading GPU shader|Compiling/i.test(text)) return L("Preparando la tarjeta gráfica…");
+  if (/Finish loading/i.test(text)) return L("Modelo listo");
+  return L("Cargando el modelo…");
 }
 
 /* ------------------------------------------------------------------ */
@@ -67,7 +68,7 @@ useSettings.subscribe((s, prev) => {
 /** Carga (descargando si hace falta) el modelo indicado y devuelve el motor. */
 export async function ensureModel(modelId: string): Promise<WebWorkerMLCEngine> {
   if (!webgpuAvailable()) {
-    throw new Error("Este equipo no admite WebGPU. Usa Ollama o una API en Configuración → Inteligencia artificial.");
+    throw new Error(L("Este equipo no admite WebGPU. Usa Ollama o una API en Configuración → Inteligencia artificial."));
   }
   clearTimeout(idleTimer);
   if (engine && useLocalAI.getState().loadedModel === modelId) return engine;
@@ -77,7 +78,7 @@ export async function ensureModel(modelId: string): Promise<WebWorkerMLCEngine> 
     useLocalAI.setState({ status: "loading", progress: r.progress, message: translateProgress(r.text) });
 
   loadingModel = modelId;
-  useLocalAI.setState({ status: "loading", progress: 0, message: "Iniciando…", error: null });
+  useLocalAI.setState({ status: "loading", progress: 0, message: L("Iniciando…"), error: null });
   loading = (async () => {
     try {
       if (!engine) {
@@ -90,7 +91,7 @@ export async function ensureModel(modelId: string): Promise<WebWorkerMLCEngine> 
       useLocalAI.setState((s) => ({
         status: "ready",
         progress: 1,
-        message: "Modelo listo",
+        message: L("Modelo listo"),
         loadedModel: modelId,
         cached: { ...s.cached, [modelId]: true },
       }));
@@ -111,10 +112,10 @@ export async function ensureModel(modelId: string): Promise<WebWorkerMLCEngine> 
 }
 
 function friendlyError(msg: string): string {
-  if (/out of memory|OOM|allocate/i.test(msg)) return "La tarjeta gráfica no tiene memoria suficiente para este modelo. Elige uno más pequeño.";
-  if (/fetch|network|Failed to fetch/i.test(msg)) return "No se pudo descargar el modelo. Comprueba la conexión (solo hace falta la primera vez).";
-  if (/WebGPU|adapter/i.test(msg)) return "No se pudo usar la tarjeta gráfica (WebGPU). Prueba con Ollama o una API.";
-  return `Error del modelo local: ${msg}`;
+  if (/out of memory|OOM|allocate/i.test(msg)) return L("La tarjeta gráfica no tiene memoria suficiente para este modelo. Elige uno más pequeño.");
+  if (/fetch|network|Failed to fetch/i.test(msg)) return L("No se pudo descargar el modelo. Comprueba la conexión (solo hace falta la primera vez).");
+  if (/WebGPU|adapter/i.test(msg)) return L("No se pudo usar la tarjeta gráfica (WebGPU). Prueba con Ollama o una API.");
+  return L("Error del modelo local: {0}", msg);
 }
 
 export async function deleteLocalModel(modelId: string) {

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { L } from "@/lib/i18n";
 /*
  * Catálogo y estado de la IA local. Este módulo es ligero a propósito:
  * el motor (WebLLM) vive en localAI.ts y solo se carga al usar la IA.
@@ -19,9 +20,9 @@ export interface LocalModel {
 
 export const LOCAL_MODELS: LocalModel[] = [
   // El primero es el predeterminado. Solo modelos cuya licencia permite el uso comercial
-  { id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 1.5B", sizeGB: 0.9, vramGB: 1.6, hint: "Recomendado: rápido y ligero, va bien en casi cualquier equipo", license: "Apache 2.0" },
-  { id: "Qwen2.5-7B-Instruct-q4f16_1-MLC", name: "Qwen 2.5 · 7B", sizeGB: 4.3, vramGB: 5.1, hint: "Máxima calidad; necesita una gráfica con 6 GB o más", license: "Apache 2.0" },
-  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: "Llama 3.2 · 3B", sizeGB: 1.8, vramGB: 2.3, hint: "Alternativa de Meta, buena redacción", license: "Llama 3.2 Community License" },
+  { id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", name: L("Qwen 2.5 · 1.5B"), sizeGB: 0.9, vramGB: 1.6, hint: L("Recomendado: rápido y ligero, va bien en casi cualquier equipo"), license: "Apache 2.0" },
+  { id: "Qwen2.5-7B-Instruct-q4f16_1-MLC", name: L("Qwen 2.5 · 7B"), sizeGB: 4.3, vramGB: 5.1, hint: L("Máxima calidad; necesita una gráfica con 6 GB o más"), license: "Apache 2.0" },
+  { id: "Llama-3.2-3B-Instruct-q4f16_1-MLC", name: L("Llama 3.2 · 3B"), sizeGB: 1.8, vramGB: 2.3, hint: L("Alternativa de Meta, buena redacción"), license: "Llama 3.2 Community License" },
 ];
 
 export const DEFAULT_LOCAL_MODEL = LOCAL_MODELS[0].id;
@@ -44,9 +45,9 @@ export async function removeRetiredModels() {
 
 /** Modelos de Anthropic disponibles con la API propia. */
 export const ANTHROPIC_MODEL_OPTIONS = [
-  { id: "claude-opus-5-5", name: "Claude Opus 5.5 (máxima calidad)" },
-  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5 (rápido)" },
-  { id: "claude-haiku-5-5", name: "Claude Haiku 5.5 (el más económico)" },
+  { id: "claude-opus-5-5", name: L("Claude Opus 5.5 (máxima calidad)") },
+  { id: "claude-sonnet-5-5", name: L("Claude Sonnet 5.5 (rápido)") },
+  { id: "claude-haiku-5-5", name: L("Claude Haiku 5.5 (el más económico)") },
 ];
 
 export interface ChatMsg {

@@ -2,6 +2,7 @@ import { AlertTriangle } from "lucide-react";
 import { useConfirm } from "@/store/confirm";
 import { Button, Dialog } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** «¿Guardar los cambios?» al salir de un documento o cerrar la ventana, como en Word. */
 export function UnsavedDialog() {
   const { open, files, answer } = useConfirm();
@@ -10,16 +11,16 @@ export function UnsavedDialog() {
     <Dialog
       open={open}
       onOpenChange={(o) => !o && answer("cancel")}
-      title={single ? "¿Guardar los cambios?" : `¿Guardar los cambios en ${files.length} archivos?`}
+      title={single ? L("¿Guardar los cambios?") : L("¿Guardar los cambios en {0} archivos?", files.length)}
       className="w-[min(92vw,460px)]"
       footer={
         <>
           <Button variant="ghost" onClick={() => answer("cancel")}>
-            Cancelar
+            {L("Cancelar")}
           </Button>
-          <Button onClick={() => answer("discard")}>No guardar</Button>
+          <Button onClick={() => answer("discard")}>{L("No guardar")}</Button>
           <Button variant="primary" autoFocus onClick={() => answer("save")}>
-            Guardar
+            {L("Guardar")}
           </Button>
         </>
       }
@@ -29,11 +30,11 @@ export function UnsavedDialog() {
         <div>
           {single ? (
             <p>
-              Hay cambios que no se han guardado en <b>«{files[0]}»</b>.
+              {L("Hay cambios que no se han guardado en")}{" "} <b>«{files[0]}»</b>.
             </p>
           ) : (
             <>
-              <p className="mb-1.5">Estos archivos tienen cambios sin guardar:</p>
+              <p className="mb-1.5">{L("Estos archivos tienen cambios sin guardar:")}</p>
               <ul className="list-disc pl-5">
                 {files.map((f) => (
                   <li key={f}>
@@ -44,7 +45,7 @@ export function UnsavedDialog() {
             </>
           )}
           <p className="mt-2 text-[12.5px] text-muted">
-            Si eliges «No guardar», el archivo del disco se queda como estaba. Los cambios siguen dentro de Lumen.
+            {L("Si eliges «No guardar», el archivo del disco se queda como estaba. Los cambios siguen dentro de Lumen.")}
           </p>
         </div>
       </div>

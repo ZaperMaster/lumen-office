@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import type { FontDef } from "@/lib/fonts";
 import { DEFAULT_LOCAL_MODEL, LOCAL_MODELS } from "@/lib/localModels";
 
+import { L } from "@/lib/i18n";
 export type PageSize = "A4" | "Letter" | "Legal" | "A5";
 export type Orientation = "portrait" | "landscape";
 export type Margins = "normal" | "narrow" | "moderate" | "wide";
@@ -136,18 +137,18 @@ export const useSettings = create<Settings & SettingsActions>()(
 
 /** Tamaños de página en milímetros (vertical). */
 export const PAGE_SIZES: Record<PageSize, { label: string; w: number; h: number }> = {
-  A4: { label: "A4 (21 × 29,7 cm)", w: 210, h: 297 },
-  Letter: { label: "Carta (21,6 × 27,9 cm)", w: 215.9, h: 279.4 },
-  Legal: { label: "Oficio (21,6 × 35,6 cm)", w: 215.9, h: 355.6 },
-  A5: { label: "A5 (14,8 × 21 cm)", w: 148, h: 210 },
+  A4: { label: L("A4 (21 × 29,7 cm)"), w: 210, h: 297 },
+  Letter: { label: L("Carta (21,6 × 27,9 cm)"), w: 215.9, h: 279.4 },
+  Legal: { label: L("Oficio (21,6 × 35,6 cm)"), w: 215.9, h: 355.6 },
+  A5: { label: L("A5 (14,8 × 21 cm)"), w: 148, h: 210 },
 };
 
 /** Márgenes en milímetros: [vertical, horizontal]. */
 export const MARGINS: Record<Margins, { label: string; v: number; h: number }> = {
-  normal: { label: "Normal (2,5 cm)", v: 25, h: 25 },
-  narrow: { label: "Estrecho (1,27 cm)", v: 12.7, h: 12.7 },
-  moderate: { label: "Moderado (2,54 / 1,91 cm)", v: 25.4, h: 19.1 },
-  wide: { label: "Ancho (2,54 / 5,08 cm)", v: 25.4, h: 50.8 },
+  normal: { label: L("Normal (2,5 cm)"), v: 25, h: 25 },
+  narrow: { label: L("Estrecho (1,27 cm)"), v: 12.7, h: 12.7 },
+  moderate: { label: L("Moderado (2,54 / 1,91 cm)"), v: 25.4, h: 19.1 },
+  wide: { label: L("Ancho (2,54 / 5,08 cm)"), v: 25.4, h: 50.8 },
 };
 
 export const MM_TO_PX = 96 / 25.4;

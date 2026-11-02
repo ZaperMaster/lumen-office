@@ -10,6 +10,7 @@ import { ChartSvg, type ChartData } from "@/components/sheet/Chart";
 import { DocChartView } from "@/components/editor/DocChartView";
 import type { ChartType } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /*
  * Elementos de documento como en Word: gráficos, cuadros de texto,
  * notas al pie y texto en columnas.
@@ -38,7 +39,7 @@ export interface DocChart extends ChartData {
 
 export const SAMPLE_CHART: DocChart = {
   type: "column",
-  title: "Ventas por trimestre",
+  title: L("Ventas por trimestre"),
   width: 560,
   legend: true,
   categories: ["T1", "T2", "T3", "T4"],
@@ -107,10 +108,10 @@ export const DocChartNode = Node.create({
 export type CalloutKind = "box" | "info" | "tip" | "warning";
 
 export const CALLOUTS: { id: CalloutKind; label: string; fill: string; border: string }[] = [
-  { id: "box", label: "Cuadro de texto", fill: "FFFFFF", border: "9AA0AE" },
-  { id: "info", label: "Nota informativa", fill: "E8F0FE", border: "4F7CFF" },
-  { id: "tip", label: "Consejo", fill: "E6F6EF", border: "20B486" },
-  { id: "warning", label: "Atención", fill: "FEF3E2", border: "F59E0B" },
+  { id: "box", label: L("Cuadro de texto"), fill: "FFFFFF", border: "9AA0AE" },
+  { id: "info", label: L("Nota informativa"), fill: "E8F0FE", border: "4F7CFF" },
+  { id: "tip", label: L("Consejo"), fill: "E6F6EF", border: "20B486" },
+  { id: "warning", label: L("Atención"), fill: "FEF3E2", border: "F59E0B" },
 ];
 
 export const Callout = Node.create({
@@ -269,10 +270,10 @@ export const Footnote = Node.create({
         pop.style.left = `${Math.min(rect.left, window.innerWidth - 320)}px`;
         pop.style.top = `${rect.bottom + 6}px`;
         const label = document.createElement("div");
-        label.textContent = "Nota al pie";
+        label.textContent = L("Nota al pie");
         const area = document.createElement("textarea");
         area.value = current.attrs.text;
-        area.placeholder = "Escribe la nota (Intro para guardar)";
+        area.placeholder = L("Escribe la nota (Intro para guardar)");
         pop.append(label, area);
         document.body.appendChild(pop);
         area.focus();

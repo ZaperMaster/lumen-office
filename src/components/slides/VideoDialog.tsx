@@ -8,6 +8,7 @@ import { safeFileName } from "@/lib/fileName";
 import { useApp } from "@/store/app";
 import { Button, Dialog } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Guardar la presentación como vídeo (MP4), con opciones y progreso. */
 export function VideoDialog({ deck, title, onClose }: { deck: Deck; title: string; onClose: () => void }) {
   const toast = useApp((s) => s.toast);
@@ -19,26 +20,26 @@ export function VideoDialog({ deck, title, onClose }: { deck: Deck; title: strin
   const start = async () => {
     const ctrl = new AbortController();
     abort.current = ctrl;
-    setProgress({ p: 0, label: "Empezando…" });
+    setProgress({ p: 0, label: L("Empezando…") });
     try {
       const { blob, ext } = await exportVideo(deck, opts, (p, label) => setProgress({ p, label }), ctrl.signal);
       const name = `${safeFileName(title || "Presentación")}.${ext}`;
       if (!isDesktop()) {
         saveAs(blob, name);
-        toast(`Descargado «${name}»`, "success");
+        toast(L("Descargado «{0}»", name), "success");
       } else {
         const { save } = await import("@tauri-apps/plugin-dialog");
-        const picked = await save({ title: "Guardar el vídeo", defaultPath: name, filters: [{ name: "Vídeo", extensions: [ext] }] });
+        const picked = await save({ title: L("Guardar el vídeo"), defaultPath: name, filters: [{ name: L("Vídeo"), extensions: [ext] }] });
         if (picked) {
           const path = picked.toLowerCase().endsWith(`.${ext}`) ? picked : `${picked}.${ext}`;
           const { writeFile } = await import("@tauri-apps/plugin-fs");
           await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
-          toast("Vídeo guardado", "success", { detail: path, action: { label: "Mostrar en la carpeta", onClick: () => void revealInFolder(path).catch(() => {}) } });
+          toast(L("Vídeo guardado"), "success", { detail: path, action: { label: L("Mostrar en la carpeta"), onClick: () => void revealInFolder(path).catch(() => {}) } });
         }
       }
       onClose();
     } catch (e) {
-      if ((e as Error).name !== "AbortError") toast("No se pudo crear el vídeo", "error", { detail: String(e) });
+      if ((e as Error).name !== "AbortError") toast(L("No se pudo crear el vídeo"), "error", { detail: String(e) });
       setProgress(null);
     }
   };
@@ -52,15 +53,15 @@ export function VideoDialog({ deck, title, onClose }: { deck: Deck; title: strin
         abort.current?.abort();
         onClose();
       }}
-      title="Guardar como vídeo"
-      description="Cada diapositiva y cada animación aparecen una tras otra, con un fundido."
+      title={L("Guardar como vídeo")}
+      description={L("Cada diapositiva y cada animación aparecen una tras otra, con un fundido.")}
       footer={
         busy ? (
-          <Button variant="ghost" onClick={() => abort.current?.abort()}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => abort.current?.abort()}>{L("Cancelar")}</Button>
         ) : (
           <>
-            <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-            <Button variant="primary" icon={<Film />} onClick={() => void start()}>Crear vídeo</Button>
+            <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+            <Button variant="primary" icon={<Film />} onClick={() => void start()}>{L("Crear vídeo")}</Button>
           </>
         )
       }
@@ -71,31 +72,31 @@ export function VideoDialog({ deck, title, onClose }: { deck: Deck; title: strin
           <div className="h-2 overflow-hidden rounded-full bg-surface-2">
             <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.round(progress.p * 100)}%` }} />
           </div>
-          <p className="mt-3 text-[12px] text-muted">El vídeo se graba en tiempo real: tarda lo mismo que dura. Puedes seguir usando el equipo.</p>
+          <p className="mt-3 text-[12px] text-muted">{L("El vídeo se graba en tiempo real: tarda lo mismo que dura. Puedes seguir usando el equipo.")}</p>
         </div>
       ) : (
         <div className="grid gap-3 text-[13px]">
           <label className="flex items-center justify-between gap-3">
-            Tiempo en cada diapositiva
+            {L("Tiempo en cada diapositiva")}
             <select className="h-8 rounded-md border border-border bg-surface px-2" value={opts.perSlide} onChange={(e) => setOpts({ ...opts, perSlide: Number(e.target.value) })}>
-              {[3, 5, 8, 10, 15].map((s) => <option key={s} value={s}>{s} segundos</option>)}
+              {[3, 5, 8, 10, 15].map((s) => <option key={s} value={s}>{s} {" "}{L("segundos")}</option>)}
             </select>
           </label>
           <label className="flex items-center justify-between gap-3">
-            Tiempo en cada animación
+            {L("Tiempo en cada animación")}
             <select className="h-8 rounded-md border border-border bg-surface px-2" value={opts.perStep} onChange={(e) => setOpts({ ...opts, perStep: Number(e.target.value) })}>
-              {[1, 1.5, 2, 3].map((s) => <option key={s} value={s}>{String(s).replace(".", ",")} segundos</option>)}
+              {[1, 1.5, 2, 3].map((s) => <option key={s} value={s}>{String(s).replace(".", ",")} {" "}{L("segundos")}</option>)}
             </select>
           </label>
           <label className="flex items-center justify-between gap-3">
-            Calidad
+            {L("Calidad")}
             <select className="h-8 rounded-md border border-border bg-surface px-2" value={opts.height} onChange={(e) => setOpts({ ...opts, height: Number(e.target.value) as 720 | 1080 })}>
-              <option value={1080}>Full HD (1920 × 1080)</option>
-              <option value={720}>HD (1280 × 720)</option>
+              <option value={1080}>{L("Full HD (1920 × 1080)")}</option>
+              <option value={720}>{L("HD (1280 × 720)")}</option>
             </select>
           </label>
           <p className="text-[12px] text-muted">
-            Durará unos {seconds >= 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60 ? `${seconds % 60} s` : ""}` : `${seconds} segundos`} (más las animaciones).
+            {L("Durará unos")}{" "} {seconds >= 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60 ? `${seconds % 60} s` : ""}` : `${seconds} segundos`} {" "}{L("(más las animaciones).")}
           </p>
         </div>
       )}

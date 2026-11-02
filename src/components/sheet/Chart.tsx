@@ -3,16 +3,17 @@ import type { Evaluator } from "@/lib/sheet/formula";
 import { formatValue } from "@/lib/sheet/format";
 import { parseRange, type ChartSpec, type ChartType } from "@/lib/sheet/model";
 
+import { L, uiLocale } from "@/lib/i18n";
 /* Gráficos dibujados en SVG a partir de un rango de la hoja. */
 
 export const CHART_TYPES: { id: ChartType; label: string }[] = [
-  { id: "column", label: "Columnas" },
-  { id: "bar", label: "Barras" },
-  { id: "line", label: "Líneas" },
-  { id: "area", label: "Área" },
-  { id: "pie", label: "Circular" },
-  { id: "doughnut", label: "Anillo" },
-  { id: "scatter", label: "Dispersión" },
+  { id: "column", label: L("Columnas") },
+  { id: "bar", label: L("Barras") },
+  { id: "line", label: L("Líneas") },
+  { id: "area", label: L("Área") },
+  { id: "pie", label: L("Circular") },
+  { id: "doughnut", label: L("Anillo") },
+  { id: "scatter", label: L("Dispersión") },
 ];
 
 export const CHART_COLORS = ["#4f7cff", "#20b486", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
@@ -53,7 +54,7 @@ export function chartData(spec: Pick<ChartSpec, "range" | "labels">, ev: Evaluat
   const series = [];
   for (let c = first; c < grid[0].length; c++) {
     series.push({
-      name: hasHeader ? String(grid[0][c] ?? `Serie ${c - first + 1}`) : `Serie ${c - first + 1}`,
+      name: hasHeader ? String(grid[0][c] ?? `Serie ${c - first + 1}`) : L("Serie {0}", c - first + 1),
       values: body.map((r) => (typeof r[c] === "number" ? (r[c] as number) : 0)),
     });
   }
@@ -78,9 +79,9 @@ function niceScale(min: number, max: number, ticks = 5) {
 
 const short = (n: number) => {
   const a = Math.abs(n);
-  if (a >= 1e6) return `${(n / 1e6).toLocaleString("es-ES", { maximumFractionDigits: 1 })} M`;
-  if (a >= 1e4) return `${(n / 1e3).toLocaleString("es-ES", { maximumFractionDigits: 1 })} mil`;
-  return n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
+  if (a >= 1e6) return `${(n / 1e6).toLocaleString(uiLocale(), { maximumFractionDigits: 1 })} M`;
+  if (a >= 1e4) return `${(n / 1e3).toLocaleString(uiLocale(), { maximumFractionDigits: 1 })} mil`;
+  return n.toLocaleString(uiLocale(), { maximumFractionDigits: 2 });
 };
 
 export function ChartSvg({ type, data, width, height, title, legend = true }: { type: ChartType; data: ChartData; width: number; height: number; title?: string; legend?: boolean }) {
@@ -94,7 +95,7 @@ export function ChartSvg({ type, data, width, height, title, legend = true }: { 
     if (!series.length || !categories.length) {
       return (
         <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13} fill="currentColor" opacity={0.5}>
-          Selecciona un rango con números
+          {L("Selecciona un rango con números")}
         </text>
       );
     }

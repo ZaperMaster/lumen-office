@@ -28,14 +28,15 @@ import {
   PopoverTrigger, Tooltip, cn,
 } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 export const NOTE_COLORS: { id: string | null; name: string; swatch: string }[] = [
-  { id: null, name: "Sin color", swatch: "transparent" },
-  { id: "yellow", name: "Amarillo", swatch: "#f6c445" },
-  { id: "green", name: "Verde", swatch: "#4cc38a" },
-  { id: "blue", name: "Azul", swatch: "#4f9dff" },
-  { id: "purple", name: "Morado", swatch: "#9b7bff" },
-  { id: "pink", name: "Rosa", swatch: "#f06595" },
-  { id: "orange", name: "Naranja", swatch: "#ff922b" },
+  { id: null, name: L("Sin color"), swatch: "transparent" },
+  { id: "yellow", name: L("Amarillo"), swatch: "#f6c445" },
+  { id: "green", name: L("Verde"), swatch: "#4cc38a" },
+  { id: "blue", name: L("Azul"), swatch: "#4f9dff" },
+  { id: "purple", name: L("Morado"), swatch: "#9b7bff" },
+  { id: "pink", name: L("Rosa"), swatch: "#f06595" },
+  { id: "orange", name: L("Naranja"), swatch: "#ff922b" },
 ];
 const swatch = (id: string | null) => NOTE_COLORS.find((c) => c.id === id)?.swatch ?? "transparent";
 
@@ -85,26 +86,26 @@ export default function NotesApp() {
     <div className="flex h-full bg-bg">
       <aside className="flex shrink-0 flex-col border-r border-border bg-surface" style={{ width }}>
         <div data-tauri-drag-region className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-2">
-          <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
+          <IconButton label={L("Volver al inicio")} onClick={() => navigate({ name: "home" })}>
             <ArrowLeft className="size-4" />
           </IconButton>
           <span className="grid size-7 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white">
             <StickyNote className="size-4" />
           </span>
-          <span className="text-[14px] font-semibold">Notas</span>
+          <span className="text-[14px] font-semibold">{L("Notas")}</span>
           <Button size="sm" variant="primary" className="ml-auto" icon={<Plus className="size-3.5" />} onClick={create}>
-            Nueva
+            {L("Nueva")}
           </Button>
         </div>
         <div className="space-y-2 border-b border-border p-3">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar notas…" className="h-8 pl-8 text-[13px]" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Buscar notas…")} className="h-8 pl-8 text-[13px]" />
           </div>
           <div className="flex flex-wrap gap-1">
-            <Chip active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })}>Todas</Chip>
-            <Chip active={filter.kind === "pinned"} onClick={() => setFilter({ kind: "pinned" })}>Fijadas</Chip>
-            <Chip active={filter.kind === "favorite"} onClick={() => setFilter({ kind: "favorite" })}>Favoritas</Chip>
+            <Chip active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })}>{L("Todas")}</Chip>
+            <Chip active={filter.kind === "pinned"} onClick={() => setFilter({ kind: "pinned" })}>{L("Fijadas")}</Chip>
+            <Chip active={filter.kind === "favorite"} onClick={() => setFilter({ kind: "favorite" })}>{L("Favoritas")}</Chip>
             {tags.map((t) => (
               <Chip key={t} active={filter.kind === "tag" && filter.tag === t} onClick={() => setFilter({ kind: "tag", tag: t })}>
                 #{t}
@@ -115,9 +116,9 @@ export default function NotesApp() {
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {notes && visible.length === 0 && (
             <div className="px-4 py-10 text-center text-[13px] text-muted">
-              {q || filter.kind !== "all" ? "No hay notas que coincidan." : "Aún no tienes notas."}
+              {q || filter.kind !== "all" ? L("No hay notas que coincidan.") : L("Aún no tienes notas.")}
               <div className="mt-3">
-                <Button size="sm" variant="outline" icon={<Plus className="size-3.5" />} onClick={create}>Crear nota</Button>
+                <Button size="sm" variant="outline" icon={<Plus className="size-3.5" />} onClick={create}>{L("Crear nota")}</Button>
               </div>
             </div>
           )}
@@ -136,7 +137,7 @@ export default function NotesApp() {
                 <span className="truncate text-[13.5px] font-semibold">{displayTitle(n)}</span>
                 {n.favorite === 1 && <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" />}
               </div>
-              <div className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-muted">{n.text.replace(/\n+/g, " ").slice(0, 160) || "Sin contenido"}</div>
+              <div className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-muted">{n.text.replace(/\n+/g, " ").slice(0, 160) || L("Sin contenido")}</div>
               <div className="mt-1 flex items-center gap-2 text-[11px] text-muted">
                 <span>{relativeTime(n.updatedAt)}</span>
                 {n.tags.slice(0, 3).map((t) => <span key={t} className="text-accent">#{t}</span>)}
@@ -145,7 +146,7 @@ export default function NotesApp() {
           ))}
         </div>
         <div className="border-t border-border px-3 py-2 text-[11.5px] text-muted">
-          {notes?.length ?? 0} notas
+          {notes?.length ?? 0} {" "}{L("notas")}
         </div>
       </aside>
 
@@ -156,8 +157,8 @@ export default function NotesApp() {
           <div className="grid h-full place-items-center text-center text-muted">
             <div>
               <StickyNote className="mx-auto mb-3 size-10 opacity-30" />
-              <p className="mb-3">Selecciona una nota o crea una nueva</p>
-              <Button variant="primary" icon={<Plus className="size-4" />} onClick={create}>Nueva nota</Button>
+              <p className="mb-3">{L("Selecciona una nota o crea una nueva")}</p>
+              <Button variant="primary" icon={<Plus className="size-4" />} onClick={create}>{L("Nueva nota")}</Button>
             </div>
           </div>
         )}
@@ -186,7 +187,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 function NoteEditor({ note }: { note: DocRecord }) {
   const [initial] = useState(note.content);
-  const { editor, saveState, saveNow } = useDocEditor(note.id, initial, "Escribe tu nota…");
+  const { editor, saveState, saveNow } = useDocEditor(note.id, initial, L("Escribe tu nota…"));
   // Las notas no tienen archivo, pero al cerrar la ventana hay que terminar de guardarlas
   useEffect(
     () => registerOpenDoc({ id: note.id, title: () => note.title, path: () => null, dirty: () => false, save: async () => true, flush: saveNow }),
@@ -215,7 +216,7 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
 
   const remove = async () => {
     await trashDoc(note.id);
-    toast("Nota movida a la papelera");
+    toast(L("Nota movida a la papelera"));
     navigate({ name: "notes" });
   };
 
@@ -247,19 +248,19 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
                   editor.commands.setTextSelection(1);
                 }
               }}
-              placeholder="Título"
+              placeholder={L("Título")}
               className="mb-2 w-full bg-transparent text-[2em] font-bold tracking-tight text-paper-text outline-none placeholder:text-paper-text/30"
               style={{ fontFamily: "inherit" }}
             />
             <div className="no-print mb-5 flex flex-wrap items-center gap-1.5 text-[12px] text-muted" style={{ fontFamily: "var(--ui-font)" }}>
-              <span>Editado {relativeTime(note.updatedAt)}</span>
+              <span>{L("Editado")}{" "} {relativeTime(note.updatedAt)}</span>
               <span>·</span>
               <SaveIndicator state={saveState} />
               <span>·</span>
               {note.tags.map((t) => (
                 <span key={t} className="group flex items-center gap-0.5 rounded-full bg-accent-soft px-2 py-0.5 text-accent">
                   #{t}
-                  <button onClick={() => updateDoc(note.id, { tags: note.tags.filter((x) => x !== t) })} className="opacity-50 hover:opacity-100" aria-label={`Quitar etiqueta ${t}`}>
+                  <button onClick={() => updateDoc(note.id, { tags: note.tags.filter((x) => x !== t) })} className="opacity-50 hover:opacity-100" aria-label={L("Quitar etiqueta {0}", t)}>
                     <X className="size-3" />
                   </button>
                 </span>
@@ -276,7 +277,7 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
                     }
                   }}
                   onBlur={addTag}
-                  placeholder="Añadir etiqueta"
+                  placeholder={L("Añadir etiqueta")}
                   className="w-24 bg-transparent outline-none placeholder:text-muted/70"
                 />
               </span>
@@ -309,9 +310,9 @@ function NoteActions({ note, editor, title, onRemove }: { note: DocRecord; edito
   return (
     <div className="flex shrink-0 items-center gap-0.5 px-2">
       <Popover>
-        <Tooltip label="Color de la nota">
+        <Tooltip label={L("Color de la nota")}>
           <PopoverTrigger asChild>
-            <button className="grid size-8 place-items-center rounded-md hover:bg-surface-2" aria-label="Color de la nota">
+            <button className="grid size-8 place-items-center rounded-md hover:bg-surface-2" aria-label={L("Color de la nota")}>
               <Palette className="size-4" />
             </button>
           </PopoverTrigger>
@@ -329,18 +330,18 @@ function NoteActions({ note, editor, title, onRemove }: { note: DocRecord; edito
           ))}
         </PopoverContent>
       </Popover>
-      <IconButton label={note.pinned ? "Desfijar" : "Fijar"} active={note.pinned === 1} onClick={() => updateDoc(note.id, { pinned: note.pinned ? 0 : 1 })}>
+      <IconButton label={note.pinned ? L("Desfijar") : L("Fijar")} active={note.pinned === 1} onClick={() => updateDoc(note.id, { pinned: note.pinned ? 0 : 1 })}>
         {note.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
       </IconButton>
-      <IconButton label={note.favorite ? "Quitar de favoritas" : "Favorita"} onClick={() => updateDoc(note.id, { favorite: note.favorite ? 0 : 1 })}>
+      <IconButton label={note.favorite ? L("Quitar de favoritas") : L("Favorita")} onClick={() => updateDoc(note.id, { favorite: note.favorite ? 0 : 1 })}>
         <Star className={cn("size-4", note.favorite === 1 && "fill-amber-400 text-amber-400")} />
       </IconButton>
       <Button size="sm" variant={panelOpen ? "secondary" : "primary"} className="ml-1" icon={<Sparkles className="size-3.5" />} onClick={() => setPanelOpen(!panelOpen)}>
-        IA
+        {L("IA")}
       </Button>
       <Menu>
         <MenuTrigger asChild>
-          <button className="grid size-8 place-items-center rounded-md hover:bg-surface-2" aria-label="Más opciones">
+          <button className="grid size-8 place-items-center rounded-md hover:bg-surface-2" aria-label={L("Más opciones")}>
             <MoreHorizontal className="size-4" />
           </button>
         </MenuTrigger>
@@ -352,14 +353,14 @@ function NoteActions({ note, editor, title, onRemove }: { note: DocRecord; edito
               navigate({ name: "document", id: note.id });
             }}
           >
-            Abrir como documento
+            {L("Abrir como documento")}
           </MenuItem>
-          <MenuItem icon={<Copy />} onSelect={async () => { const d = await duplicateDoc(note.id); if (d) navigate({ name: "notes", id: d.id }); }}>Duplicar</MenuItem>
-          <MenuItem icon={<FileDown />} onSelect={() => exportAs("docx")}>Exportar a Word (.docx)</MenuItem>
-          <MenuItem icon={<FileDown />} onSelect={() => exportAs("md")}>Exportar a Markdown (.md)</MenuItem>
-          <MenuItem icon={<FileDown />} onSelect={() => exportAs("txt")}>Exportar a texto (.txt)</MenuItem>
+          <MenuItem icon={<Copy />} onSelect={async () => { const d = await duplicateDoc(note.id); if (d) navigate({ name: "notes", id: d.id }); }}>{L("Duplicar")}</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("docx")}>{L("Exportar a Word (.docx)")}</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("md")}>{L("Exportar a Markdown (.md)")}</MenuItem>
+          <MenuItem icon={<FileDown />} onSelect={() => exportAs("txt")}>{L("Exportar a texto (.txt)")}</MenuItem>
           <MenuSeparator />
-          <MenuItem icon={<Trash2 />} danger onSelect={onRemove}>Mover a la papelera</MenuItem>
+          <MenuItem icon={<Trash2 />} danger onSelect={onRemove}>{L("Mover a la papelera")}</MenuItem>
         </MenuContent>
       </Menu>
     </div>
@@ -379,8 +380,8 @@ function NoteToolbar({ editor }: { editor: Editor }) {
         if (e.deltaY) e.currentTarget.scrollLeft += e.deltaY;
       }}
     >
-      <IconButton size="sm" label="Deshacer" shortcut="Ctrl+Z" disabled={!f.canUndo} onClick={() => c().undo().run()}><Undo2 className="size-4" /></IconButton>
-      <IconButton size="sm" label="Rehacer" shortcut="Ctrl+Y" disabled={!f.canRedo} onClick={() => c().redo().run()}><Redo2 className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Deshacer")} shortcut="Ctrl+Z" disabled={!f.canUndo} onClick={() => c().undo().run()}><Undo2 className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Rehacer")} shortcut="Ctrl+Y" disabled={!f.canRedo} onClick={() => c().redo().run()}><Redo2 className="size-4" /></IconButton>
       <span className="mx-1 h-5 w-px bg-border" />
       <select
         value={block}
@@ -390,29 +391,29 @@ function NoteToolbar({ editor }: { editor: Editor }) {
           else c().setHeading({ level: Number(v.slice(1)) as 1 | 2 | 3 }).run();
         }}
         className="h-7 rounded-md border border-border bg-surface px-1.5 text-[12.5px]"
-        aria-label="Estilo de párrafo"
+        aria-label={L("Estilo de párrafo")}
       >
-        <option value="p">Texto</option>
-        <option value="h1">Título 1</option>
-        <option value="h2">Título 2</option>
-        <option value="h3">Título 3</option>
+        <option value="p">{L("Texto")}</option>
+        <option value="h1">{L("Título 1")}</option>
+        <option value="h2">{L("Título 2")}</option>
+        <option value="h3">{L("Título 3")}</option>
       </select>
       <span className="mx-1 h-5 w-px bg-border" />
-      <IconButton size="sm" label="Negrita" shortcut="Ctrl+B" active={f.bold} onClick={() => c().toggleBold().run()}><Bold className="size-4" /></IconButton>
-      <IconButton size="sm" label="Cursiva" shortcut="Ctrl+I" active={f.italic} onClick={() => c().toggleItalic().run()}><Italic className="size-4" /></IconButton>
-      <IconButton size="sm" label="Subrayado" shortcut="Ctrl+U" active={f.underline} onClick={() => c().toggleUnderline().run()}><Underline className="size-4" /></IconButton>
-      <IconButton size="sm" label="Tachado" active={f.strike} onClick={() => c().toggleStrike().run()}><Strikethrough className="size-4" /></IconButton>
-      <IconButton size="sm" label="Resaltar" active={f.highlight} onClick={() => c().toggleHighlight({ color: "#fff59d" }).run()}><Highlighter className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Negrita")} shortcut="Ctrl+B" active={f.bold} onClick={() => c().toggleBold().run()}><Bold className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Cursiva")} shortcut="Ctrl+I" active={f.italic} onClick={() => c().toggleItalic().run()}><Italic className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Subrayado")} shortcut="Ctrl+U" active={f.underline} onClick={() => c().toggleUnderline().run()}><Underline className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Tachado")} active={f.strike} onClick={() => c().toggleStrike().run()}><Strikethrough className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Resaltar")} active={f.highlight} onClick={() => c().toggleHighlight({ color: "#fff59d" }).run()}><Highlighter className="size-4" /></IconButton>
       <span className="mx-1 h-5 w-px bg-border" />
-      <IconButton size="sm" label="Lista" active={f.bulletList} onClick={() => c().toggleBulletList().run()}><List className="size-4" /></IconButton>
-      <IconButton size="sm" label="Lista numerada" active={f.orderedList} onClick={() => c().toggleOrderedList().run()}><ListOrdered className="size-4" /></IconButton>
-      <IconButton size="sm" label="Tareas" active={f.taskList} onClick={() => c().toggleTaskList().run()}><CheckSquare className="size-4" /></IconButton>
-      <IconButton size="sm" label="Cita" active={f.blockquote} onClick={() => c().toggleBlockquote().run()}><Quote className="size-4" /></IconButton>
-      <IconButton size="sm" label="Código" active={f.codeBlock} onClick={() => c().toggleCodeBlock().run()}><Code className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Lista")} active={f.bulletList} onClick={() => c().toggleBulletList().run()}><List className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Lista numerada")} active={f.orderedList} onClick={() => c().toggleOrderedList().run()}><ListOrdered className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Tareas")} active={f.taskList} onClick={() => c().toggleTaskList().run()}><CheckSquare className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Cita")} active={f.blockquote} onClick={() => c().toggleBlockquote().run()}><Quote className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Código")} active={f.codeBlock} onClick={() => c().toggleCodeBlock().run()}><Code className="size-4" /></IconButton>
       <span className="mx-1 h-5 w-px bg-border" />
       <LinkButton editor={editor} />
-      <IconButton size="sm" label="Imagen" onClick={() => fileRef.current?.click()}><ImagePlus className="size-4" /></IconButton>
-      <IconButton size="sm" label="Tabla" onClick={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Imagen")} onClick={() => fileRef.current?.click()}><ImagePlus className="size-4" /></IconButton>
+      <IconButton size="sm" label={L("Tabla")} onClick={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 className="size-4" /></IconButton>
       <input
         ref={fileRef}
         type="file"
@@ -429,7 +430,7 @@ function NoteToolbar({ editor }: { editor: Editor }) {
         <MenuTrigger asChild>
           <button className="flex h-7 items-center gap-1.5 rounded-md px-2 text-[12.5px] font-medium text-accent hover:bg-accent-soft">
             <Sparkles className="size-3.5" />
-            Escribir con IA
+            {L("Escribir con IA")}
           </button>
         </MenuTrigger>
         <AIActionsMenuContent editor={editor} />

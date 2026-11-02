@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Cpu, Download, Eye, EyeOff, HardDrive, KeyRound, Keyboard, MemoryStick, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw, BadgeCheck, ShoppingCart } from "lucide-react";
+import { Check, Cpu, Download, Eye, EyeOff, HardDrive, KeyRound, Keyboard, MemoryStick, Server, Trash2, Info, Palette, PenLine, FileText, Sparkles, User, Upload, RotateCcw, BadgeCheck, ShoppingCart, Languages } from "lucide-react";
 import { RDialogRoot } from "@/components/ui/dialogPrimitives";
 import { THEMES, ACCENT_PRESETS, getTheme } from "@/lib/themes";
 import { LANGUAGES } from "@/lib/ai";
@@ -15,25 +15,28 @@ import { Button, Dialog, Input, Kbd, Segmented, Slider, Switch, cn } from "@/com
 import { Logo } from "@/components/Logo";
 import { useLicense } from "@/lib/license";
 import { LicenseKeyForm, buyLicense } from "@/components/LicenseScreen";
+import { LanguageList } from "@/components/LanguagePicker";
 
+import { L, uiLocale } from "@/lib/i18n";
 const TABS = [
-  { id: "appearance", label: "Apariencia", icon: Palette },
-  { id: "editor", label: "Editor", icon: PenLine },
-  { id: "page", label: "Página", icon: FileText },
-  { id: "ai", label: "Inteligencia artificial", icon: Sparkles },
-  { id: "general", label: "General y datos", icon: User },
-  { id: "license", label: "Licencia", icon: KeyRound },
-  { id: "shortcuts", label: "Atajos de teclado", icon: Keyboard },
-  { id: "about", label: "Acerca de", icon: Info },
+  { id: "appearance", label: L("Apariencia"), icon: Palette },
+  { id: "language", label: L("Idioma"), icon: Languages },
+  { id: "editor", label: L("Editor"), icon: PenLine },
+  { id: "page", label: L("Página"), icon: FileText },
+  { id: "ai", label: L("Inteligencia artificial"), icon: Sparkles },
+  { id: "general", label: L("General y datos"), icon: User },
+  { id: "license", label: L("Licencia"), icon: KeyRound },
+  { id: "shortcuts", label: L("Atajos de teclado"), icon: Keyboard },
+  { id: "about", label: L("Acerca de"), icon: Info },
 ] as const;
 
 export function SettingsDialog() {
   const { settingsOpen, settingsTab, closeSettings, openSettings } = useApp();
   return (
-    <RDialogRoot open={settingsOpen} onOpenChange={(o) => !o && closeSettings()} title="Configuración">
+    <RDialogRoot open={settingsOpen} onOpenChange={(o) => !o && closeSettings()} title={L("Configuración")}>
       <div className="flex h-[min(640px,86vh)] w-[min(940px,94vw)]">
         <nav className="flex w-[220px] shrink-0 flex-col gap-0.5 border-r border-border bg-surface-2/50 p-3">
-          <div className="mb-3 px-2 text-[16px] font-semibold">Configuración</div>
+          <div className="mb-3 px-2 text-[16px] font-semibold">{L("Configuración")}</div>
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -50,6 +53,7 @@ export function SettingsDialog() {
         </nav>
         <div className="min-w-0 flex-1 overflow-y-auto p-7">
           {settingsTab === "appearance" && <Appearance />}
+          {settingsTab === "language" && <LanguageSettings />}
           {settingsTab === "editor" && <EditorSettings />}
           {settingsTab === "page" && <PageSettings />}
           {settingsTab === "ai" && <AISettings />}
@@ -60,6 +64,15 @@ export function SettingsDialog() {
         </div>
       </div>
     </RDialogRoot>
+  );
+}
+
+function LanguageSettings() {
+  return (
+    <>
+      <H desc={L("Solo el español viene con la app; los demás idiomas se descargan al elegirlos. Al cambiar de idioma la app se vuelve a abrir.")}>{L("Idioma")}</H>
+      <LanguageList manage />
+    </>
   );
 }
 
@@ -90,8 +103,8 @@ function Appearance() {
   const s = useSettings();
   return (
     <>
-      <H desc="Elige el tema y el color de acento de toda la aplicación.">Apariencia</H>
-      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Tema</div>
+      <H desc={L("Elige el tema y el color de acento de toda la aplicación.")}>{L("Apariencia")}</H>
+      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">{L("Tema")}</div>
       <div className="mb-7 grid grid-cols-[repeat(auto-fill,minmax(128px,1fr))] gap-3">
         {THEMES.map((t) => {
           const tk = t.tokens;
@@ -122,13 +135,13 @@ function Appearance() {
         })}
       </div>
 
-      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Color de acento</div>
+      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">{L("Color de acento")}</div>
       <div className="mb-7 flex flex-wrap items-center gap-2">
         <button
           onClick={() => s.set("accent", null)}
           className={cn("h-8 rounded-full border px-3 text-[12px] font-medium", s.accent === null ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}
         >
-          Del tema
+          {L("Del tema")}
         </button>
         {ACCENT_PRESETS.map((c) => (
           <button
@@ -136,30 +149,30 @@ function Appearance() {
             onClick={() => s.set("accent", c)}
             className={cn("grid size-8 place-items-center rounded-full transition-transform hover:scale-110", s.accent === c && "ring-2 ring-offset-2 ring-offset-surface")}
             style={{ background: c, ["--tw-ring-color" as string]: c }}
-            aria-label={`Acento ${c}`}
+            aria-label={L("Acento {0}", c)}
           >
             {s.accent === c && <Check className="size-4 text-white" />}
           </button>
         ))}
-        <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-border" title="Color personalizado">
+        <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-border" title={L("Color personalizado")}>
           <span className="text-[16px] text-muted">+</span>
           <input type="color" value={s.accent ?? getTheme(s.themeId).tokens.accent} onChange={(e) => s.set("accent", e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" />
         </label>
       </div>
 
-      <Field label="Fuente de la interfaz" desc="Tipografía de menús, botones y paneles.">
+      <Field label={L("Fuente de la interfaz")} desc={L("Tipografía de menús, botones y paneles.")}>
         <FontPicker value={s.uiFont} onChange={(css) => s.set("uiFont", css)} className="w-[200px]" />
       </Field>
-      <Field label="Redondez de las esquinas" desc={`${s.radius} px`}>
+      <Field label={L("Redondez de las esquinas")} desc={`${s.radius} px`}>
         <Slider value={s.radius} onChange={(v) => s.set("radius", v)} min={0} max={18} className="w-48" />
       </Field>
-      <Field label="Color de la hoja" desc="En temas oscuros, la hoja puede seguir el tema o ser siempre blanca como el papel.">
+      <Field label={L("Color de la hoja")} desc={L("En temas oscuros, la hoja puede seguir el tema o ser siempre blanca como el papel.")}>
         <Segmented
           value={s.paperMode}
           onChange={(v) => s.set("paperMode", v)}
           options={[
-            { value: "theme", label: "Según el tema" },
-            { value: "white", label: "Siempre blanca" },
+            { value: "theme", label: L("Según el tema") },
+            { value: "white", label: L("Siempre blanca") },
           ]}
         />
       </Field>
@@ -171,30 +184,30 @@ function EditorSettings() {
   const s = useSettings();
   return (
     <>
-      <H desc="Formato predeterminado para el texto de documentos y notas.">Editor</H>
+      <H desc={L("Formato predeterminado para el texto de documentos y notas.")}>{L("Editor")}</H>
       <div
         className="mb-6 rounded-[var(--radius)] border border-border bg-paper p-5 text-paper-text"
         style={{ fontFamily: s.fontFamily, fontSize: `${s.fontSize}pt`, lineHeight: s.lineHeight }}
       >
-        <div className="mb-1 text-[1.6em] font-bold">Vista previa del texto</div>
-        El veloz murciélago hindú comía feliz cardillo y kiwi. La cigüeña tocaba el saxofón detrás del palenque de paja. 0123456789
+        <div className="mb-1 text-[1.6em] font-bold">{L("Vista previa del texto")}</div>
+        {L("El veloz murciélago hindú comía feliz cardillo y kiwi. La cigüeña tocaba el saxofón detrás del palenque de paja. 0123456789")}
       </div>
-      <Field label="Fuente predeterminada">
+      <Field label={L("Fuente predeterminada")}>
         <FontPicker value={s.fontFamily} onChange={(css) => s.set("fontFamily", css)} className="w-[220px]" />
       </Field>
-      <Field label="Tamaño de fuente" desc="En puntos, como en Word.">
+      <Field label={L("Tamaño de fuente")} desc={L("En puntos, como en Word.")}>
         <FontSizePicker value={s.fontSize} onChange={(v) => s.set("fontSize", v)} />
       </Field>
-      <Field label="Interlineado" desc={String(s.lineHeight).replace(".", ",")}>
+      <Field label={L("Interlineado")} desc={String(s.lineHeight).replace(".", ",")}>
         <Slider value={s.lineHeight} onChange={(v) => s.set("lineHeight", v)} min={1} max={2.5} step={0.05} className="w-48" />
       </Field>
-      <Field label="Espacio entre párrafos" desc={`${String(s.paraSpacing).replace(".", ",")} líneas`}>
+      <Field label={L("Espacio entre párrafos")} desc={L("{0} líneas", String(s.paraSpacing).replace(".", ","))}>
         <Slider value={s.paraSpacing} onChange={(v) => s.set("paraSpacing", v)} min={0} max={2} step={0.1} className="w-48" />
       </Field>
-      <Field label="Revisión ortográfica" desc="Subraya en rojo las palabras mal escritas.">
+      <Field label={L("Revisión ortográfica")} desc={L("Subraya en rojo las palabras mal escritas.")}>
         <Switch checked={s.spellcheck} onChange={(v) => s.set("spellcheck", v)} />
       </Field>
-      <Field label="Autoformato al escribir" desc="Convierte comillas en «», -- en —, (c) en ©, 1/2 en ½, etc.">
+      <Field label={L("Autoformato al escribir")} desc={L("Convierte comillas en «», -- en —, (c) en ©, 1/2 en ½, etc.")}>
         <Switch checked={s.smartTyping} onChange={(v) => s.set("smartTyping", v)} />
       </Field>
     </>
@@ -205,25 +218,25 @@ function PageSettings() {
   const s = useSettings();
   return (
     <>
-      <H desc="Formato de la hoja en la vista de impresión, al imprimir y al exportar a Word.">Página</H>
-      <Field label="Tamaño de papel">
+      <H desc={L("Formato de la hoja en la vista de impresión, al imprimir y al exportar a Word.")}>{L("Página")}</H>
+      <Field label={L("Tamaño de papel")}>
         <select value={s.pageSize} onChange={(e) => s.set("pageSize", e.target.value as PageSize)} className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
           {(Object.keys(PAGE_SIZES) as PageSize[]).map((p) => <option key={p} value={p}>{PAGE_SIZES[p].label}</option>)}
         </select>
       </Field>
-      <Field label="Orientación">
-        <Segmented value={s.orientation} onChange={(v) => s.set("orientation", v)} options={[{ value: "portrait", label: "Vertical" }, { value: "landscape", label: "Horizontal" }]} />
+      <Field label={L("Orientación")}>
+        <Segmented value={s.orientation} onChange={(v) => s.set("orientation", v)} options={[{ value: "portrait", label: L("Vertical") }, { value: "landscape", label: L("Horizontal") }]} />
       </Field>
-      <Field label="Márgenes">
+      <Field label={L("Márgenes")}>
         <select value={s.margins} onChange={(e) => s.set("margins", e.target.value as Margins)} className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
           {(Object.keys(MARGINS) as Margins[]).map((m) => <option key={m} value={m}>{MARGINS[m].label}</option>)}
         </select>
       </Field>
-      <Field label="Vista predeterminada">
+      <Field label={L("Vista predeterminada")}>
         <Segmented
           value={s.viewMode}
           onChange={(v) => s.set("viewMode", v)}
-          options={[{ value: "page", label: "Impresión" }, { value: "web", label: "Web" }, { value: "focus", label: "Enfoque" }]}
+          options={[{ value: "page", label: L("Impresión") }, { value: "web", label: L("Web") }, { value: "focus", label: L("Enfoque") }]}
         />
       </Field>
     </>
@@ -231,12 +244,12 @@ function PageSettings() {
 }
 
 const API_PRESETS = [
-  { name: "OpenAI", url: "https://api.openai.com/v1" },
-  { name: "OpenRouter", url: "https://openrouter.ai/api/v1" },
-  { name: "Groq", url: "https://api.groq.com/openai/v1" },
-  { name: "DeepSeek", url: "https://api.deepseek.com/v1" },
-  { name: "Mistral", url: "https://api.mistral.ai/v1" },
-  { name: "LM Studio (local)", url: "http://localhost:1234/v1" },
+  { name: L("OpenAI"), url: "https://api.openai.com/v1" },
+  { name: L("OpenRouter"), url: "https://openrouter.ai/api/v1" },
+  { name: L("Groq"), url: "https://api.groq.com/openai/v1" },
+  { name: L("DeepSeek"), url: "https://api.deepseek.com/v1" },
+  { name: L("Mistral"), url: "https://api.mistral.ai/v1" },
+  { name: L("LM Studio (local)"), url: "http://localhost:1234/v1" },
 ];
 
 function AISettings() {
@@ -264,7 +277,7 @@ function AISettings() {
       if (models.length && !models.includes(current)) s.set("ollamaModel", models[0]);
     } catch {
       setOllamaModels(null);
-      setOllamaError("No se encontró Ollama en esa dirección. Instálalo desde ollama.com y ábrelo.");
+      setOllamaError(L("No se encontró Ollama en esa dirección. Instálalo desde ollama.com y ábrelo."));
     }
   };
 
@@ -280,35 +293,35 @@ function AISettings() {
       const models = await listOpenAIModels(s.openaiBaseUrl, s.openaiKey);
       setApiModels(models);
       if (models.length && !s.openaiModel) s.set("openaiModel", models[0]);
-      setApiStatus({ ok: true, text: `Conectado · ${models.length} modelos disponibles` });
+      setApiStatus({ ok: true, text: L("Conectado · {0} modelos disponibles", models.length) });
     } catch (e) {
       setApiModels(null);
-      setApiStatus({ ok: false, text: e instanceof Error ? e.message : "No se pudo conectar" });
+      setApiStatus({ ok: false, text: e instanceof Error ? e.message : L("No se pudo conectar") });
     }
   };
 
   const testApi = async () => {
-    setApiStatus({ ok: true, text: "Probando…" });
+    setApiStatus({ ok: true, text: L("Probando…") });
     try {
       const { streamText } = await import("@/lib/ai");
       const reply = await streamText({ messages: [{ role: "user", content: "Responde solo con la palabra: listo" }], temperature: 0 });
-      setApiStatus({ ok: true, text: `Funciona. Respuesta: «${reply.slice(0, 40)}»` });
+      setApiStatus({ ok: true, text: L("Funciona. Respuesta: «{0}»", reply.slice(0, 40)) });
     } catch (e) {
-      setApiStatus({ ok: false, text: e instanceof Error ? e.message : "Error" });
+      setApiStatus({ ok: false, text: e instanceof Error ? e.message : L("Error") });
     }
   };
 
   const engines = [
-    { id: "webllm", title: "Integrado (local)", desc: "En tu tarjeta gráfica. Sin conexión y sin enviar nada.", icon: <HardDrive className="size-4" /> },
-    { id: "ollama", title: "Ollama (local)", desc: "Modelos instalados con Ollama en este equipo.", icon: <Server className="size-4" /> },
-    { id: "api", title: "Tu propia API", desc: "OpenAI, OpenRouter, Groq, Anthropic… No consume memoria.", icon: <KeyRound className="size-4" /> },
+    { id: "webllm", title: L("Integrado (local)"), desc: L("En tu tarjeta gráfica. Sin conexión y sin enviar nada."), icon: <HardDrive className="size-4" /> },
+    { id: "ollama", title: L("Ollama (local)"), desc: L("Modelos instalados con Ollama en este equipo."), icon: <Server className="size-4" /> },
+    { id: "api", title: L("Tu propia API"), desc: L("OpenAI, OpenRouter, Groq, Anthropic… No consume memoria."), icon: <KeyRound className="size-4" /> },
   ] as const;
 
   return (
     <>
-      <H desc="Elige dónde se ejecuta la IA: en tu equipo (privado y sin conexión) o en un servicio con tu propia clave.">Inteligencia artificial</H>
+      <H desc={L("Elige dónde se ejecuta la IA: en tu equipo (privado y sin conexión) o en un servicio con tu propia clave.")}>{L("Inteligencia artificial")}</H>
 
-      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Motor</div>
+      <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">{L("Motor")}</div>
       <div className="mb-6 grid grid-cols-3 gap-2">
         {engines.map((e) => (
           <button
@@ -332,10 +345,10 @@ function AISettings() {
         <>
           {!gpu && (
             <div className="mb-4 rounded-[var(--radius)] border border-red-500/30 bg-red-500/10 p-3 text-[13px]">
-              Este equipo no admite WebGPU, así que el motor integrado no puede funcionar. Usa Ollama o tu propia API.
+              {L("Este equipo no admite WebGPU, así que el motor integrado no puede funcionar. Usa Ollama o tu propia API.")}
             </div>
           )}
-          <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">Modelo</div>
+          <div className="mb-2 text-[12px] font-semibold tracking-wide text-muted uppercase">{L("Modelo")}</div>
           <div className="mb-3 grid gap-2">
             {LOCAL_MODELS.map((m) => {
               const selected = s.localModel === m.id;
@@ -354,23 +367,23 @@ function AISettings() {
                       <div className="flex items-center gap-2 text-[13.5px] font-medium">
                         {m.name}
                         {loaded ? (
-                          <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10.5px] text-amber-600">En memoria</span>
+                          <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10.5px] text-amber-600">{L("En memoria")}</span>
                         ) : downloaded ? (
-                          <span className="rounded-full bg-surface-3 px-1.5 py-0.5 text-[10.5px] text-muted">Descargado</span>
+                          <span className="rounded-full bg-surface-3 px-1.5 py-0.5 text-[10.5px] text-muted">{L("Descargado")}</span>
                         ) : null}
                       </div>
                       <div className="text-[12px] text-muted">{m.hint}</div>
                       <div className="mt-0.5 text-[11.5px] text-muted">
-                        Descarga {m.sizeGB.toLocaleString("es-ES")} GB · memoria al usarlo {m.vramGB.toLocaleString("es-ES")} GB
+                        {L("Descarga")}{" "} {m.sizeGB.toLocaleString(uiLocale())} {" "}{L("GB · memoria al usarlo")}{" "} {m.vramGB.toLocaleString(uiLocale())} {" "}{L("GB")}
                       </div>
-                      <div className="mt-0.5 text-[11.5px] text-muted">Licencia: {m.license}</div>
+                      <div className="mt-0.5 text-[11.5px] text-muted">{L("Licencia:")}{" "} {m.license}</div>
                     </div>
                   </button>
                   {gpu && (
                     <div className="flex shrink-0 gap-1">
                       {loaded ? (
-                        <Button size="sm" variant="outline" icon={<MemoryStick className="size-3.5" />} onClick={async () => { await (await loadEngine()).unloadModel(); toast("Memoria liberada", "success"); }}>
-                          Liberar
+                        <Button size="sm" variant="outline" icon={<MemoryStick className="size-3.5" />} onClick={async () => { await (await loadEngine()).unloadModel(); toast(L("Memoria liberada"), "success"); }}>
+                          {L("Liberar")}
                         </Button>
                       ) : (
                         <Button
@@ -384,11 +397,11 @@ function AISettings() {
                               await (await loadEngine()).ensureModel(m.id);
                               toast(`${m.name} listo`, "success");
                             } catch (e) {
-                              toast(e instanceof Error ? e.message : "No se pudo cargar el modelo", "error");
+                              toast(e instanceof Error ? e.message : L("No se pudo cargar el modelo"), "error");
                             }
                           }}
                         >
-                          {downloaded ? "Cargar" : "Descargar"}
+                          {downloaded ? L("Cargar") : L("Descargar")}
                         </Button>
                       )}
                       {downloaded && (
@@ -398,11 +411,11 @@ function AISettings() {
                           className="text-red-500"
                           icon={<Trash2 className="size-3.5" />}
                           disabled={local.status === "loading"}
-                          aria-label={`Borrar ${m.name}`}
+                          aria-label={L("Borrar {0}", m.name)}
                           onClick={async () => {
-                            if (!confirm(`¿Borrar ${m.name} de este equipo? Tendrás que volver a descargarlo para usarlo.`)) return;
+                            if (!confirm(L("¿Borrar {0} de este equipo? Tendrás que volver a descargarlo para usarlo.", m.name))) return;
                             await (await loadEngine()).deleteLocalModel(m.id);
-                            toast("Modelo eliminado", "success");
+                            toast(L("Modelo eliminado"), "success");
                           }}
                         />
                       )}
@@ -415,24 +428,24 @@ function AISettings() {
           <ModelProgress className="mb-3" />
           {local.error && <p className="mb-3 text-[12.5px] text-red-500">{local.error}</p>}
           <p className="mb-4 text-[12px] leading-relaxed text-muted">
-            La descarga solo hace falta una vez; después el modelo queda guardado y funciona sin conexión.
+            {L("La descarga solo hace falta una vez; después el modelo queda guardado y funciona sin conexión.")}
           </p>
         </>
       )}
 
       {s.aiEngine === "ollama" && (
         <div className="mb-4">
-          <Field label="Dirección de Ollama" desc="Normalmente no hace falta cambiarla.">
+          <Field label={L("Dirección de Ollama")} desc={L("Normalmente no hace falta cambiarla.")}>
             <div className="flex gap-2">
               <Input value={s.ollamaUrl} onChange={(e) => s.set("ollamaUrl", e.target.value)} className="w-56 font-mono text-[12.5px]" />
               <Button variant="outline" onClick={checkOllama}>
-                Comprobar
+                {L("Comprobar")}
               </Button>
             </div>
           </Field>
           <Field
-            label="Modelo"
-            desc={ollamaModels && !ollamaModels.length ? "No hay modelos. Instala uno, por ejemplo: ollama pull qwen2.5:7b" : "Modelos instalados en Ollama."}
+            label={L("Modelo")}
+            desc={ollamaModels && !ollamaModels.length ? L("No hay modelos. Instala uno, por ejemplo: ollama pull qwen2.5:7b") : L("Modelos instalados en Ollama.")}
           >
             <select
               value={s.ollamaModel}
@@ -449,16 +462,16 @@ function AISettings() {
             </select>
           </Field>
           {ollamaError && <p className="mt-2 text-[12.5px] text-red-500">{ollamaError}</p>}
-          {ollamaModels && <p className="mt-2 text-[12.5px] text-emerald-600">Conectado con Ollama · {ollamaModels.length} modelos</p>}
+          {ollamaModels && <p className="mt-2 text-[12.5px] text-emerald-600">{L("Conectado con Ollama ·")}{" "} {ollamaModels.length} {" "}{L("modelos")}</p>}
         </div>
       )}
 
       {s.aiEngine === "api" && (
         <div className="mb-4">
           <div className="mb-4 rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-relaxed">
-            Con una API, el texto que mandes a la IA se envía a ese servicio y su uso se cobra en tu cuenta. La clave se guarda solo en este equipo.
+            {L("Con una API, el texto que mandes a la IA se envía a ese servicio y su uso se cobra en tu cuenta. La clave se guarda solo en este equipo.")}
           </div>
-          <Field label="Proveedor">
+          <Field label={L("Proveedor")}>
             <Segmented
               value={s.apiProvider}
               onChange={(v) => {
@@ -466,14 +479,14 @@ function AISettings() {
                 setApiStatus(null);
               }}
               options={[
-                { value: "openai", label: "Compatible con OpenAI" },
-                { value: "anthropic", label: "Anthropic (Claude)" },
+                { value: "openai", label: L("Compatible con OpenAI") },
+                { value: "anthropic", label: L("Anthropic (Claude)") },
               ]}
             />
           </Field>
           {s.apiProvider === "openai" ? (
             <>
-              <Field label="Servicio" desc="Cualquier API compatible con OpenAI. Elige uno o escribe la dirección.">
+              <Field label={L("Servicio")} desc={L("Cualquier API compatible con OpenAI. Elige uno o escribe la dirección.")}>
                 <div className="flex w-[300px] flex-col gap-1.5">
                   <select
                     value={API_PRESETS.find((p) => p.url === s.openaiBaseUrl)?.url ?? ""}
@@ -483,7 +496,7 @@ function AISettings() {
                     }}
                     className="h-9 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]"
                   >
-                    <option value="">Personalizado</option>
+                    <option value="">{L("Personalizado")}</option>
                     {API_PRESETS.map((p) => (
                       <option key={p.url} value={p.url}>
                         {p.name}
@@ -493,13 +506,13 @@ function AISettings() {
                   <Input value={s.openaiBaseUrl} onChange={(e) => s.set("openaiBaseUrl", e.target.value.trim())} className="font-mono text-[12px]" spellCheck={false} />
                 </div>
               </Field>
-              <Field label="Clave de API" desc="No hace falta para servidores locales como LM Studio.">
+              <Field label={L("Clave de API")} desc={L("No hace falta para servidores locales como LM Studio.")}>
                 <div className="flex w-[300px] gap-1.5">
-                  <Input type={showKey ? "text" : "password"} value={s.openaiKey} onChange={(e) => s.set("openaiKey", e.target.value.trim())} placeholder="sk-…" autoComplete="off" spellCheck={false} className="font-mono" />
-                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? "Ocultar clave" : "Mostrar clave"} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
+                  <Input type={showKey ? "text" : "password"} value={s.openaiKey} onChange={(e) => s.set("openaiKey", e.target.value.trim())} placeholder={L("sk-…")} autoComplete="off" spellCheck={false} className="font-mono" />
+                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? L("Ocultar clave") : L("Mostrar clave")} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
                 </div>
               </Field>
-              <Field label="Modelo" desc="Escríbelo o cárgalo de la lista del servicio.">
+              <Field label={L("Modelo")} desc={L("Escríbelo o cárgalo de la lista del servicio.")}>
                 <div className="flex w-[300px] gap-1.5">
                   {apiModels?.length ? (
                     <select value={s.openaiModel} onChange={(e) => s.set("openaiModel", e.target.value)} className="h-9 min-w-0 flex-1 rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
@@ -513,20 +526,20 @@ function AISettings() {
                     <Input value={s.openaiModel} onChange={(e) => s.set("openaiModel", e.target.value.trim())} placeholder="p. ej. gpt-4o-mini" spellCheck={false} className="font-mono" />
                   )}
                   <Button variant="outline" onClick={loadApiModels}>
-                    Cargar
+                    {L("Cargar")}
                   </Button>
                 </div>
               </Field>
             </>
           ) : (
             <>
-              <Field label="Clave de API de Anthropic" desc="Se crea en console.anthropic.com → API Keys.">
+              <Field label={L("Clave de API de Anthropic")} desc={L("Se crea en console.anthropic.com → API Keys.")}>
                 <div className="flex w-[300px] gap-1.5">
-                  <Input type={showKey ? "text" : "password"} value={s.anthropicKey} onChange={(e) => s.set("anthropicKey", e.target.value.trim())} placeholder="sk-ant-…" autoComplete="off" spellCheck={false} className="font-mono" />
-                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? "Ocultar clave" : "Mostrar clave"} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
+                  <Input type={showKey ? "text" : "password"} value={s.anthropicKey} onChange={(e) => s.set("anthropicKey", e.target.value.trim())} placeholder={L("sk-ant-…")} autoComplete="off" spellCheck={false} className="font-mono" />
+                  <Button variant="outline" onClick={() => setShowKey((v) => !v)} aria-label={showKey ? L("Ocultar clave") : L("Mostrar clave")} icon={showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />} />
                 </div>
               </Field>
-              <Field label="Modelo">
+              <Field label={L("Modelo")}>
                 <select value={s.anthropicModel} onChange={(e) => s.set("anthropicModel", e.target.value)} className="h-9 w-[300px] rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
                   {ANTHROPIC_MODEL_OPTIONS.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -539,7 +552,7 @@ function AISettings() {
           )}
           <div className="mt-3 flex items-center gap-3">
             <Button variant="primary" onClick={testApi}>
-              Probar conexión
+              {L("Probar conexión")}
             </Button>
             {apiStatus && <span className={cn("text-[12.5px]", apiStatus.ok ? "text-emerald-600" : "text-red-500")}>{apiStatus.text}</span>}
           </div>
@@ -549,13 +562,13 @@ function AISettings() {
       {s.aiEngine !== "api" && (
         <>
           <Field
-            label="Liberar memoria automáticamente"
-            desc="Cuando no usas la IA, el modelo sale de la memoria. Al volver a usarla tarda unos segundos en cargarse."
+            label={L("Liberar memoria automáticamente")}
+            desc={L("Cuando no usas la IA, el modelo sale de la memoria. Al volver a usarla tarda unos segundos en cargarse.")}
           >
-            <Switch checked={s.aiAutoUnload} onChange={(v) => s.set("aiAutoUnload", v)} label="Liberar memoria automáticamente" />
+            <Switch checked={s.aiAutoUnload} onChange={(v) => s.set("aiAutoUnload", v)} label={L("Liberar memoria automáticamente")} />
           </Field>
           {s.aiAutoUnload ? (
-            <Field label="Liberar tras" desc="Tiempo sin usar la IA antes de liberar la memoria.">
+            <Field label={L("Liberar tras")} desc={L("Tiempo sin usar la IA antes de liberar la memoria.")}>
               <select
                 value={s.aiUnloadMinutes}
                 onChange={(e) => s.set("aiUnloadMinutes", Number(e.target.value))}
@@ -563,21 +576,21 @@ function AISettings() {
               >
                 {[1, 2, 5, 10, 30].map((m) => (
                   <option key={m} value={m}>
-                    {m} min
+                    {m} {" "}{L("min")}
                   </option>
                 ))}
               </select>
             </Field>
           ) : (
             <div className="my-2 rounded-[var(--radius)] border border-amber-500/30 bg-amber-500/10 p-3 text-[12.5px] leading-relaxed">
-              <b>La IA responderá más rápido</b>, pero el modelo se queda cargado mientras la app esté abierta y ocupa unos{" "}
-              {(LOCAL_MODELS.find((m) => m.id === s.localModel)?.vramGB ?? 3).toLocaleString("es-ES")} GB de memoria.
+              <b>{L("La IA responderá más rápido")}</b>{L(", pero el modelo se queda cargado mientras la app esté abierta y ocupa unos")}{" "}
+              {(LOCAL_MODELS.find((m) => m.id === s.localModel)?.vramGB ?? 3).toLocaleString(uiLocale())} {" "}{L("GB de memoria.")}
             </div>
           )}
         </>
       )}
 
-      <Field label="Idioma de las respuestas">
+      <Field label={L("Idioma de las respuestas")}>
         <select
           value={s.aiLanguage}
           onChange={(e) => s.set("aiLanguage", e.target.value)}
@@ -585,7 +598,7 @@ function AISettings() {
         >
           {LANGUAGES.map((l) => (
             <option key={l} value={l}>
-              {l}
+              {L(l)}
             </option>
           ))}
         </select>
@@ -599,42 +612,42 @@ function LicenseSettings() {
   const toast = useApp((st) => st.toast);
   return (
     <>
-      <H desc="Lumen Office se puede probar gratis durante 14 días. Después hace falta una licencia.">Licencia</H>
+      <H desc={L("Lumen Office se puede probar gratis durante 14 días. Después hace falta una licencia.")}>{L("Licencia")}</H>
       {status === "licensed" && info ? (
         <div className="mb-5 rounded-[var(--radius)] border border-emerald-500/30 bg-emerald-500/10 p-4">
           <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-emerald-700 dark:text-emerald-400">
-            <BadgeCheck className="size-5" /> Activado
+            <BadgeCheck className="size-5" /> {" "}{L("Activado")}
           </div>
           <div className="text-[13px]">
             {info.name} · {info.email}
           </div>
           <div className="text-[12px] text-muted">
-            Licencia {info.plan} · emitida el {new Date(info.issued).toLocaleDateString("es-ES")}
-            {info.expires ? ` · válida hasta el ${new Date(info.expires).toLocaleDateString("es-ES")}` : " · sin caducidad"}
+            {L("Licencia")}{" "} {info.plan} {" "}{L("· emitida el")}{" "} {new Date(info.issued).toLocaleDateString(uiLocale())}
+            {info.expires ? L(" · válida hasta el {0}", new Date(info.expires).toLocaleDateString(uiLocale())) : L(" · sin caducidad")}
           </div>
         </div>
       ) : (
         <div className="mb-5 rounded-[var(--radius)] border border-border bg-surface-2 p-4">
-          <div className="mb-1 text-[14px] font-semibold">{status === "trial" ? `Prueba gratuita: ${daysLeft === 1 ? "queda 1 día" : `quedan ${daysLeft} días`}` : "La prueba ha terminado"}</div>
-          <p className="mb-3 text-[12.5px] text-muted">Si ya tienes una clave, pégala aquí para activar Lumen Office en este equipo.</p>
+          <div className="mb-1 text-[14px] font-semibold">{status === "trial" ? L("Prueba gratuita: {0}", daysLeft === 1 ? L("queda 1 día") : L("quedan {0} días", daysLeft)) : L("La prueba ha terminado")}</div>
+          <p className="mb-3 text-[12.5px] text-muted">{L("Si ya tienes una clave, pégala aquí para activar Lumen Office en este equipo.")}</p>
           <LicenseKeyForm />
           <Button variant="ghost" size="sm" className="mt-2" icon={<ShoppingCart className="size-3.5" />} onClick={buyLicense}>
-            Conseguir una licencia
+            {L("Conseguir una licencia")}
           </Button>
         </div>
       )}
       {status === "licensed" && (
-        <Field label="Quitar la licencia de este equipo" desc="Por ejemplo, para usarla en otro ordenador. Podrás volver a activarla con la misma clave.">
+        <Field label={L("Quitar la licencia de este equipo")} desc={L("Por ejemplo, para usarla en otro ordenador. Podrás volver a activarla con la misma clave.")}>
           <Button
             variant="outline"
             onClick={async () => {
-              if (!confirm("¿Quitar la licencia de este equipo? Guarda tu clave antes para poder volver a activarla.")) return;
+              if (!confirm(L("¿Quitar la licencia de este equipo? Guarda tu clave antes para poder volver a activarla."))) return;
               const { deactivate } = await import("@/lib/license");
               await deactivate();
-              toast("Licencia quitada de este equipo");
+              toast(L("Licencia quitada de este equipo"));
             }}
           >
-            Quitar
+            {L("Quitar")}
           </Button>
         </Field>
       )}
@@ -654,36 +667,36 @@ function General() {
       const data = JSON.parse(await file.text()) as { app?: string; docs?: DocRecord[] };
       if (data.app !== "lumen" || !Array.isArray(data.docs)) throw new Error();
       await db.docs.bulkPut(data.docs);
-      toast(`${data.docs.length} elementos restaurados`, "success");
+      toast(L("{0} elementos restaurados", data.docs.length), "success");
     } catch {
-      toast("El archivo no es una copia de seguridad válida", "error");
+      toast(L("El archivo no es una copia de seguridad válida"), "error");
     }
   };
 
   return (
     <>
-      <H desc="Tus datos se guardan en este equipo. Haz copias de seguridad de vez en cuando.">General y datos</H>
-      <Field label="Tu nombre" desc="Se usa en el saludo y como autor al exportar.">
-        <Input value={s.userName} onChange={(e) => s.set("userName", e.target.value)} placeholder="Nombre" className="w-56" />
+      <H desc={L("Tus datos se guardan en este equipo. Haz copias de seguridad de vez en cuando.")}>{L("General y datos")}</H>
+      <Field label={L("Tu nombre")} desc={L("Se usa en el saludo y como autor al exportar.")}>
+        <Input value={s.userName} onChange={(e) => s.set("userName", e.target.value)} placeholder={L("Nombre")} className="w-56" />
       </Field>
       <Field
-        label="Guardar automáticamente en el archivo"
+        label={L("Guardar automáticamente en el archivo")}
         desc={
           s.fileAutoSave
-            ? "Los documentos abiertos desde un archivo o guardados en uno se actualizan solos en el disco unos segundos después de cada cambio."
-            : "Tendrás que pulsar Guardar (Ctrl+S). Si sales o cierras con cambios sin guardar, se te preguntará."
+            ? L("Los documentos abiertos desde un archivo o guardados en uno se actualizan solos en el disco unos segundos después de cada cambio.")
+            : L("Tendrás que pulsar Guardar (Ctrl+S). Si sales o cierras con cambios sin guardar, se te preguntará.")
         }
       >
-        <Switch checked={s.fileAutoSave} onChange={(v) => s.set("fileAutoSave", v)} label="Guardar automáticamente en el archivo" />
+        <Switch checked={s.fileAutoSave} onChange={(v) => s.set("fileAutoSave", v)} label={L("Guardar automáticamente en el archivo")} />
       </Field>
-      <Field label="Copia de seguridad" desc="Descarga todos tus documentos y notas en un archivo.">
-        <Button variant="outline" icon={<Download className="size-4" />} onClick={backup}>Exportar</Button>
+      <Field label={L("Copia de seguridad")} desc={L("Descarga todos tus documentos y notas en un archivo.")}>
+        <Button variant="outline" icon={<Download className="size-4" />} onClick={backup}>{L("Exportar")}</Button>
       </Field>
-      <Field label="Restaurar copia" desc="Importa un archivo de copia de seguridad de Lumen.">
-        <Button variant="outline" icon={<Upload className="size-4" />} onClick={() => fileRef.current?.click()}>Importar</Button>
+      <Field label={L("Restaurar copia")} desc={L("Importa un archivo de copia de seguridad de Lumen.")}>
+        <Button variant="outline" icon={<Upload className="size-4" />} onClick={() => fileRef.current?.click()}>{L("Importar")}</Button>
         <input ref={fileRef} type="file" accept=".json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) restore(f); }} />
       </Field>
-      <Field label="Restablecer configuración" desc="Vuelve a los valores originales. No borra documentos, modelos descargados ni claves de API.">
+      <Field label={L("Restablecer configuración")} desc={L("Vuelve a los valores originales. No borra documentos, modelos descargados ni claves de API.")}>
         <Button
           variant="outline"
           icon={<RotateCcw className="size-4" />}
@@ -691,10 +704,10 @@ function General() {
             const { userName, localFonts, localModel, openaiKey, anthropicKey } = s;
             s.reset();
             s.patch({ userName, localFonts, localModel, openaiKey, anthropicKey });
-            toast("Configuración restablecida", "success");
+            toast(L("Configuración restablecida"), "success");
           }}
         >
-          Restablecer
+          {L("Restablecer")}
         </Button>
       </Field>
     </>
@@ -702,28 +715,28 @@ function General() {
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["Negrita / Cursiva / Subrayado", "Ctrl+B · Ctrl+I · Ctrl+U"],
-  ["Tachado", "Ctrl+Shift+S"],
-  ["Deshacer / Rehacer", "Ctrl+Z · Ctrl+Y"],
-  ["Buscar / Reemplazar", "Ctrl+F · Ctrl+H"],
-  ["Guardar", "Ctrl+S"],
-  ["Imprimir / PDF", "Ctrl+P"],
-  ["Aumentar / reducir tamaño", "Ctrl+] · Ctrl+["],
-  ["Alinear izq. / centro / der. / justificar", "Ctrl+Shift+L · E · R · J"],
-  ["Título 1, 2, 3", "Ctrl+Alt+1 · 2 · 3"],
-  ["Lista con viñetas / numerada", "Ctrl+Shift+8 · Ctrl+Shift+7"],
-  ["Lista de tareas", "Ctrl+Shift+9"],
-  ["Cita", "Ctrl+Shift+B"],
-  ["Salto de página", "Ctrl+Enter"],
-  ["Abrir/cerrar panel de IA", "Ctrl+J"],
-  ["Sangría", "Tab · Shift+Tab"],
-  ["Salir del modo enfoque", "Esc"],
+  [L("Negrita / Cursiva / Subrayado"), L("Ctrl+B · Ctrl+I · Ctrl+U")],
+  [L("Tachado"), "Ctrl+Shift+S"],
+  [L("Deshacer / Rehacer"), L("Ctrl+Z · Ctrl+Y")],
+  [L("Buscar / Reemplazar"), L("Ctrl+F · Ctrl+H")],
+  [L("Guardar"), "Ctrl+S"],
+  [L("Imprimir / PDF"), "Ctrl+P"],
+  [L("Aumentar / reducir tamaño"), L("Ctrl+] · Ctrl+[")],
+  [L("Alinear izq. / centro / der. / justificar"), L("Ctrl+Shift+L · E · R · J")],
+  [L("Título 1, 2, 3"), L("Ctrl+Alt+1 · 2 · 3")],
+  [L("Lista con viñetas / numerada"), L("Ctrl+Shift+8 · Ctrl+Shift+7")],
+  [L("Lista de tareas"), "Ctrl+Shift+9"],
+  [L("Cita"), "Ctrl+Shift+B"],
+  [L("Salto de página"), "Ctrl+Enter"],
+  [L("Abrir/cerrar panel de IA"), "Ctrl+J"],
+  [L("Sangría"), L("Tab · Shift+Tab")],
+  [L("Salir del modo enfoque"), "Esc"],
 ];
 
 function Shortcuts() {
   return (
     <>
-      <H>Atajos de teclado</H>
+      <H>{L("Atajos de teclado")}</H>
       <div className="rounded-[var(--radius)] border border-border">
         {SHORTCUTS.map(([k, v]) => (
           <div key={k} className="flex items-center justify-between border-b border-border px-4 py-2.5 text-[13px] last:border-0">
@@ -749,52 +762,52 @@ function About() {
     <>
       <div className="flex flex-col items-center pt-6 pb-6 text-center">
         <Logo className="mb-4 size-16" />
-        <div className="text-[22px] font-bold">Lumen Office</div>
-        <div className="mb-4 text-muted">Versión {version}</div>
+        <div className="text-[22px] font-bold">{L("Lumen Office")}</div>
+        <div className="mb-4 text-muted">{L("Versión")}{" "} {version}</div>
         <p className="max-w-md text-[13.5px] text-muted">
-          Suite ofimática con documentos, notas y asistente de IA. Hecha con React, Tiptap, WebLLM y Tauri.
+          {L("Suite ofimática con documentos, notas y asistente de IA. Hecha con React, Tiptap, WebLLM y Tauri.")}
         </p>
       </div>
       {desktop && (
         <>
           <Field
-            label="Actualizaciones"
+            label={L("Actualizaciones")}
             desc={
               status === "checking"
-                ? "Buscando…"
+                ? L("Buscando…")
                 : status === "uptodate"
-                  ? "Tienes la última versión."
+                  ? L("Tienes la última versión.")
                   : status === "available"
-                    ? `Hay una versión nueva: ${newVersion}.`
+                    ? L("Hay una versión nueva: {0}.", newVersion)
                     : status === "downloading" || status === "installing"
-                      ? "Actualizando…"
+                      ? L("Actualizando…")
                       : status === "error"
                         ? error
-                        : "Las versiones nuevas se descargan desde GitHub y están firmadas."
+                        : L("Las versiones nuevas se descargan desde GitHub y están firmadas.")
             }
           >
             {status === "available" ? (
               <Button variant="primary" icon={<Download className="size-4" />} onClick={() => void install()}>
-                Actualizar a {newVersion}
+                {L("Actualizar a")}{" "} {newVersion}
               </Button>
             ) : (
               <Button variant="outline" disabled={status === "checking" || status === "downloading" || status === "installing"} onClick={() => void check()}>
-                Buscar actualizaciones
+                {L("Buscar actualizaciones")}
               </Button>
             )}
           </Field>
-          <Field label="Buscar actualizaciones al abrir la app">
-            <Switch checked={s.autoCheckUpdates} onChange={(v) => s.set("autoCheckUpdates", v)} label="Buscar actualizaciones al abrir la app" />
+          <Field label={L("Buscar actualizaciones al abrir la app")}>
+            <Switch checked={s.autoCheckUpdates} onChange={(v) => s.set("autoCheckUpdates", v)} label={L("Buscar actualizaciones al abrir la app")} />
           </Field>
         </>
       )}
       <Field
-        label="Licencia"
-        desc="PolyForm Strict 1.0.0: se puede usar gratis para fines no comerciales y leer su código. No se permite modificarla, redistribuirla ni venderla. Para otros usos hace falta una licencia del autor."
+        label={L("Licencia")}
+        desc={L("PolyForm Strict 1.0.0: se puede usar gratis para fines no comerciales y leer su código. No se permite modificarla, redistribuirla ni venderla. Para otros usos hace falta una licencia del autor.")}
       >
-        <span className="text-[12.5px] text-muted">© Alejandro Zapata</span>
+        <span className="text-[12.5px] text-muted">{L("© Alejandro Zapata")}</span>
       </Field>
-      <Field label="Licencias de terceros" desc="Avisos de copyright y licencias de las librerías que incluye la app.">
+      <Field label={L("Licencias de terceros")} desc={L("Avisos de copyright y licencias de las librerías que incluye la app.")}>
         <ThirdPartyNotices />
       </Field>
     </>
@@ -811,16 +824,16 @@ function ThirdPartyNotices() {
       fetch("/third-party-notices.txt")
         .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
         .then(setText)
-        .catch(() => setText("No se pudieron cargar los avisos."));
+        .catch(() => setText(L("No se pudieron cargar los avisos.")));
   };
   return (
     <>
       <Button variant="outline" onClick={load}>
-        Ver licencias
+        {L("Ver licencias")}
       </Button>
-      <Dialog open={open} onOpenChange={setOpen} title="Licencias de terceros" className="w-[min(94vw,820px)]">
+      <Dialog open={open} onOpenChange={setOpen} title={L("Licencias de terceros")} className="w-[min(94vw,820px)]">
         <pre className="max-h-[60vh] overflow-auto rounded-[var(--radius)] bg-surface-2 p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap text-text">
-          {text ?? "Cargando…"}
+          {text ?? L("Cargando…")}
         </pre>
       </Dialog>
     </>

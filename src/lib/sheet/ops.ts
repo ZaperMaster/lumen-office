@@ -5,6 +5,7 @@ import {
   type Cell, type CellStyle, type Merge, type Range, type Sheet, type Workbook,
 } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /*
  * Operaciones sobre el libro. Todas devuelven un libro nuevo (el anterior queda
  * intacto para poder deshacer).
@@ -434,11 +435,11 @@ export function updateSheet(wb: Workbook, si: number, patch: Partial<Sheet>): Wo
 /* ------------------------------------------------------------------ */
 
 export const TABLE_STYLES: { id: string; label: string; head: string; band: string; text: string }[] = [
-  { id: "blue", label: "Azul", head: "#4472c4", band: "#d9e1f2", text: "#ffffff" },
-  { id: "green", label: "Verde", head: "#0f9d58", band: "#e2efda", text: "#ffffff" },
-  { id: "orange", label: "Naranja", head: "#ed7d31", band: "#fce4d6", text: "#ffffff" },
-  { id: "gray", label: "Gris", head: "#595959", band: "#ededed", text: "#ffffff" },
-  { id: "purple", label: "Morado", head: "#7030a0", band: "#e4dfec", text: "#ffffff" },
+  { id: "blue", label: L("Azul"), head: "#4472c4", band: "#d9e1f2", text: "#ffffff" },
+  { id: "green", label: L("Verde"), head: "#0f9d58", band: "#e2efda", text: "#ffffff" },
+  { id: "orange", label: L("Naranja"), head: "#ed7d31", band: "#fce4d6", text: "#ffffff" },
+  { id: "gray", label: L("Gris"), head: "#595959", band: "#ededed", text: "#ffffff" },
+  { id: "purple", label: L("Morado"), head: "#7030a0", band: "#e4dfec", text: "#ffffff" },
 ];
 
 /** Encabezado en negrita y color, filas alternas, bordes y filtro. */

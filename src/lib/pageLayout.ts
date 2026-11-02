@@ -1,3 +1,4 @@
+import { L, uiLocale } from "@/lib/i18n";
 /*
  * Encabezado, pie de página y numeración de un documento.
  * Cada zona tiene tres partes (izquierda, centro, derecha) con texto y campos:
@@ -27,18 +28,18 @@ export const DEFAULT_LAYOUT: PageLayout = {
 };
 
 export const FIELDS: { token: string; label: string }[] = [
-  { token: "{pagina}", label: "Nº de página" },
-  { token: "{paginas}", label: "Total de páginas" },
-  { token: "{titulo}", label: "Título" },
-  { token: "{fecha}", label: "Fecha" },
-  { token: "{autor}", label: "Autor" },
+  { token: "{pagina}", label: L("Nº de página") },
+  { token: "{paginas}", label: L("Total de páginas") },
+  { token: "{titulo}", label: L("Título") },
+  { token: "{fecha}", label: L("Fecha") },
+  { token: "{autor}", label: L("Autor") },
 ];
 
 /** Formatos de número de página para el menú «Número de página». */
 export const PAGE_NUMBER_FORMATS: { id: string; label: string; text: string }[] = [
   { id: "n", label: "1", text: "{pagina}" },
-  { id: "pag", label: "Página 1", text: "Página {pagina}" },
-  { id: "de", label: "Página 1 de 10", text: "Página {pagina} de {paginas}" },
+  { id: "pag", label: L("Página 1"), text: "Página {pagina}" },
+  { id: "de", label: L("Página 1 de 10"), text: "Página {pagina} de {paginas}" },
   { id: "slash", label: "1 / 10", text: "{pagina} / {paginas}" },
   { id: "dash", label: "- 1 -", text: "- {pagina} -" },
 ];
@@ -69,7 +70,7 @@ export function resolveFields(text: string, ctx: FieldContext): string {
     .replaceAll("{pagina}", String(ctx.page))
     .replaceAll("{paginas}", String(ctx.pages))
     .replaceAll("{titulo}", ctx.title || "Documento sin título")
-    .replaceAll("{fecha}", new Date().toLocaleDateString("es-ES"))
+    .replaceAll("{fecha}", new Date().toLocaleDateString(uiLocale()))
     .replaceAll("{autor}", ctx.author);
 }
 

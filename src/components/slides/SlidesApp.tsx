@@ -30,6 +30,7 @@ import { PresenterConsole } from "@/components/slides/PresenterView";
 import { VideoDialog } from "@/components/slides/VideoDialog";
 import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Popover, PopoverClose, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 /*  Carga                                                              */
 /* ------------------------------------------------------------------ */
@@ -48,8 +49,8 @@ export default function SlidesApp({ id }: { id: string }) {
     return (
       <div className="grid h-full place-items-center">
         <div className="text-center">
-          <p className="mb-3 text-muted">Esta presentación no existe o está en la papelera.</p>
-          <Button variant="primary" onClick={() => navigate({ name: "home" })}>Volver al inicio</Button>
+          <p className="mb-3 text-muted">{L("Esta presentación no existe o está en la papelera.")}</p>
+          <Button variant="primary" onClick={() => navigate({ name: "home" })}>{L("Volver al inicio")}</Button>
         </div>
       </div>
     );
@@ -94,14 +95,14 @@ function AnimButton({ icon, label, active, disabled, onClick }: { icon: string; 
 type DragState = { kind: "move" | "resize" | "rotate"; handle?: string; ids: string[]; start: { x: number; y: number }; orig: Record<string, SlideEl> };
 
 const SHAPES: { id: ShapeKind; label: string; icon: ReactNode }[] = [
-  { id: "rect", label: "Rectángulo", icon: <Square /> },
-  { id: "roundRect", label: "Rectángulo redondeado", icon: <Square className="rounded" /> },
-  { id: "ellipse", label: "Elipse", icon: <Circle /> },
-  { id: "triangle", label: "Triángulo", icon: <Triangle /> },
-  { id: "diamond", label: "Rombo", icon: <Diamond /> },
-  { id: "arrow", label: "Flecha", icon: <MoveRight /> },
-  { id: "star", label: "Estrella", icon: <Star /> },
-  { id: "line", label: "Línea", icon: <Minus /> },
+  { id: "rect", label: L("Rectángulo"), icon: <Square /> },
+  { id: "roundRect", label: L("Rectángulo redondeado"), icon: <Square className="rounded" /> },
+  { id: "ellipse", label: L("Elipse"), icon: <Circle /> },
+  { id: "triangle", label: L("Triángulo"), icon: <Triangle /> },
+  { id: "diamond", label: L("Rombo"), icon: <Diamond /> },
+  { id: "arrow", label: L("Flecha"), icon: <MoveRight /> },
+  { id: "star", label: L("Estrella"), icon: <Star /> },
+  { id: "line", label: L("Línea"), icon: <Minus /> },
 ];
 
 const ICONS = ["⭐", "✅", "❌", "💡", "🚀", "📈", "📉", "🎯", "💰", "👥", "📅", "⏱️", "🔒", "🌍", "❤️", "⚠️", "📌", "🏆", "📊", "🛠️", "💬", "📦", "🎓", "🌱", "📱", "💻", "✉️", "📞", "🏠", "🚗", "✈️", "🎉"];
@@ -254,7 +255,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
     setCur(i + 1);
   };
   const deleteSlide = (i = cur) => {
-    if (deckRef.current.slides.length <= 1) return toast("La presentación necesita al menos una diapositiva");
+    if (deckRef.current.slides.length <= 1) return toast(L("La presentación necesita al menos una diapositiva"));
     commit((d) => ({ ...d, slides: d.slides.filter((_, j) => j !== i) }));
     setCur(Math.max(0, Math.min(i, deckRef.current.slides.length - 2)));
     setSel([]);
@@ -285,7 +286,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
   const addShape = (shape: ShapeKind) =>
     addEl({ type: "shape", shape, x: 490, y: 235, w: shape === "line" ? 400 : 300, h: shape === "line" ? 20 : 250, html: "", align: "center", valign: "middle", fontSize: 26, strokeW: shape === "line" ? 4 : 0 });
   const addImage = (file: File, index = 0) => {
-    if (!file.type.startsWith("image/")) return toast("Ese archivo no es una imagen", "error");
+    if (!file.type.startsWith("image/")) return toast(L("Ese archivo no es una imagen"), "error");
     const target = imageTarget.current;
     const reader = new FileReader();
     reader.onload = () => {
@@ -455,7 +456,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
         setPreview(Date.now());
         setTimeout(() => setPreview(0), 2000);
       }, 30);
-      toast(`Animación «${animLabel(a)}» aplicada`, "success");
+      toast(L("Animación «{0}» aplicada", animLabel(a)), "success");
     }
   };
   const [trPreview, setTrPreview] = useState(0);
@@ -598,7 +599,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
       if (mod && k === "p") { e.preventDefault(); finishEditing(); setPrinting(true); return; }
       if (mod && k === "o") {
         e.preventDefault();
-        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : "No se pudo abrir", "error"));
+        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : L("No se pudo abrir"), "error"));
         else navigate({ name: "home", section: "open" });
         return;
       }
@@ -691,13 +692,13 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
   /* ---------------- Interfaz ---------------- */
   const tabs: { id: Tab; label: string }[] = [
-    { id: "home", label: "Inicio" },
-    { id: "insert", label: "Insertar" },
-    { id: "design", label: "Diseño" },
-    { id: "animations", label: "Animaciones" },
-    { id: "transitions", label: "Transiciones" },
-    { id: "show", label: "Presentación" },
-    { id: "ai", label: "IA" },
+    { id: "home", label: L("Inicio") },
+    { id: "insert", label: L("Insertar") },
+    { id: "design", label: L("Diseño") },
+    { id: "animations", label: L("Animaciones") },
+    { id: "transitions", label: L("Transiciones") },
+    { id: "show", label: L("Presentación") },
+    { id: "ai", label: L("IA") },
   ];
   const fontValue = one?.font ?? null;
   const sizeValue = one?.fontSize ?? 28;
@@ -708,7 +709,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
   const layoutMenu = (onPick: (l: LayoutId) => void) => (
     <MenuContent className="w-[230px]">
-      <MenuLabel>Diseño de la diapositiva</MenuLabel>
+      <MenuLabel>{L("Diseño de la diapositiva")}</MenuLabel>
       {LAYOUTS.map((l) => (
         <MenuItem key={l.id} onSelect={() => onPick(l.id)}>{l.name}</MenuItem>
       ))}
@@ -722,7 +723,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
           doc={doc}
           title={title}
           onTitle={setTitle}
-          placeholder="Presentación sin título"
+          placeholder={L("Presentación sin título")}
           saveState={saveState}
           diskState={diskState}
           unsavedFile={unsavedFile}
@@ -730,13 +731,13 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
           icon={<Presentation />}
         >
           <Button size="sm" variant={panelOpen ? "secondary" : "outline"} icon={<SlidersHorizontal className="size-3.5" />} onClick={() => setPanelOpen((v) => !v)}>
-            Formato
+            {L("Formato")}
           </Button>
           <Button size="sm" variant="outline" icon={<Play className="size-3.5" />} onClick={() => { finishEditing(); setPresenting(0); }}>
-            Presentar
+            {L("Presentar")}
           </Button>
           <Button size="sm" variant="primary" icon={<Sparkles className="size-3.5" />} onClick={() => setAiOpen(true)}>
-            IA
+            {L("IA")}
           </Button>
         </OfficeHeader>
 
@@ -749,19 +750,19 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
             left={
               <OfficeFileMenu
                 files={files}
-                saveLabel="(.pptx)"
+                saveLabel={L("(.pptx)")}
                 onPrint={() => { finishEditing(); setPrinting(true); }}
                 exports={[
-                  { label: "PowerPoint (.pptx)", icon: <Presentation />, onSelect: () => files.exportAs("pptx") },
-                  { label: "PDF (.pdf)", icon: <Printer />, onSelect: savePdf },
-                  { label: "Vídeo (.mp4)", icon: <Film />, onSelect: () => { finishEditing(); setVideoOpen(true); } },
+                  { label: L("PowerPoint (.pptx)"), icon: <Presentation />, onSelect: () => files.exportAs("pptx") },
+                  { label: L("PDF (.pdf)"), icon: <Printer />, onSelect: savePdf },
+                  { label: L("Vídeo (.mp4)"), icon: <Film />, onSelect: () => { finishEditing(); setVideoOpen(true); } },
                 ]}
               />
             }
             right={
               <>
-                <IconButton size="sm" label="Deshacer" shortcut="Ctrl+Z" onClick={undo} disabled={!undoStack.current.length}><Undo2 className="size-4" /></IconButton>
-                <IconButton size="sm" label="Rehacer" shortcut="Ctrl+Y" onClick={redo} disabled={!redoStack.current.length}><Redo2 className="size-4" /></IconButton>
+                <IconButton size="sm" label={L("Deshacer")} shortcut="Ctrl+Z" onClick={undo} disabled={!undoStack.current.length}><Undo2 className="size-4" /></IconButton>
+                <IconButton size="sm" label={L("Rehacer")} shortcut="Ctrl+Y" onClick={redo} disabled={!redoStack.current.length}><Redo2 className="size-4" /></IconButton>
               </>
             }
           />
@@ -773,17 +774,17 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
           >
             {tab === "home" && (
               <>
-                <RGroup label="Diapositivas">
+                <RGroup label={L("Diapositivas")}>
                   <Menu>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Plus />} label="Nueva diapositiva" /></span>
+                      <span><RBig icon={<Plus />} label={L("Nueva diapositiva")} /></span>
                     </MenuTrigger>
                     {layoutMenu(addSlide)}
                   </Menu>
                   <div className="flex flex-col">
                     <Menu>
                       <MenuTrigger asChild>
-                        <span><IconButton size="sm" label="Cambiar el diseño"><FileText className="size-4" /></IconButton></span>
+                        <span><IconButton size="sm" label={L("Cambiar el diseño")}><FileText className="size-4" /></IconButton></span>
                       </MenuTrigger>
                       {layoutMenu((l) => {
                         // Se conservan los textos que encajan con el nuevo diseño
@@ -800,75 +801,75 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                         setSel([]);
                       })}
                     </Menu>
-                    <IconButton size="sm" label="Duplicar diapositiva" onClick={() => duplicateSlide()}><Copy className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Duplicar diapositiva")} onClick={() => duplicateSlide()}><Copy className="size-4" /></IconButton>
                   </div>
-                  <IconButton size="sm" label="Eliminar diapositiva" onClick={() => deleteSlide()}><Trash2 className="size-4" /></IconButton>
+                  <IconButton size="sm" label={L("Eliminar diapositiva")} onClick={() => deleteSlide()}><Trash2 className="size-4" /></IconButton>
                 </RGroup>
-                <RGroup label="Fuente" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Fuente")} className="flex-col items-start justify-center gap-1">
                   <div className="flex items-center gap-1">
-                    <FontPicker value={fontValue} onChange={(css) => editEls(sel, { font: css })} className="w-[150px]" placeholder="Fuente del tema" />
+                    <FontPicker value={fontValue} onChange={(css) => editEls(sel, { font: css })} className="w-[150px]" placeholder={L("Fuente del tema")} />
                     <FontSizePicker value={sizeValue} onChange={(pt) => editEls(sel, { fontSize: pt })} />
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Negrita" shortcut="Ctrl+B" active={!!one?.bold} onClick={toggleBold}><Bold className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Cursiva" shortcut="Ctrl+I" onClick={() => wrapAll("i")}><Italic className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Subrayado" shortcut="Ctrl+U" onClick={() => wrapAll("u")}><Underline className="size-4" /></IconButton>
-                    <ColorButton label="Color del texto" icon={<Type />} color={one?.color ?? t.accent} onApply={(c) => textColor(c)} onClear={() => editEls(sel, { color: undefined })} />
+                    <IconButton size="sm" label={L("Negrita")} shortcut="Ctrl+B" active={!!one?.bold} onClick={toggleBold}><Bold className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Cursiva")} shortcut="Ctrl+I" onClick={() => wrapAll("i")}><Italic className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Subrayado")} shortcut="Ctrl+U" onClick={() => wrapAll("u")}><Underline className="size-4" /></IconButton>
+                    <ColorButton label={L("Color del texto")} icon={<Type />} color={one?.color ?? t.accent} onApply={(c) => textColor(c)} onClear={() => editEls(sel, { color: undefined })} />
                   </div>
                 </RGroup>
-                <RGroup label="Párrafo" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Párrafo")} className="flex-col items-start justify-center gap-1">
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Viñetas" onClick={() => list(false)}><List className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Numeración" onClick={() => list(true)}><ListOrdered className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Viñetas")} onClick={() => list(false)}><List className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Numeración")} onClick={() => list(true)}><ListOrdered className="size-4" /></IconButton>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Izquierda" active={one?.align === "left"} onClick={() => editEls(sel, { align: "left" })}><AlignLeft className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Centrar" active={one?.align === "center"} onClick={() => editEls(sel, { align: "center" })}><AlignCenter className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Derecha" active={one?.align === "right"} onClick={() => editEls(sel, { align: "right" })}><AlignRight className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Izquierda")} active={one?.align === "left"} onClick={() => editEls(sel, { align: "left" })}><AlignLeft className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Centrar")} active={one?.align === "center"} onClick={() => editEls(sel, { align: "center" })}><AlignCenter className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Derecha")} active={one?.align === "right"} onClick={() => editEls(sel, { align: "right" })}><AlignRight className="size-4" /></IconButton>
                     <Menu>
                       <MenuTrigger asChild>
-                        <span><IconButton size="sm" label="Alineación vertical"><AlignVerticalJustifyCenter className="size-4" /></IconButton></span>
+                        <span><IconButton size="sm" label={L("Alineación vertical")}><AlignVerticalJustifyCenter className="size-4" /></IconButton></span>
                       </MenuTrigger>
                       <MenuContent>
-                        <MenuItem onSelect={() => editEls(sel, { valign: "top" })}>Arriba</MenuItem>
-                        <MenuItem onSelect={() => editEls(sel, { valign: "middle" })}>En medio</MenuItem>
-                        <MenuItem onSelect={() => editEls(sel, { valign: "bottom" })}>Abajo</MenuItem>
+                        <MenuItem onSelect={() => editEls(sel, { valign: "top" })}>{L("Arriba")}</MenuItem>
+                        <MenuItem onSelect={() => editEls(sel, { valign: "middle" })}>{L("En medio")}</MenuItem>
+                        <MenuItem onSelect={() => editEls(sel, { valign: "bottom" })}>{L("Abajo")}</MenuItem>
                       </MenuContent>
                     </Menu>
                   </div>
                 </RGroup>
-                <RGroup label="Dibujo" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Dibujo")} className="flex-col items-start justify-center gap-1">
                   <div className="flex items-center gap-0.5">
-                    <ColorButton label="Relleno de forma" icon={<PaintBucket />} color={one?.fill ?? t.accent} onApply={(c) => editEls(sel, { fill: c })} onClear={() => editEls(sel, { fill: "transparent" })} clearLabel="Sin relleno" />
-                    <ColorButton label="Contorno de forma" icon={<Square />} color={one?.stroke ?? "#1c1e24"} onApply={(c) => editEls(sel, (e) => ({ ...e, stroke: c, strokeW: e.strokeW || 3 }))} onClear={() => editEls(sel, { stroke: undefined, strokeW: 0 })} clearLabel="Sin contorno" />
+                    <ColorButton label={L("Relleno de forma")} icon={<PaintBucket />} color={one?.fill ?? t.accent} onApply={(c) => editEls(sel, { fill: c })} onClear={() => editEls(sel, { fill: "transparent" })} clearLabel={L("Sin relleno")} />
+                    <ColorButton label={L("Contorno de forma")} icon={<Square />} color={one?.stroke ?? "#1c1e24"} onApply={(c) => editEls(sel, (e) => ({ ...e, stroke: c, strokeW: e.strokeW || 3 }))} onClear={() => editEls(sel, { stroke: undefined, strokeW: 0 })} clearLabel={L("Sin contorno")} />
                   </div>
                   <div className="flex items-center gap-0.5">
                     <Menu>
                       <MenuTrigger asChild>
-                        <span><IconButton size="sm" label="Organizar"><ArrowUp className="size-4" /></IconButton></span>
+                        <span><IconButton size="sm" label={L("Organizar")}><ArrowUp className="size-4" /></IconButton></span>
                       </MenuTrigger>
                       <MenuContent>
-                        <MenuItem icon={<ArrowUp />} onSelect={() => order("front")}>Traer al frente</MenuItem>
-                        <MenuItem icon={<ArrowUp />} onSelect={() => order("up")}>Traer adelante</MenuItem>
-                        <MenuItem icon={<ArrowDown />} onSelect={() => order("down")}>Enviar atrás</MenuItem>
-                        <MenuItem icon={<ArrowDown />} onSelect={() => order("back")}>Enviar al fondo</MenuItem>
+                        <MenuItem icon={<ArrowUp />} onSelect={() => order("front")}>{L("Traer al frente")}</MenuItem>
+                        <MenuItem icon={<ArrowUp />} onSelect={() => order("up")}>{L("Traer adelante")}</MenuItem>
+                        <MenuItem icon={<ArrowDown />} onSelect={() => order("down")}>{L("Enviar atrás")}</MenuItem>
+                        <MenuItem icon={<ArrowDown />} onSelect={() => order("back")}>{L("Enviar al fondo")}</MenuItem>
                         <MenuSeparator />
-                        <MenuItem icon={<AlignHorizontalJustifyCenter />} onSelect={() => alignSel("hcenter")}>Centrar en horizontal</MenuItem>
-                        <MenuItem icon={<AlignVerticalJustifyCenter />} onSelect={() => alignSel("vcenter")}>Centrar en vertical</MenuItem>
+                        <MenuItem icon={<AlignHorizontalJustifyCenter />} onSelect={() => alignSel("hcenter")}>{L("Centrar en horizontal")}</MenuItem>
+                        <MenuItem icon={<AlignVerticalJustifyCenter />} onSelect={() => alignSel("vcenter")}>{L("Centrar en vertical")}</MenuItem>
                         <MenuSeparator />
-                        <MenuLabel>Varios elementos seleccionados</MenuLabel>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("left")}>Alinear a la izquierda</MenuItem>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("center")}>Alinear al centro</MenuItem>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("right")}>Alinear a la derecha</MenuItem>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("top")}>Alinear arriba</MenuItem>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("middle")}>Alinear en medio</MenuItem>
-                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("bottom")}>Alinear abajo</MenuItem>
-                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distH")}>Repartir en horizontal</MenuItem>
-                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distV")}>Repartir en vertical</MenuItem>
+                        <MenuLabel>{L("Varios elementos seleccionados")}</MenuLabel>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("left")}>{L("Alinear a la izquierda")}</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("center")}>{L("Alinear al centro")}</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("right")}>{L("Alinear a la derecha")}</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("top")}>{L("Alinear arriba")}</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("middle")}>{L("Alinear en medio")}</MenuItem>
+                        <MenuItem disabled={sel.length < 2} onSelect={() => alignGroup("bottom")}>{L("Alinear abajo")}</MenuItem>
+                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distH")}>{L("Repartir en horizontal")}</MenuItem>
+                        <MenuItem disabled={sel.length < 3} onSelect={() => alignGroup("distV")}>{L("Repartir en vertical")}</MenuItem>
                       </MenuContent>
                     </Menu>
-                    <IconButton size="sm" label="Duplicar elemento" shortcut="Ctrl+D" onClick={duplicateSel} disabled={!sel.length}><Copy className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Eliminar elemento" shortcut="Supr" onClick={deleteSel} disabled={!sel.length}><Trash2 className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Duplicar elemento")} shortcut="Ctrl+D" onClick={duplicateSel} disabled={!sel.length}><Copy className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Eliminar elemento")} shortcut={L("Supr")} onClick={deleteSel} disabled={!sel.length}><Trash2 className="size-4" /></IconButton>
                   </div>
                 </RGroup>
               </>
@@ -876,27 +877,27 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
             {tab === "insert" && (
               <>
-                <RGroup label="Diapositivas">
+                <RGroup label={L("Diapositivas")}>
                   <Menu>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Plus />} label="Nueva diapositiva" /></span>
+                      <span><RBig icon={<Plus />} label={L("Nueva diapositiva")} /></span>
                     </MenuTrigger>
                     {layoutMenu(addSlide)}
                   </Menu>
                 </RGroup>
-                <RGroup label="Elementos">
-                  <RBig icon={<Type />} label="Cuadro de texto" onClick={addText} />
-                  <RBig icon={<ImageIcon />} label="Imágenes" onClick={() => pickImage({ kind: "add" })} title="Puedes elegir varias a la vez, pegarlas con Ctrl+V o arrastrarlas" />
-                  <RBig icon={<Table2 />} label="Tabla" onClick={() => setTableEdit("new")} title="Tabla con encabezado (doble clic para editarla)" />
-                  <RBig icon={<ChartColumnBig />} label="Gráfico" onClick={() => setChartEdit("new")} title="Gráfico con tus datos (doble clic para editarlo)" />
+                <RGroup label={L("Elementos")}>
+                  <RBig icon={<Type />} label={L("Cuadro de texto")} onClick={addText} />
+                  <RBig icon={<ImageIcon />} label={L("Imágenes")} onClick={() => pickImage({ kind: "add" })} title={L("Puedes elegir varias a la vez, pegarlas con Ctrl+V o arrastrarlas")} />
+                  <RBig icon={<Table2 />} label={L("Tabla")} onClick={() => setTableEdit("new")} title={L("Tabla con encabezado (doble clic para editarla)")} />
+                  <RBig icon={<ChartColumnBig />} label={L("Gráfico")} onClick={() => setChartEdit("new")} title={L("Gráfico con tus datos (doble clic para editarlo)")} />
                 </RGroup>
-                <RGroup label="Iconos">
+                <RGroup label={L("Iconos")}>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <span><RBig icon={<Smile />} label="Icono" /></span>
+                      <span><RBig icon={<Smile />} label={L("Icono")} /></span>
                     </PopoverTrigger>
                     <PopoverContent className="w-[272px]">
-                      <div className="mb-2 text-[12.5px] font-medium">Insertar un icono</div>
+                      <div className="mb-2 text-[12.5px] font-medium">{L("Insertar un icono")}</div>
                       <div className="grid grid-cols-8 gap-1">
                         {ICONS.map((ic) => (
                           <PopoverClose asChild key={ic}>
@@ -912,7 +913,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     </PopoverContent>
                   </Popover>
                 </RGroup>
-                <RGroup label="Formas">
+                <RGroup label={L("Formas")}>
                   <div className="grid grid-cols-4 gap-0.5">
                     {SHAPES.map((s) => (
                       <IconButton key={s.id} size="sm" label={s.label} onClick={() => addShape(s.id)}>
@@ -926,7 +927,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
             {tab === "design" && (
               <>
-                <RGroup label="Temas">
+                <RGroup label={L("Temas")}>
                   <div className="flex items-center gap-1.5">
                     {THEMES.map((th) => (
                       <Tooltip key={th.id} label={th.name}>
@@ -935,7 +936,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                           className={cn("relative h-[56px] w-[88px] overflow-hidden rounded-md border-2 text-left", deck.theme === th.id ? "border-accent" : "border-border hover:border-accent/50")}
                           style={{ background: th.bg }}
                         >
-                          <span className="absolute top-2 left-2 text-[13px] font-bold" style={{ color: th.title, fontFamily: th.titleFont }}>Aa</span>
+                          <span className="absolute top-2 left-2 text-[13px] font-bold" style={{ color: th.title, fontFamily: th.titleFont }}>{L("Aa")}</span>
                           <span className="absolute bottom-2 left-2 h-1.5 w-10 rounded-full" style={{ background: th.accent }} />
                           {th.band && <span className="absolute right-0 bottom-0 left-0 h-1" style={{ background: th.band }} />}
                         </button>
@@ -943,29 +944,29 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     ))}
                   </div>
                 </RGroup>
-                <RGroup label="Fondo">
-                  <ColorButton label="Color de fondo de esta diapositiva" icon={<Palette />} color={slide.bg ?? t.bg} onApply={(c) => editSlide((s) => ({ ...s, bg: c }))} onClear={() => editSlide((s) => ({ ...s, bg: undefined }))} clearLabel="Fondo del tema" />
-                  <RBig icon={<Palette />} label="Aplicar a todas" onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, bg: slide.bg })) }))} title="Usa el fondo de esta diapositiva en todas" />
+                <RGroup label={L("Fondo")}>
+                  <ColorButton label={L("Color de fondo de esta diapositiva")} icon={<Palette />} color={slide.bg ?? t.bg} onApply={(c) => editSlide((s) => ({ ...s, bg: c }))} onClear={() => editSlide((s) => ({ ...s, bg: undefined }))} clearLabel={L("Fondo del tema")} />
+                  <RBig icon={<Palette />} label={L("Aplicar a todas")} onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, bg: slide.bg })) }))} title={L("Usa el fondo de esta diapositiva en todas")} />
                 </RGroup>
               </>
             )}
 
             {tab === "animations" && (
               <>
-                <RGroup label="Vista previa">
-                  <RBig icon={<Play />} label="Reproducir" onClick={playPreview} title="Reproduce las animaciones de esta diapositiva" />
+                <RGroup label={L("Vista previa")}>
+                  <RBig icon={<Play />} label={L("Reproducir")} onClick={playPreview} title={L("Reproduce las animaciones de esta diapositiva")} />
                 </RGroup>
-                <RGroup label={sel.length ? "Elige cómo aparece el elemento seleccionado" : "Selecciona un elemento de la diapositiva para animarlo"}>
+                <RGroup label={sel.length ? L("Elige cómo aparece el elemento seleccionado") : L("Selecciona un elemento de la diapositiva para animarlo")}>
                   <div className="grid grid-flow-col grid-rows-2 gap-1">
-                    <AnimButton icon="✕" label="Ninguna" active={!!one && (one.anim ?? "none") === "none"} disabled={!sel.length} onClick={() => applyAnim("none")} />
+                    <AnimButton icon="✕" label={L("Ninguna")} active={!!one && (one.anim ?? "none") === "none"} disabled={!sel.length} onClick={() => applyAnim("none")} />
                     {ANIMS.map((a) => (
                       <AnimButton key={a.id} icon={a.icon} label={a.label} active={!!one && one.anim === a.id} disabled={!sel.length} onClick={() => applyAnim(a.id)} />
                     ))}
                   </div>
                 </RGroup>
-                <RGroup label="Intervalos" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Intervalos")} className="flex-col items-start justify-center gap-1">
                   <label className="flex items-center gap-2 text-[12px]">
-                    <span className="w-[62px] text-muted">Inicio</span>
+                    <span className="w-[62px] text-muted">{L("Inicio")}</span>
                     <select
                       disabled={!one?.anim || one.anim === "none"}
                       value={one?.animTrigger ?? "after"}
@@ -976,12 +977,12 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     </select>
                   </label>
                   <label className="flex items-center gap-2 text-[12px]">
-                    <span className="w-[62px] text-muted">Duración</span>
+                    <span className="w-[62px] text-muted">{L("Duración")}</span>
                     <input type="number" min={0.1} max={10} step={0.1} disabled={!one?.anim || one.anim === "none"} value={one?.animDur ?? 0.6} onChange={(e) => editEls(sel, { animDur: Math.max(0.1, Number(e.target.value) || 0.6) })} onKeyDown={(e) => e.stopPropagation()} className="h-7 w-16 rounded-md border border-border bg-surface px-1.5 text-right text-[12px] disabled:opacity-40" />
                     s
                   </label>
                   <label className="flex items-center gap-2 text-[12px]">
-                    <span className="w-[62px] text-muted">Retraso</span>
+                    <span className="w-[62px] text-muted">{L("Retraso")}</span>
                     <input type="number" min={0} max={30} step={0.1} disabled={!one?.anim || one.anim === "none"} value={one?.animDelay ?? 0} onChange={(e) => editEls(sel, { animDelay: Math.max(0, Number(e.target.value) || 0) })} onKeyDown={(e) => e.stopPropagation()} className="h-7 w-16 rounded-md border border-border bg-surface px-1.5 text-right text-[12px] disabled:opacity-40" />
                     s
                   </label>
@@ -991,7 +992,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
             {tab === "transitions" && (
               <>
-                <RGroup label="Transición al entrar en esta diapositiva">
+                <RGroup label={L("Transición al entrar en esta diapositiva")}>
                   <div className="grid grid-flow-col grid-rows-2 gap-1">
                     {TRANSITIONS.map((tr) => (
                       <AnimButton
@@ -1007,24 +1008,24 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                     ))}
                   </div>
                 </RGroup>
-                <RGroup label="Todas">
-                  <RBig icon={<Copy />} label="Aplicar a todas" onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, transition: slide.transition })) }))} />
+                <RGroup label={L("Todas")}>
+                  <RBig icon={<Copy />} label={L("Aplicar a todas")} onClick={() => commit((d) => ({ ...d, slides: d.slides.map((s) => ({ ...s, transition: slide.transition })) }))} />
                 </RGroup>
               </>
             )}
 
             {tab === "show" && (
-              <RGroup label="Iniciar presentación">
-                <RBig icon={<Play />} label="Desde el principio" onClick={() => { finishEditing(); setPresenting(0); }} title="F5" />
-                <RBig icon={<MonitorPlay />} label="Desde la actual" onClick={() => { finishEditing(); setPresenting(cur); }} title="Mayús+F5" />
-                <RBig icon={<ScreenShare />} label="Vista del moderador" onClick={() => { finishEditing(); setModerator(cur); }} title="En tu pantalla ves las notas, la siguiente diapositiva y el tiempo; en el proyector, solo la diapositiva (Alt+F5)" />
+              <RGroup label={L("Iniciar presentación")}>
+                <RBig icon={<Play />} label={L("Desde el principio")} onClick={() => { finishEditing(); setPresenting(0); }} title="F5" />
+                <RBig icon={<MonitorPlay />} label={L("Desde la actual")} onClick={() => { finishEditing(); setPresenting(cur); }} title={L("Mayús+F5")} />
+                <RBig icon={<ScreenShare />} label={L("Vista del moderador")} onClick={() => { finishEditing(); setModerator(cur); }} title="En tu pantalla ves las notas, la siguiente diapositiva y el tiempo; en el proyector, solo la diapositiva (Alt+F5)" />
               </RGroup>
             )}
 
             {tab === "ai" && (
-              <RGroup label="Asistente">
-                <RBig icon={<Sparkles />} label="Crear presentación" onClick={() => setAiOpen(true)} title="La IA escribe las diapositivas a partir de un tema" />
-                <RBig icon={<StickyNote />} label="Notas del orador" onClick={() => void speakerNotes()} title="La IA escribe qué decir en esta diapositiva" />
+              <RGroup label={L("Asistente")}>
+                <RBig icon={<Sparkles />} label={L("Crear presentación")} onClick={() => setAiOpen(true)} title={L("La IA escribe las diapositivas a partir de un tema")} />
+                <RBig icon={<StickyNote />} label={L("Notas del orador")} onClick={() => void speakerNotes()} title={L("La IA escribe qué decir en esta diapositiva")} />
               </RGroup>
             )}
           </div>
@@ -1055,13 +1056,13 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                         <span className="grid size-4 place-items-center rounded bg-amber-400 text-[9px] text-black" title={`${s.els.filter((e) => e.anim && e.anim !== "none").length} animaciones`}>★</span>
                       )}
                       {s.transition && s.transition !== "none" && (
-                        <span className="grid size-4 place-items-center rounded bg-sky-500 text-[9px] text-white" title="Tiene transición">⇄</span>
+                        <span className="grid size-4 place-items-center rounded bg-sky-500 text-[9px] text-white" title={L("Tiene transición")}>⇄</span>
                       )}
                     </div>
                   )}
                   <div className="absolute top-1 right-1 hidden gap-0.5 group-hover:flex">
-                    <button onClick={(e) => { e.stopPropagation(); duplicateSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title="Duplicar"><Copy className="size-3" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); deleteSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title="Eliminar"><X className="size-3" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); duplicateSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title={L("Duplicar")}><Copy className="size-3" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); deleteSlide(i); }} className="grid size-5 place-items-center rounded bg-black/60 text-white" title={L("Eliminar")}><X className="size-3" /></button>
                   </div>
                 </div>
               </div>
@@ -1069,7 +1070,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
             <Menu>
               <MenuTrigger asChild>
                 <button className="mt-1 flex h-9 items-center justify-center gap-1.5 rounded-md border border-dashed border-border text-[12.5px] text-muted hover:border-accent hover:text-accent">
-                  <Plus className="size-4" /> Nueva <ChevronDown className="size-3" />
+                  <Plus className="size-4" /> {" "}{L("Nueva")}{" "} <ChevronDown className="size-3" />
                 </button>
               </MenuTrigger>
               {layoutMenu(addSlide)}
@@ -1178,7 +1179,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                             <div key={h} className="stage-handle pointer-events-auto" style={pos(h)} onMouseDown={(e) => startDrag(e, "resize", [el.id], h)} />
                           ))}
                         {single && el.shape !== "line" && (
-                          <div className="stage-rot pointer-events-auto" style={{ left: box.width / 2 - 6, top: -30 }} onMouseDown={(e) => startDrag(e, "rotate", [el.id])} title="Girar (Mayús: libre)" />
+                          <div className="stage-rot pointer-events-auto" style={{ left: box.width / 2 - 6, top: -30 }} onMouseDown={(e) => startDrag(e, "rotate", [el.id])} title={L("Girar (Mayús: libre)")} />
                         )}
                       </div>
                     );
@@ -1188,7 +1189,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                   slide.els
                     .filter((e) => e.anim && e.anim !== "none")
                     .map((el, i) => (
-                      <div key={`a${el.id}`} className="anim-tag" style={{ left: el.x * scale - 6, top: el.y * scale - 10 }} title={`Animación ${i + 1}`}>
+                      <div key={`a${el.id}`} className="anim-tag" style={{ left: el.x * scale - 6, top: el.y * scale - 10 }} title={L("Animación {0}", i + 1)}>
                         <b>{i + 1}</b>
                         {ANIMS.find((a) => a.id === el.anim)?.icon} {animLabel(el.anim)}
                         {(el.animTrigger ?? "after") === "click" ? " · 🖱" : ""}
@@ -1198,14 +1199,14 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 {guides.h.map((y, i) => <div key={`h${i}`} className="stage-guide" style={{ top: y * scale, left: 0, height: 1, width: SLIDE_W * scale }} />)}
               </div>
               <div className="pointer-events-none absolute bottom-2 left-3 text-[11.5px] text-muted">
-                Diapositiva {cur + 1} de {deck.slides.length}
+                {L("Diapositiva")}{" "} {cur + 1} {" "}{L("de")}{" "} {deck.slides.length}
                 {one && ` · ${Math.round(one.x)}, ${Math.round(one.y)} · ${Math.round(one.w)} × ${Math.round(one.h)}${one.rot ? ` · ${one.rot}°` : ""}`}
               </div>
             </div>
             <textarea
               value={slide.notes ?? ""}
               onChange={(e) => editSlide((s) => ({ ...s, notes: e.target.value }), false)}
-              placeholder="Notas del orador (solo las ves tú al presentar con la tecla N)"
+              placeholder={L("Notas del orador (solo las ves tú al presentar con la tecla N)")}
               className="no-print h-[84px] shrink-0 resize-none border-t border-border bg-surface px-4 py-2.5 text-[13px] outline-none"
             />
           </div>
@@ -1276,7 +1277,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
             }
             if (!title && slides[0]) setTitle(htmlText(slides[0].els[0]?.html).slice(0, 80));
             setAiOpen(false);
-            toast(`${slides.length} diapositivas creadas`, "success");
+            toast(L("{0} diapositivas creadas", slides.length), "success");
           }}
         />
       )}
@@ -1296,8 +1297,8 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
 
   async function speakerNotes() {
     const text = slide.els.map((e) => htmlText(e.html)).filter(Boolean).join("\n");
-    if (!text) return toast("Esta diapositiva no tiene texto");
-    toast("Escribiendo las notas…");
+    if (!text) return toast(L("Esta diapositiva no tiene texto"));
+    toast(L("Escribiendo las notas…"));
     try {
       const out = await streamText({
         system: "Eres un experto en presentaciones. Escribe en español, en 3-5 frases naturales, lo que el orador debería decir para esta diapositiva. Solo el texto, sin títulos.",
@@ -1305,9 +1306,9 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
         temperature: 0.5,
       });
       editSlide((s) => ({ ...s, notes: out.trim() }));
-      toast("Notas del orador añadidas", "success");
+      toast(L("Notas del orador añadidas"), "success");
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudieron escribir las notas", "error");
+      toast(e instanceof Error ? e.message : L("No se pudieron escribir las notas"), "error");
     }
   }
 }
@@ -1395,7 +1396,7 @@ function Presenter({ deck, start, onExit }: { deck: Deck; start: number; onExit:
       )}
       <div className="absolute right-4 bottom-3 rounded-full bg-black/50 px-3 py-1 text-[12px] text-white/80">
         {i + 1} / {deck.slides.length}
-        {pos.step < totalSteps && ` · ${totalSteps - pos.step} clic${totalSteps - pos.step === 1 ? "" : "s"} para las animaciones`} · Esc para salir · N notas
+        {pos.step < totalSteps && L(" · {0} clic{1} para las animaciones", totalSteps - pos.step, totalSteps - pos.step === 1 ? "" : "s")} {" "}{L("· Esc para salir · N notas")}
       </div>
       {notes && slide.notes && (
         <div className="absolute bottom-12 left-1/2 max-w-[70vw] -translate-x-1/2 rounded-lg bg-black/80 px-4 py-3 text-[15px] whitespace-pre-wrap text-white">{slide.notes}</div>
@@ -1448,21 +1449,21 @@ function SlidesAIDialog({ onClose, onCreate }: { onClose: () => void; onCreate: 
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Crear presentación con IA"
-      description="Describe el tema y la IA escribirá las diapositivas. Después puedes cambiar el tema visual y editarlo todo."
+      title={L("Crear presentación con IA")}
+      description={L("Describe el tema y la IA escribirá las diapositivas. Después puedes cambiar el tema visual y editarlo todo.")}
       className="w-[min(94vw,640px)]"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cerrar</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cerrar")}</Button>
           {slides.length > 0 && !busy && (
             <>
-              <Button variant="outline" onClick={() => onCreate(slides, "append")}>Añadir al final</Button>
-              <Button variant="primary" onClick={() => onCreate(slides, "replace")}>Usar estas {slides.length} diapositivas</Button>
+              <Button variant="outline" onClick={() => onCreate(slides, "append")}>{L("Añadir al final")}</Button>
+              <Button variant="primary" onClick={() => onCreate(slides, "replace")}>{L("Usar estas")}{" "} {slides.length} {" "}{L("diapositivas")}</Button>
             </>
           )}
           {(!slides.length || busy) && (
             <Button variant="primary" icon={busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} disabled={busy || !topic.trim()} onClick={() => void run()}>
-              Generar
+              {L("Generar")}
             </Button>
           )}
         </>
@@ -1470,16 +1471,16 @@ function SlidesAIDialog({ onClose, onCreate }: { onClose: () => void; onCreate: 
     >
       <div className="flex flex-col gap-3">
         <label className="text-[12.5px] font-medium">
-          Tema
-          <Input autoFocus value={topic} onChange={(e) => setTopic(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter" && topic.trim() && !busy) void run(); }} placeholder="Ej.: Energías renovables en España" className="mt-1 h-9" />
+          {L("Tema")}
+          <Input autoFocus value={topic} onChange={(e) => setTopic(e.target.value)} onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Enter" && topic.trim() && !busy) void run(); }} placeholder={L("Ej.: Energías renovables en España")} className="mt-1 h-9" />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="text-[12.5px] font-medium">
-            Público <span className="font-normal text-muted">(opcional)</span>
-            <Input value={audience} onChange={(e) => setAudience(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder="Ej.: alumnos de 4.º de ESO" className="mt-1 h-9" />
+            {L("Público")}{" "} <span className="font-normal text-muted">{L("(opcional)")}</span>
+            <Input value={audience} onChange={(e) => setAudience(e.target.value)} onKeyDown={(e) => e.stopPropagation()} placeholder={L("Ej.: alumnos de 4.º de ESO")} className="mt-1 h-9" />
           </label>
           <label className="text-[12.5px] font-medium">
-            Diapositivas
+            {L("Diapositivas")}
             <select value={count} onChange={(e) => setCount(Number(e.target.value))} className="mt-1 h-9 w-full rounded-[var(--radius)] border border-border bg-surface px-2 text-[13px]">
               {[4, 5, 6, 8, 10, 12].map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -1487,7 +1488,7 @@ function SlidesAIDialog({ onClose, onCreate }: { onClose: () => void; onCreate: 
         </div>
         {error && <div className="rounded-md bg-red-500/10 p-2.5 text-[12.5px] text-red-600">{error}</div>}
         {(out || busy) && (
-          <div className="max-h-[260px] overflow-auto rounded-[var(--radius)] border border-border bg-surface-2 p-3 text-[12.5px] whitespace-pre-wrap">{out || "Pensando…"}</div>
+          <div className="max-h-[260px] overflow-auto rounded-[var(--radius)] border border-border bg-surface-2 p-3 text-[12.5px] whitespace-pre-wrap">{out || L("Pensando…")}</div>
         )}
       </div>
     </Dialog>

@@ -5,6 +5,7 @@ import { CHART_TYPES, ChartSvg } from "@/components/sheet/Chart";
 import { chartHeight, type DocChart } from "@/components/editor/docBlocks";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Gráfico dentro del documento: se ve en el editor y se edita con doble clic. */
 export function DocChartView({ node, updateAttributes, selected, editor }: NodeViewProps) {
   const chart = node.attrs.chart as DocChart;
@@ -15,7 +16,7 @@ export function DocChartView({ node, updateAttributes, selected, editor }: NodeV
         <ChartSvg type={chart.type} data={chart} width={chart.width} height={chartHeight(chart)} title={chart.title || undefined} legend={chart.legend} />
         {editor.isEditable && (
           <button className="doc-chart-edit no-print" onClick={() => setEditing(true)} contentEditable={false}>
-            <Pencil className="size-3.5" /> Editar datos
+            <Pencil className="size-3.5" /> {" "}{L("Editar datos")}
           </button>
         )}
       </div>
@@ -49,12 +50,12 @@ export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { i
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title={insert ? "Insertar gráfico" : "Datos del gráfico"}
+      title={insert ? L("Insertar gráfico") : L("Datos del gráfico")}
       className="!w-[min(94vw,760px)]"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={() => { onSave(c); onClose(); }}>{insert ? "Insertar" : "Guardar"}</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+          <Button variant="primary" onClick={() => { onSave(c); onClose(); }}>{insert ? L("Insertar") : L("Guardar")}</Button>
         </>
       }
     >
@@ -67,18 +68,18 @@ export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { i
               </button>
             ))}
           </div>
-          <Input value={c.title} onChange={(e) => set({ title: e.target.value })} placeholder="Título del gráfico" className="mb-2" />
+          <Input value={c.title} onChange={(e) => set({ title: e.target.value })} placeholder={L("Título del gráfico")} className="mb-2" />
           <div className="max-h-[300px] overflow-auto" onPaste={onPaste}>
             <table className="w-full border-separate border-spacing-1 text-[13px]">
               <thead>
                 <tr>
-                  <th className="w-[34%] text-left text-[11.5px] font-medium text-muted">Categoría</th>
+                  <th className="w-[34%] text-left text-[11.5px] font-medium text-muted">{L("Categoría")}</th>
                   {c.series.map((s, si) => (
                     <th key={si}>
                       <div className="flex items-center gap-1">
                         <input className={cell + " font-semibold"} value={s.name} onChange={(e) => set({ series: c.series.map((x, j) => (j === si ? { ...x, name: e.target.value } : x)) })} />
                         {c.series.length > 1 && (
-                          <button title="Quitar serie" className="text-muted hover:text-red-500" onClick={() => set({ series: c.series.filter((_, j) => j !== si) })}>
+                          <button title={L("Quitar serie")} className="text-muted hover:text-red-500" onClick={() => set({ series: c.series.filter((_, j) => j !== si) })}>
                             <Trash2 className="size-3.5" />
                           </button>
                         )}
@@ -93,7 +94,7 @@ export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { i
                     <td className="flex items-center gap-1">
                       <input className={cell} value={cat} onChange={(e) => set({ categories: c.categories.map((x, j) => (j === ri ? e.target.value : x)) })} />
                       {c.categories.length > 1 && (
-                        <button title="Quitar fila" className="text-muted hover:text-red-500" onClick={() => set({ categories: c.categories.filter((_, j) => j !== ri), series: c.series.map((s) => ({ ...s, values: s.values.filter((_, j) => j !== ri) })) })}>
+                        <button title={L("Quitar fila")} className="text-muted hover:text-red-500" onClick={() => set({ categories: c.categories.filter((_, j) => j !== ri), series: c.series.map((s) => ({ ...s, values: s.values.filter((_, j) => j !== ri) })) })}>
                           <Trash2 className="size-3.5" />
                         </button>
                       )}
@@ -113,9 +114,9 @@ export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { i
             </table>
           </div>
           <div className="mt-2 flex gap-2">
-            <Button size="sm" icon={<Plus />} onClick={() => set({ categories: [...c.categories, `Elemento ${c.categories.length + 1}`], series: c.series.map((s) => ({ ...s, values: [...s.values, 0] })) })}>Fila</Button>
-            <Button size="sm" icon={<Plus />} onClick={() => set({ series: [...c.series, { name: `Serie ${c.series.length + 1}`, values: c.categories.map(() => 0) }] })}>Serie</Button>
-            <span className="self-center text-[11.5px] text-muted">También puedes pegar una tabla copiada de una hoja de cálculo.</span>
+            <Button size="sm" icon={<Plus />} onClick={() => set({ categories: [...c.categories, `Elemento ${c.categories.length + 1}`], series: c.series.map((s) => ({ ...s, values: [...s.values, 0] })) })}>{L("Fila")}</Button>
+            <Button size="sm" icon={<Plus />} onClick={() => set({ series: [...c.series, { name: L("Serie {0}", c.series.length + 1), values: c.categories.map(() => 0) }] })}>{L("Serie")}</Button>
+            <span className="self-center text-[11.5px] text-muted">{L("También puedes pegar una tabla copiada de una hoja de cálculo.")}</span>
           </div>
         </div>
         <div>
@@ -123,10 +124,10 @@ export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { i
             <ChartSvg type={c.type} data={c} width={250} height={170} title={c.title || undefined} legend={c.legend} />
           </div>
           <label className="mt-3 flex items-center gap-2 text-[12.5px]">
-            <input type="checkbox" checked={c.legend} onChange={(e) => set({ legend: e.target.checked })} /> Mostrar leyenda
+            <input type="checkbox" checked={c.legend} onChange={(e) => set({ legend: e.target.checked })} /> {" "}{L("Mostrar leyenda")}
           </label>
           <label className={cn("mt-2 block text-[12.5px]", hideWidth && "hidden")}>
-            Ancho: {c.width} px
+            {L("Ancho:")}{" "} {c.width} {" "}{L("px")}
             <input type="range" min={280} max={640} step={10} value={c.width} onChange={(e) => set({ width: Number(e.target.value) })} className="w-full" />
           </label>
         </div>

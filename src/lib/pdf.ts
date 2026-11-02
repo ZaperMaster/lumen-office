@@ -2,6 +2,7 @@ import { isDesktop, revealInFolder } from "@/lib/files";
 import { safeFileName } from "@/lib/fileName";
 import { useApp } from "@/store/app";
 
+import { L } from "@/lib/i18n";
 /*
  * Guardar como PDF de un clic: se pregunta dónde y se crea el PDF con el motor
  * de impresión (texto real, con la misma maquetación que al imprimir), sin la
@@ -29,7 +30,7 @@ export async function exportPdf(title: string, page: PdfPage, prepare?: () => Pr
     return null;
   }
   const { save } = await import("@tauri-apps/plugin-dialog");
-  const picked = await save({ title: "Guardar como PDF", defaultPath: `${safeFileName(title)}.pdf`, filters: [{ name: "PDF", extensions: ["pdf"] }] });
+  const picked = await save({ title: L("Guardar como PDF"), defaultPath: `${safeFileName(title)}.pdf`, filters: [{ name: L("PDF"), extensions: ["pdf"] }] });
   if (!picked) return null;
   const path = /\.pdf$/i.test(picked) ? picked : `${picked}.pdf`;
   const undo = await prepare?.();
@@ -40,13 +41,13 @@ export async function exportPdf(title: string, page: PdfPage, prepare?: () => Pr
     await invoke("print_to_pdf", {
       options: { path, width: page.widthMm / MM_PER_IN, height: page.heightMm / MM_PER_IN, margin: (page.marginMm ?? 0) / MM_PER_IN },
     });
-    toast("PDF guardado", "success", {
+    toast(L("PDF guardado"), "success", {
       detail: path,
-      action: { label: "Mostrar en la carpeta", onClick: () => void revealInFolder(path).catch(() => {}) },
+      action: { label: L("Mostrar en la carpeta"), onClick: () => void revealInFolder(path).catch(() => {}) },
     });
     return path;
   } catch (e) {
-    toast("No se pudo guardar el PDF", "error", { detail: String(e) });
+    toast(L("No se pudo guardar el PDF"), "error", { detail: String(e) });
     return null;
   } finally {
     undo?.();

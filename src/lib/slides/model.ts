@@ -1,5 +1,6 @@
 import type { ChartType } from "@/lib/sheet/model";
 
+import { L } from "@/lib/i18n";
 /*
  * Modelo de las presentaciones. Las diapositivas miden 1280 × 720 unidades
  * (16:9); los elementos se colocan con coordenadas en esas unidades.
@@ -33,42 +34,42 @@ export type Transition = "none" | "fade" | "slide" | "push" | "zoom" | "flip" | 
 
 /** Animaciones disponibles, con su nombre y un icono para la galería. */
 export const ANIMS: { id: Anim; label: string; icon: string; group: "Entrada" | "Énfasis" }[] = [
-  { id: "fade", label: "Aparecer", icon: "◐", group: "Entrada" },
-  { id: "fly", label: "Desde abajo", icon: "⬆", group: "Entrada" },
-  { id: "flyDown", label: "Desde arriba", icon: "⬇", group: "Entrada" },
-  { id: "flyLeft", label: "Desde la izquierda", icon: "➡", group: "Entrada" },
-  { id: "flyRight", label: "Desde la derecha", icon: "⬅", group: "Entrada" },
-  { id: "zoom", label: "Acercar", icon: "🔍", group: "Entrada" },
-  { id: "grow", label: "Crecer", icon: "⤢", group: "Entrada" },
-  { id: "pop", label: "Saltar", icon: "✸", group: "Entrada" },
-  { id: "bounce", label: "Rebotar", icon: "⤓", group: "Entrada" },
-  { id: "spin", label: "Girar", icon: "⟳", group: "Entrada" },
-  { id: "flip", label: "Voltear", icon: "⇋", group: "Entrada" },
-  { id: "wipe", label: "Barrido", icon: "▤", group: "Entrada" },
-  { id: "blur", label: "Desenfoque", icon: "◌", group: "Entrada" },
-  { id: "swing", label: "Columpio", icon: "〰", group: "Entrada" },
-  { id: "typewriter", label: "Máquina de escribir", icon: "⌨", group: "Entrada" },
-  { id: "pulse", label: "Latido", icon: "♥", group: "Énfasis" },
-  { id: "shake", label: "Sacudir", icon: "≋", group: "Énfasis" },
+  { id: "fade", label: L("Aparecer"), icon: "◐", group: "Entrada" },
+  { id: "fly", label: L("Desde abajo"), icon: "⬆", group: "Entrada" },
+  { id: "flyDown", label: L("Desde arriba"), icon: "⬇", group: "Entrada" },
+  { id: "flyLeft", label: L("Desde la izquierda"), icon: "➡", group: "Entrada" },
+  { id: "flyRight", label: L("Desde la derecha"), icon: "⬅", group: "Entrada" },
+  { id: "zoom", label: L("Acercar"), icon: "🔍", group: "Entrada" },
+  { id: "grow", label: L("Crecer"), icon: "⤢", group: "Entrada" },
+  { id: "pop", label: L("Saltar"), icon: "✸", group: "Entrada" },
+  { id: "bounce", label: L("Rebotar"), icon: "⤓", group: "Entrada" },
+  { id: "spin", label: L("Girar"), icon: "⟳", group: "Entrada" },
+  { id: "flip", label: L("Voltear"), icon: "⇋", group: "Entrada" },
+  { id: "wipe", label: L("Barrido"), icon: "▤", group: "Entrada" },
+  { id: "blur", label: L("Desenfoque"), icon: "◌", group: "Entrada" },
+  { id: "swing", label: L("Columpio"), icon: "〰", group: "Entrada" },
+  { id: "typewriter", label: L("Máquina de escribir"), icon: "⌨", group: "Entrada" },
+  { id: "pulse", label: L("Latido"), icon: "♥", group: "Énfasis" },
+  { id: "shake", label: L("Sacudir"), icon: "≋", group: "Énfasis" },
 ];
 
 export const animLabel = (a?: Anim) => (a && a !== "none" ? (ANIMS.find((x) => x.id === a)?.label ?? a) : "Ninguna");
 
 export const TRANSITIONS: { id: Transition; label: string; icon: string }[] = [
-  { id: "none", label: "Ninguna", icon: "▢" },
-  { id: "fade", label: "Desvanecer", icon: "◐" },
-  { id: "slide", label: "Deslizar", icon: "⇠" },
-  { id: "push", label: "Empujar", icon: "⇡" },
-  { id: "zoom", label: "Zoom", icon: "🔍" },
-  { id: "flip", label: "Voltear", icon: "⇋" },
-  { id: "wipe", label: "Barrido", icon: "▤" },
-  { id: "blur", label: "Desenfoque", icon: "◌" },
+  { id: "none", label: L("Ninguna"), icon: "▢" },
+  { id: "fade", label: L("Desvanecer"), icon: "◐" },
+  { id: "slide", label: L("Deslizar"), icon: "⇠" },
+  { id: "push", label: L("Empujar"), icon: "⇡" },
+  { id: "zoom", label: L("Zoom"), icon: "🔍" },
+  { id: "flip", label: L("Voltear"), icon: "⇋" },
+  { id: "wipe", label: L("Barrido"), icon: "▤" },
+  { id: "blur", label: L("Desenfoque"), icon: "◌" },
 ];
 
 export const TRIGGERS: { id: AnimTrigger; label: string; hint: string }[] = [
-  { id: "click", label: "Al hacer clic", hint: "Aparece cuando haces clic al presentar" },
-  { id: "with", label: "Con la anterior", hint: "A la vez que la animación anterior" },
-  { id: "after", label: "Después de la anterior", hint: "Justo cuando termina la anterior" },
+  { id: "click", label: L("Al hacer clic"), hint: L("Aparece cuando haces clic al presentar") },
+  { id: "with", label: L("Con la anterior"), hint: L("A la vez que la animación anterior") },
+  { id: "after", label: L("Después de la anterior"), hint: L("Justo cuando termina la anterior") },
 ];
 
 export interface AnimStep {
@@ -197,14 +198,14 @@ export interface Theme {
 }
 
 export const THEMES: Theme[] = [
-  { id: "clean", name: "Claro", bg: "#ffffff", title: "#1c1e24", text: "#3a3f4b", accent: "#4f7cff", titleFont: `"Inter Variable", sans-serif`, bodyFont: `"Inter Variable", sans-serif` },
-  { id: "dark", name: "Noche", bg: "#14161c", title: "#ffffff", text: "#c9cdd6", accent: "#8b9cff", titleFont: `"Inter Variable", sans-serif`, bodyFont: `"Inter Variable", sans-serif` },
-  { id: "ocean", name: "Océano", bg: "#0f3d5e", title: "#ffffff", text: "#d6ecf7", accent: "#5ad1e6", titleFont: `"Montserrat Variable", sans-serif`, bodyFont: `"Open Sans Variable", sans-serif` },
-  { id: "forest", name: "Bosque", bg: "#f3f6ef", title: "#1f4d2b", text: "#33402f", accent: "#3b8a4f", titleFont: `"Lora Variable", serif`, bodyFont: `"Source Serif 4 Variable", serif`, band: "#3b8a4f" },
-  { id: "sunset", name: "Atardecer", bg: "#fff6ee", title: "#b23a16", text: "#4a3226", accent: "#f08a24", titleFont: `"Playfair Display Variable", serif`, bodyFont: `"Lora Variable", serif`, band: "#f08a24" },
-  { id: "violet", name: "Violeta", bg: "#1b1033", title: "#ffffff", text: "#ddd3f5", accent: "#c084fc", titleFont: `"Raleway Variable", sans-serif`, bodyFont: `"Nunito Variable", sans-serif` },
-  { id: "paper", name: "Papel", bg: "#faf7f0", title: "#2b2b2b", text: "#4a4a4a", accent: "#c0392b", titleFont: `"EB Garamond Variable", serif`, bodyFont: `"EB Garamond Variable", serif`, band: "#c0392b" },
-  { id: "corporate", name: "Corporativo", bg: "#ffffff", title: "#123a6b", text: "#33475b", accent: "#1f6feb", titleFont: `"Roboto Variable", sans-serif`, bodyFont: `"Roboto Variable", sans-serif`, band: "#123a6b" },
+  { id: "clean", name: L("Claro"), bg: "#ffffff", title: "#1c1e24", text: "#3a3f4b", accent: "#4f7cff", titleFont: `"Inter Variable", sans-serif`, bodyFont: `"Inter Variable", sans-serif` },
+  { id: "dark", name: L("Noche"), bg: "#14161c", title: "#ffffff", text: "#c9cdd6", accent: "#8b9cff", titleFont: `"Inter Variable", sans-serif`, bodyFont: `"Inter Variable", sans-serif` },
+  { id: "ocean", name: L("Océano"), bg: "#0f3d5e", title: "#ffffff", text: "#d6ecf7", accent: "#5ad1e6", titleFont: `"Montserrat Variable", sans-serif`, bodyFont: `"Open Sans Variable", sans-serif` },
+  { id: "forest", name: L("Bosque"), bg: "#f3f6ef", title: "#1f4d2b", text: "#33402f", accent: "#3b8a4f", titleFont: `"Lora Variable", serif`, bodyFont: `"Source Serif 4 Variable", serif`, band: "#3b8a4f" },
+  { id: "sunset", name: L("Atardecer"), bg: "#fff6ee", title: "#b23a16", text: "#4a3226", accent: "#f08a24", titleFont: `"Playfair Display Variable", serif`, bodyFont: `"Lora Variable", serif`, band: "#f08a24" },
+  { id: "violet", name: L("Violeta"), bg: "#1b1033", title: "#ffffff", text: "#ddd3f5", accent: "#c084fc", titleFont: `"Raleway Variable", sans-serif`, bodyFont: `"Nunito Variable", sans-serif` },
+  { id: "paper", name: L("Papel"), bg: "#faf7f0", title: "#2b2b2b", text: "#4a4a4a", accent: "#c0392b", titleFont: `"EB Garamond Variable", serif`, bodyFont: `"EB Garamond Variable", serif`, band: "#c0392b" },
+  { id: "corporate", name: L("Corporativo"), bg: "#ffffff", title: "#123a6b", text: "#33475b", accent: "#1f6feb", titleFont: `"Roboto Variable", sans-serif`, bodyFont: `"Roboto Variable", sans-serif`, band: "#123a6b" },
 ];
 
 export const theme = (id: string) => THEMES.find((t) => t.id === id) ?? THEMES[0];
@@ -219,13 +220,13 @@ export const sid = () => `${Date.now().toString(36)}${(seq++).toString(36)}${Mat
 export type LayoutId = "title" | "content" | "two" | "section" | "titleOnly" | "image" | "blank";
 
 export const LAYOUTS: { id: LayoutId; name: string }[] = [
-  { id: "title", name: "Diapositiva de título" },
-  { id: "content", name: "Título y contenido" },
-  { id: "two", name: "Dos columnas" },
-  { id: "section", name: "Encabezado de sección" },
-  { id: "titleOnly", name: "Solo el título" },
-  { id: "image", name: "Título e imagen" },
-  { id: "blank", name: "En blanco" },
+  { id: "title", name: L("Diapositiva de título") },
+  { id: "content", name: L("Título y contenido") },
+  { id: "two", name: L("Dos columnas") },
+  { id: "section", name: L("Encabezado de sección") },
+  { id: "titleOnly", name: L("Solo el título") },
+  { id: "image", name: L("Título e imagen") },
+  { id: "blank", name: L("En blanco") },
 ];
 
 const text = (role: Role, x: number, y: number, w: number, h: number, extra: Partial<SlideEl> = {}): SlideEl => ({
@@ -248,31 +249,31 @@ export function layoutEls(id: LayoutId): SlideEl[] {
   switch (id) {
     case "title":
       return [
-        text("title", 120, 220, 1040, 150, { align: "center", fontSize: 64, placeholder: "Haz clic para añadir un título" }),
-        text("subtitle", 200, 390, 880, 80, { align: "center", placeholder: "Haz clic para añadir un subtítulo" }),
+        text("title", 120, 220, 1040, 150, { align: "center", fontSize: 64, placeholder: L("Haz clic para añadir un título") }),
+        text("subtitle", 200, 390, 880, 80, { align: "center", placeholder: L("Haz clic para añadir un subtítulo") }),
       ];
     case "content":
       return [
-        text("title", 80, 50, 1120, 110, { placeholder: "Título de la diapositiva" }),
-        text("body", 80, 180, 1120, 480, { html: "<ul><li></li></ul>", placeholder: "Escribe los puntos" }),
+        text("title", 80, 50, 1120, 110, { placeholder: L("Título de la diapositiva") }),
+        text("body", 80, 180, 1120, 480, { html: "<ul><li></li></ul>", placeholder: L("Escribe los puntos") }),
       ];
     case "two":
       return [
-        text("title", 80, 50, 1120, 110, { placeholder: "Título de la diapositiva" }),
-        text("body", 80, 180, 540, 480, { html: "<ul><li></li></ul>", placeholder: "Columna izquierda" }),
-        text("body", 660, 180, 540, 480, { html: "<ul><li></li></ul>", placeholder: "Columna derecha" }),
+        text("title", 80, 50, 1120, 110, { placeholder: L("Título de la diapositiva") }),
+        text("body", 80, 180, 540, 480, { html: "<ul><li></li></ul>", placeholder: L("Columna izquierda") }),
+        text("body", 660, 180, 540, 480, { html: "<ul><li></li></ul>", placeholder: L("Columna derecha") }),
       ];
     case "section":
       return [
-        text("title", 100, 250, 1080, 140, { fontSize: 60, placeholder: "Título de la sección" }),
-        text("subtitle", 100, 400, 1080, 70, { placeholder: "Descripción" }),
+        text("title", 100, 250, 1080, 140, { fontSize: 60, placeholder: L("Título de la sección") }),
+        text("subtitle", 100, 400, 1080, 70, { placeholder: L("Descripción") }),
       ];
     case "titleOnly":
-      return [text("title", 80, 50, 1120, 110, { placeholder: "Título de la diapositiva" })];
+      return [text("title", 80, 50, 1120, 110, { placeholder: L("Título de la diapositiva") })];
     case "image":
       return [
-        text("title", 80, 50, 1120, 110, { placeholder: "Título de la diapositiva" }),
-        { id: sid(), type: "shape", shape: "roundRect", x: 240, y: 190, w: 800, h: 460, fill: "#00000010", stroke: "#00000030", strokeW: 2, html: "", placeholder: "Inserta una imagen (Insertar → Imagen)", align: "center", valign: "middle", fontSize: 22 },
+        text("title", 80, 50, 1120, 110, { placeholder: L("Título de la diapositiva") }),
+        { id: sid(), type: "shape", shape: "roundRect", x: 240, y: 190, w: 800, h: 460, fill: "#00000010", stroke: "#00000030", strokeW: 2, html: "", placeholder: L("Inserta una imagen (Insertar → Imagen)"), align: "center", valign: "middle", fontSize: 22 },
       ];
     default:
       return [];

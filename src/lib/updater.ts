@@ -3,6 +3,7 @@ import type { Update } from "@tauri-apps/plugin-updater";
 import { isDesktop, flushOpenDocs } from "@/lib/files";
 import { confirmClose } from "@/lib/closeGuard";
 
+import { L } from "@/lib/i18n";
 /*
  * Actualizaciones automáticas: la app consulta el latest.json de la última Release
  * de GitHub, descarga el instalador nuevo (firmado con nuestra clave) y lo instala.
@@ -28,10 +29,10 @@ let pending: Update | null = null;
 
 function friendly(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
-  if (/404|not found/i.test(msg)) return "No se encontró información de actualizaciones (¿el repositorio es público?).";
-  if (/signature/i.test(msg)) return "La actualización no tiene una firma válida y no se ha instalado.";
-  if (/network|connect|dns|timed out|request/i.test(msg)) return "No se pudo conectar para buscar actualizaciones.";
-  return `No se pudo comprobar si hay actualizaciones. ${msg}`;
+  if (/404|not found/i.test(msg)) return L("No se encontró información de actualizaciones (¿el repositorio es público?).");
+  if (/signature/i.test(msg)) return L("La actualización no tiene una firma válida y no se ha instalado.");
+  if (/network|connect|dns|timed out|request/i.test(msg)) return L("No se pudo conectar para buscar actualizaciones.");
+  return L("No se pudo comprobar si hay actualizaciones. {0}", msg);
 }
 
 export const useUpdater = create<UpdaterState>((set, get) => ({

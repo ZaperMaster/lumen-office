@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { L } from "@/lib/i18n";
 import { ChartSvg } from "@/components/sheet/Chart";
 import { SLIDE_H, SLIDE_W, animTimeline, htmlText, theme as getTheme, type AnimStep, type Slide, type SlideEl, type Theme } from "@/lib/slides/model";
 
@@ -166,7 +167,7 @@ export function ElementView({ el, t, showPlaceholder }: { el: SlideEl; t: Theme;
       {(el.type === "text" || el.type === "shape") && (
         <div className="slide-text-box" style={{ ...textStyle(el, t), lineHeight: el.lineHeight }}>
           {empty && showPlaceholder && el.placeholder ? (
-            <div className="slide-placeholder">{el.placeholder}</div>
+            <div className="slide-placeholder">{L(el.placeholder)}</div>
           ) : (
             <div className="slide-text" dangerouslySetInnerHTML={{ __html: el.html ?? "" }} />
           )}

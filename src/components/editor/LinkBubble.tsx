@@ -6,6 +6,7 @@ import { normalizeUrl, openExternal } from "@/lib/openExternal";
 import { useApp } from "@/store/app";
 import { Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Menú que aparece al poner el cursor sobre un vínculo: abrir, editar, copiar y quitar. */
 export function LinkBubble({ editor }: { editor: Editor }) {
   const toast = useApp((s) => s.toast);
@@ -13,7 +14,7 @@ export function LinkBubble({ editor }: { editor: Editor }) {
   const [draft, setDraft] = useState("");
   const href = useEditorState({ editor, selector: ({ editor: e }) => (e.getAttributes("link").href as string | undefined) ?? "" });
 
-  const open = () => openExternal(href).catch((e) => toast(e instanceof Error ? e.message : "No se pudo abrir", "error"));
+  const open = () => openExternal(href).catch((e) => toast(e instanceof Error ? e.message : L("No se pudo abrir"), "error"));
   const save = () => {
     const url = normalizeUrl(draft);
     if (url) editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
@@ -64,22 +65,22 @@ export function LinkBubble({ editor }: { editor: Editor }) {
               onMouseDown={(e) => e.preventDefault()}
               onClick={open}
               className="max-w-[260px] truncate rounded-md px-2 py-1 text-left text-accent underline-offset-2 hover:underline"
-              title="Abrir vínculo (también con Ctrl + clic)"
+              title={L("Abrir vínculo (también con Ctrl + clic)")}
             >
               {href}
             </button>
             <span className="mx-0.5 h-5 w-px bg-border" />
-            {btn("Abrir en el navegador", open, <ExternalLink className="size-4" />)}
-            {btn("Editar vínculo", () => { setDraft(href); setEditing(true); }, <Pencil className="size-4" />)}
+            {btn(L("Abrir en el navegador"), open, <ExternalLink className="size-4" />)}
+            {btn(L("Editar vínculo"), () => { setDraft(href); setEditing(true); }, <Pencil className="size-4" />)}
             {btn(
-              "Copiar dirección",
+              L("Copiar dirección"),
               async () => {
                 await navigator.clipboard.writeText(href);
-                toast("Dirección copiada", "success");
+                toast(L("Dirección copiada"), "success");
               },
               <Copy className="size-4" />,
             )}
-            {btn("Quitar vínculo", () => editor.chain().focus().extendMarkRange("link").unsetLink().run(), <Unlink className="size-4" />, true)}
+            {btn(L("Quitar vínculo"), () => editor.chain().focus().extendMarkRange("link").unsetLink().run(), <Unlink className="size-4" />, true)}
           </>
         )}
       </div>

@@ -8,6 +8,7 @@ import { formatValue } from "@/lib/sheet/format";
 import { PIVOT_FNS, type PivotFn, type PivotSpec } from "@/lib/sheet/pivot";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 /*  Menú del filtro de una columna                                     */
 /* ------------------------------------------------------------------ */
@@ -85,20 +86,20 @@ export function FilterMenu({
       onKeyDown={(e) => e.stopPropagation()}
     >
       <button onClick={() => onSort(true)} className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] hover:bg-surface-2">
-        <ArrowDownAZ className="size-4 text-muted" /> Ordenar de A a Z
+        <ArrowDownAZ className="size-4 text-muted" /> {" "}{L("Ordenar de A a Z")}
       </button>
       <button onClick={() => onSort(false)} className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] hover:bg-surface-2">
-        <ArrowDownZA className="size-4 text-muted" /> Ordenar de Z a A
+        <ArrowDownZA className="size-4 text-muted" /> {" "}{L("Ordenar de Z a A")}
       </button>
       <button
         onClick={() => onApply(null)}
         disabled={!f.show[col]}
         className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] hover:bg-surface-2 disabled:opacity-40"
       >
-        <FilterX className="size-4 text-muted" /> Quitar el filtro de esta columna
+        <FilterX className="size-4 text-muted" /> {" "}{L("Quitar el filtro de esta columna")}
       </button>
       <div className="my-1.5 h-px bg-border" />
-      <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar" className="mb-1.5 h-8" onKeyDown={(e) => e.key === "Enter" && apply()} />
+      <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Buscar")} className="mb-1.5 h-8" onKeyDown={(e) => e.key === "Enter" && apply()} />
       <div className="max-h-[200px] overflow-y-auto rounded-md border border-border py-1">
         <label className="flex cursor-pointer items-center gap-2 px-2 py-1 text-[12.5px] font-medium hover:bg-surface-2">
           <input
@@ -113,7 +114,7 @@ export function FilterMenu({
               setChecked(next);
             }}
           />
-          (Seleccionar todo)
+          {L("(Seleccionar todo)")}
         </label>
         {shown.map((v) => (
           <label key={v} className="flex cursor-pointer items-center gap-2 px-2 py-1 text-[12.5px] hover:bg-surface-2">
@@ -127,13 +128,13 @@ export function FilterMenu({
                 setChecked(next);
               }}
             />
-            <span className={cn("truncate", v === "" && "text-muted italic")}>{v === "" ? "(Vacías)" : v}</span>
+            <span className={cn("truncate", v === "" && "text-muted italic")}>{v === "" ? L("(Vacías)") : v}</span>
           </label>
         ))}
       </div>
       <div className="mt-2 flex justify-end gap-1.5">
-        <Button size="sm" variant="ghost" onClick={onClose}>Cancelar</Button>
-        <Button size="sm" variant="primary" onClick={apply} disabled={!values.some((v) => checked.has(v))}>Aceptar</Button>
+        <Button size="sm" variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+        <Button size="sm" variant="primary" onClick={apply} disabled={!values.some((v) => checked.has(v))}>{L("Aceptar")}</Button>
       </div>
     </div>,
     document.body,
@@ -154,29 +155,29 @@ export function CondDialog({ type, range, onClose, onSave }: { type: CondType; r
   const p = COND_PRESETS.find((x) => x.id === preset)!;
   const valid = !!parseRange(rg) && (!NEEDS_A.includes(type) || a.trim() !== "") && (type !== "between" || b.trim() !== "");
   const label: Record<string, string> = {
-    gt: "Dar formato a las celdas MAYORES que",
-    lt: "Dar formato a las celdas MENORES que",
-    between: "Dar formato a las celdas ENTRE",
-    eq: "Dar formato a las celdas IGUALES a",
-    text: "Dar formato a las celdas que CONTIENEN",
-    top: "Dar formato a los valores más altos (cantidad)",
-    bottom: "Dar formato a los valores más bajos (cantidad)",
+    gt: L("Dar formato a las celdas MAYORES que"),
+    lt: L("Dar formato a las celdas MENORES que"),
+    between: L("Dar formato a las celdas ENTRE"),
+    eq: L("Dar formato a las celdas IGUALES a"),
+    text: L("Dar formato a las celdas que CONTIENEN"),
+    top: L("Dar formato a los valores más altos (cantidad)"),
+    bottom: L("Dar formato a los valores más bajos (cantidad)"),
   };
   return (
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
       title={COND_LABELS[type]}
-      description="La regla se aplica sola cada vez que cambian los datos."
+      description={L("La regla se aplica sola cada vez que cambian los datos.")}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
           <Button
             variant="primary"
             disabled={!valid}
             onClick={() => onSave({ id: uid(), type, range: rg.toUpperCase(), a: a || undefined, b: b || undefined, bg: p.bg, color: p.color })}
           >
-            Aplicar
+            {L("Aplicar")}
           </Button>
         </>
       }
@@ -186,18 +187,18 @@ export function CondDialog({ type, range, onClose, onSave }: { type: CondType; r
           <label className="text-[12.5px] font-medium">
             {label[type]}
             <div className="mt-1 flex items-center gap-2">
-              <Input autoFocus value={a} onChange={(e) => setA(e.target.value)} className="h-9 flex-1" placeholder={type === "text" ? "Texto" : "Valor"} />
+              <Input autoFocus value={a} onChange={(e) => setA(e.target.value)} className="h-9 flex-1" placeholder={type === "text" ? L("Texto") : L("Valor")} />
               {type === "between" && (
                 <>
                   <span className="text-muted">y</span>
-                  <Input value={b} onChange={(e) => setB(e.target.value)} className="h-9 flex-1" placeholder="Valor" />
+                  <Input value={b} onChange={(e) => setB(e.target.value)} className="h-9 flex-1" placeholder={L("Valor")} />
                 </>
               )}
             </div>
           </label>
         )}
         <label className="text-[12.5px] font-medium">
-          Con este formato
+          {L("Con este formato")}
           <div className="mt-1 grid gap-1.5">
             {COND_PRESETS.map((x) => (
               <button
@@ -214,7 +215,7 @@ export function CondDialog({ type, range, onClose, onSave }: { type: CondType; r
           </div>
         </label>
         <label className="text-[12.5px] font-medium">
-          Se aplica a
+          {L("Se aplica a")}
           <Input value={rg} onChange={(e) => setRg(e.target.value)} className={cn("mt-1 h-9 font-mono", !parseRange(rg) && "border-red-400")} />
         </label>
       </div>
@@ -234,17 +235,17 @@ export function CondManager({ rules, onClose, onDelete, onClear }: { rules: Cond
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Reglas de formato condicional"
+      title={L("Reglas de formato condicional")}
       description="Reglas de esta hoja. Se aplican en orden; la última manda si dos coinciden."
       className="w-[min(94vw,560px)]"
       footer={
         <>
-          <Button variant="ghost" className="mr-auto text-red-500" disabled={!rules.length} onClick={onClear}>Borrar todas</Button>
-          <Button variant="primary" onClick={onClose}>Cerrar</Button>
+          <Button variant="ghost" className="mr-auto text-red-500" disabled={!rules.length} onClick={onClear}>{L("Borrar todas")}</Button>
+          <Button variant="primary" onClick={onClose}>{L("Cerrar")}</Button>
         </>
       }
     >
-      {!rules.length && <p className="py-6 text-center text-[13px] text-muted">Esta hoja no tiene reglas.</p>}
+      {!rules.length && <p className="py-6 text-center text-[13px] text-muted">{L("Esta hoja no tiene reglas.")}</p>}
       <div className="flex flex-col gap-1.5">
         {rules.map((r) => (
           <div key={r.id} className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
@@ -259,7 +260,7 @@ export function CondManager({ rules, onClose, onDelete, onClear }: { rules: Cond
               <div className="truncate text-[13px] font-medium">{describe(r)}</div>
               <div className="font-mono text-[11.5px] text-muted">{r.range}</div>
             </div>
-            <button onClick={() => onDelete(r.id)} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-red-500" aria-label="Eliminar regla">
+            <button onClick={() => onDelete(r.id)} className="grid size-7 place-items-center rounded-md text-muted hover:bg-surface-2 hover:text-red-500" aria-label={L("Eliminar regla")}>
               <Trash2 className="size-4" />
             </button>
           </div>
@@ -297,12 +298,12 @@ export function ValidationDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Lista desplegable"
-      description="Las celdas mostrarán una flecha para elegir un valor de la lista."
+      title={L("Lista desplegable")}
+      description={L("Las celdas mostrarán una flecha para elegir un valor de la lista.")}
       footer={
         <>
-          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={onRemove}>Quitar la lista</Button>}
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={onRemove}>{L("Quitar la lista")}</Button>}
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
           <Button
             variant="primary"
             disabled={!valid}
@@ -315,7 +316,7 @@ export function ValidationDialog({
               })
             }
           >
-            Aplicar
+            {L("Aplicar")}
           </Button>
         </>
       }
@@ -324,36 +325,36 @@ export function ValidationDialog({
         <div className="flex gap-1.5">
           {(["list", "source"] as const).map((m) => (
             <button key={m} onClick={() => setMode(m)} className={cn("flex-1 rounded-md border px-3 py-1.5 text-[12.5px]", mode === m ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}>
-              {m === "list" ? "Escribir los valores" : "Tomarlos de un rango"}
+              {m === "list" ? L("Escribir los valores") : L("Tomarlos de un rango")}
             </button>
           ))}
         </div>
         {mode === "list" ? (
           <label className="text-[12.5px] font-medium">
-            Valores (uno por línea)
+            {L("Valores (uno por línea)")}
             <textarea
               autoFocus
               value={items}
               onChange={(e) => setItems(e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
               rows={5}
-              placeholder={"Pendiente\nEn curso\nTerminado"}
+              placeholder={L("Pendiente\nEn curso\nTerminado")}
               className="mt-1 w-full resize-none rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-[13px] outline-none focus:border-accent"
             />
           </label>
         ) : (
           <label className="text-[12.5px] font-medium">
-            Rango con los valores
-            <Input autoFocus value={source} onChange={(e) => setSource(e.target.value)} placeholder="Ej.: H2:H10 o Listas!A1:A20" className="mt-1 h-9 font-mono" />
+            {L("Rango con los valores")}
+            <Input autoFocus value={source} onChange={(e) => setSource(e.target.value)} placeholder={L("Ej.: H2:H10 o Listas!A1:A20")} className="mt-1 h-9 font-mono" />
           </label>
         )}
         <label className="text-[12.5px] font-medium">
-          Celdas
+          {L("Celdas")}
           <Input value={rg} onChange={(e) => setRg(e.target.value)} className={cn("mt-1 h-9 font-mono", !parseRange(rg) && "border-red-400")} />
         </label>
         <label className="flex cursor-pointer items-center gap-2 text-[12.5px]">
           <input type="checkbox" checked={strict} onChange={(e) => setStrict(e.target.checked)} />
-          No permitir valores que no estén en la lista
+          {L("No permitir valores que no estén en la lista")}
         </label>
       </div>
     </Dialog>
@@ -370,12 +371,12 @@ export function NoteDialog({ cell, initial, onClose, onSave }: { cell: string; i
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title={initial ? `Comentario de ${cell}` : `Nuevo comentario en ${cell}`}
+      title={initial ? L("Comentario de {0}", cell) : L("Nuevo comentario en {0}", cell)}
       footer={
         <>
-          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={() => onSave(null)}>Eliminar</Button>}
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={() => onSave(text)} disabled={!text.trim()}>Guardar</Button>
+          {initial && <Button variant="ghost" className="mr-auto text-red-500" onClick={() => onSave(null)}>{L("Eliminar")}</Button>}
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+          <Button variant="primary" onClick={() => onSave(text)} disabled={!text.trim()}>{L("Guardar")}</Button>
         </>
       }
     >
@@ -388,7 +389,7 @@ export function NoteDialog({ cell, initial, onClose, onSave }: { cell: string; i
           if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && text.trim()) onSave(text);
         }}
         rows={5}
-        placeholder="Escribe una nota para esta celda…"
+        placeholder={L("Escribe una nota para esta celda…")}
         className="w-full resize-none rounded-[var(--radius)] border border-border bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-accent"
       />
     </Dialog>
@@ -442,43 +443,43 @@ export function PivotDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Tabla dinámica"
-      description="Resume los datos agrupándolos por una columna. Se crea en una hoja nueva y se actualiza sola si cambian los datos."
+      title={L("Tabla dinámica")}
+      description={L("Resume los datos agrupándolos por una columna. Se crea en una hoja nueva y se actualiza sola si cambian los datos.")}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
           <Button variant="primary" disabled={!valid} onClick={() => onCreate({ sheet: si, range: rg!, rows: rowsC!, cols, value: valueC!, fn })}>
-            Crear
+            {L("Crear")}
           </Button>
         </>
       }
     >
       <div className="grid grid-cols-2 gap-3">
         <label className="col-span-2 text-[12.5px] font-medium">
-          Datos (con encabezados en la primera fila)
+          {L("Datos (con encabezados en la primera fila)")}
           <Input value={rgText} onChange={(e) => setRgText(e.target.value.toUpperCase())} className={cn("mt-1 h-9 font-mono", !rg && "border-red-400")} />
         </label>
         <label className="text-[12.5px] font-medium">
-          Agrupar filas por
+          {L("Agrupar filas por")}
           <select value={rowsC ?? ""} onChange={(e) => setRows(Number(e.target.value))} className={select}>
             {headers.map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
           </select>
         </label>
         <label className="text-[12.5px] font-medium">
-          Columnas <span className="font-normal text-muted">(opcional)</span>
+          {L("Columnas")}{" "} <span className="font-normal text-muted">{L("(opcional)")}</span>
           <select value={cols ?? ""} onChange={(e) => setCols(e.target.value === "" ? null : Number(e.target.value))} className={select}>
-            <option value="">(ninguna)</option>
+            <option value="">{L("(ninguna)")}</option>
             {headers.filter((h) => h.c !== rowsC).map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
           </select>
         </label>
         <label className="text-[12.5px] font-medium">
-          Valores
+          {L("Valores")}
           <select value={valueC ?? ""} onChange={(e) => setValue(Number(e.target.value))} className={select}>
             {headers.map((h) => <option key={h.c} value={h.c}>{h.label}</option>)}
           </select>
         </label>
         <label className="text-[12.5px] font-medium">
-          Cálculo
+          {L("Cálculo")}
           <select value={fn} onChange={(e) => setFn(e.target.value as PivotFn)} className={select}>
             {PIVOT_FNS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
           </select>

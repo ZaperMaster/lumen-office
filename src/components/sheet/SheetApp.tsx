@@ -35,6 +35,7 @@ import { useOfficeDoc } from "@/components/office/useOfficeDoc";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
 import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Slider, Switch, Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* ------------------------------------------------------------------ */
 /*  Carga                                                              */
 /* ------------------------------------------------------------------ */
@@ -53,8 +54,8 @@ export default function SheetApp({ id }: { id: string }) {
     return (
       <div className="grid h-full place-items-center">
         <div className="text-center">
-          <p className="mb-3 text-muted">Esta hoja de cálculo no existe o está en la papelera.</p>
-          <Button variant="primary" onClick={() => navigate({ name: "home" })}>Volver al inicio</Button>
+          <p className="mb-3 text-muted">{L("Esta hoja de cálculo no existe o está en la papelera.")}</p>
+          <Button variant="primary" onClick={() => navigate({ name: "home" })}>{L("Volver al inicio")}</Button>
         </div>
       </div>
     );
@@ -175,7 +176,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     const next = fn(prev);
     if (next === prev) return;
     if (ops.touchesLocked(prev, next)) {
-      useApp.getState().toast("La hoja está protegida", "error", { detail: "Quita la protección en Datos → Proteger hoja para cambiar estas celdas." });
+      useApp.getState().toast(L("La hoja está protegida"), "error", { detail: L("Quita la protección en Datos → Proteger hoja para cambiar estas celdas.") });
       return;
     }
     undoStack.current.push(prev);
@@ -223,7 +224,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
     (text: string, typed: boolean, inBar = false) => {
       const sh = wbRef.current.sheets[wbRef.current.active];
       if (sh.protected && !sh.cells[key(sel.ar, sel.ac)]?.s?.unlocked) {
-        useApp.getState().toast("Esta celda está protegida", "error", { detail: "Quita la protección en Datos → Proteger hoja." });
+        useApp.getState().toast(L("Esta celda está protegida"), "error", { detail: L("Quita la protección en Datos → Proteger hoja.") });
         return;
       }
       setSuggestIdx(0);
@@ -243,7 +244,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
         if (open > 0) text += ")".repeat(open);
         const err = checkFormula(text.slice(1));
         if (err) {
-          toast(`La fórmula tiene un error: ${err}`, "error", { detail: "Corrígela o pulsa Esc para cancelar." });
+          toast(L("La fórmula tiene un error: {0}", err), "error", { detail: L("Corrígela o pulsa Esc para cancelar.") });
           return;
         }
       }
@@ -253,7 +254,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
         const opts = validationOptions(val, ev, wbRef.current.active);
         const hit = opts.find((o) => o.toLowerCase() === text.trim().toLowerCase());
         if (!hit) {
-          toast("Ese valor no está en la lista de la celda", "error", { detail: `Valores permitidos: ${opts.slice(0, 8).join(", ")}${opts.length > 8 ? "…" : ""}` });
+          toast(L("Ese valor no está en la lista de la celda"), "error", { detail: L("Valores permitidos: {0}{1}", opts.slice(0, 8).join(", "), opts.length > 8 ? "…" : "") });
           return;
         }
         text = hit;
@@ -341,7 +342,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       return rg.r2 > rg.r1;
     })();
     commit((w) => ops.sortRange(w, w.active, rg, sel.ac, asc, firstRowText));
-    toast(asc ? "Ordenado de A a Z" : "Ordenado de Z a A", "success");
+    toast(asc ? L("Ordenado de A a Z") : L("Ordenado de Z a A"), "success");
   };
 
   const removeDuplicates = () => {
@@ -357,7 +358,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       keep.push(r);
     }
     const removed = rg.r2 - rg.r1 + 1 - keep.length;
-    if (!removed) return toast("No hay filas duplicadas");
+    if (!removed) return toast(L("No hay filas duplicadas"));
     commit((w) => {
       const s = w.sheets[w.active];
       const rows = keep.map((r) => {
@@ -369,7 +370,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       out = ops.pasteClip(out, w.active, rg.r1, rg.c1, { rows: rows.length, cols: rg.c2 - rg.c1 + 1, cells: rows, r: rg.r1, c: rg.c1, sheet: w.active, cut: true, text: "" });
       return out;
     });
-    toast(`${removed} fila${removed === 1 ? "" : "s"} duplicada${removed === 1 ? "" : "s"} eliminada${removed === 1 ? "" : "s"}`, "success");
+    toast(L("{0} fila{1} duplicada{2} eliminada{3}", removed, removed === 1 ? "" : "s", removed === 1 ? "" : "s", removed === 1 ? "" : "s"), "success");
   };
 
   const freeze = (r: number, c: number) => commit((w) => ops.updateSheet(w, w.active, { freezeR: r || undefined, freezeC: c || undefined }));
@@ -593,7 +594,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       else if (mod && k === "h") { e.preventDefault(); setFindOpen({ replace: true }); }
       else if (mod && k === "o") {
         e.preventDefault();
-        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : "No se pudo abrir", "error"));
+        if (isDesktop()) void openFileFromDisk().then((d) => d && openDoc(d)).catch((err) => toast(err instanceof Error ? err.message : L("No se pudo abrir"), "error"));
         else navigate({ name: "home", section: "open" });
       }
     };
@@ -654,7 +655,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       for (const [r, t] of texts) t.split(sep[0]).map((x) => x.trim()).forEach((part, j) => (out = ops.inputCell(out, w.active, r, col + j, part)));
       return out;
     });
-    toast(`Texto separado por «${sep[0] === "\t" ? "tabulador" : sep[0] === " " ? "espacio" : sep[0]}» en ${texts.length} filas`, "success");
+    toast(L("Texto separado por «{0}» en {1} filas", sep[0] === "\t" ? "tabulador" : sep[0] === " " ? "espacio" : sep[0], texts.length), "success");
   };
 
   /** Ancho justo para el contenido en todas las columnas seleccionadas. */
@@ -670,7 +671,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
       return;
     }
     const rg = n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n;
-    if (rg.r1 === rg.r2) return toast("Selecciona una tabla con encabezados (al menos dos filas)", "error");
+    if (rg.r1 === rg.r2) return toast(L("Selecciona una tabla con encabezados (al menos dos filas)"), "error");
     commit((w) => ops.updateSheet(w, w.active, { filter: { ...rg, show: {} } }));
   };
   const condTarget = (): Range => (n.r1 === n.r2 && n.c1 === n.c2 ? currentRegion(sheet, sel.ar, sel.ac) : n);
@@ -757,7 +758,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   }
   const pdf = (p: PrintSetup = sheet.print ?? {}) => {
     const pg = paper(p);
-    void exportPdf(title || "Hoja de cálculo", pg, () => renderForPrint(p, true));
+    void exportPdf(title || L("Hoja de cálculo"), pg, () => renderForPrint(p, true));
   };
 
   /* ---------------- Barra de fórmulas ---------------- */
@@ -766,7 +767,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   const goTo = (text: string) => {
     const rg = parseRange(text.trim().toUpperCase());
     setNameBox(null);
-    if (!rg) return toast("Escribe una celda o un rango, por ejemplo B4 o A1:C10", "error");
+    if (!rg) return toast(L("Escribe una celda o un rango, por ejemplo B4 o A1:C10"), "error");
     setSel({ ar: rg.r1, ac: rg.c1, ...rg });
     focusGrid();
   };
@@ -805,12 +806,12 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
   }, []);
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "home", label: "Inicio" },
-    { id: "insert", label: "Insertar" },
-    { id: "formulas", label: "Fórmulas" },
-    { id: "data", label: "Datos" },
-    { id: "view", label: "Vista" },
-    { id: "ai", label: "IA" },
+    { id: "home", label: L("Inicio") },
+    { id: "insert", label: L("Insertar") },
+    { id: "formulas", label: L("Fórmulas") },
+    { id: "data", label: L("Datos") },
+    { id: "view", label: L("Vista") },
+    { id: "ai", label: L("IA") },
   ];
 
   return (
@@ -820,7 +821,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           doc={doc}
           title={title}
           onTitle={setTitle}
-          placeholder="Hoja de cálculo sin título"
+          placeholder={L("Hoja de cálculo sin título")}
           saveState={saveState}
           diskState={diskState}
           unsavedFile={unsavedFile}
@@ -828,7 +829,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           icon={<FileSpreadsheet />}
         >
           <Button size="sm" variant="primary" icon={<Sparkles className="size-3.5" />} onClick={() => setTab("ai")}>
-            IA
+            {L("IA")}
           </Button>
         </OfficeHeader>
 
@@ -841,21 +842,21 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             left={
               <OfficeFileMenu
                 files={files}
-                saveLabel="(.xlsx)"
+                saveLabel={L("(.xlsx)")}
                 onPrint={() => void print()}
                 exports={[
-                  { label: "Excel (.xlsx)", icon: <FileSpreadsheet />, onSelect: () => files.exportAs("xlsx") },
-                  { label: "CSV de la hoja actual (.csv)", icon: <FileText />, onSelect: () => files.exportAs("csv") },
-                  { label: "PDF (.pdf)", icon: <Printer />, onSelect: () => pdf() },
+                  { label: L("Excel (.xlsx)"), icon: <FileSpreadsheet />, onSelect: () => files.exportAs("xlsx") },
+                  { label: L("CSV de la hoja actual (.csv)"), icon: <FileText />, onSelect: () => files.exportAs("csv") },
+                  { label: L("PDF (.pdf)"), icon: <Printer />, onSelect: () => pdf() },
                 ]}
               />
             }
             right={
               <>
-                <IconButton size="sm" label="Deshacer" shortcut="Ctrl+Z" onClick={undo} disabled={!undoStack.current.length}>
+                <IconButton size="sm" label={L("Deshacer")} shortcut="Ctrl+Z" onClick={undo} disabled={!undoStack.current.length}>
                   <Undo2 className="size-4" />
                 </IconButton>
-                <IconButton size="sm" label="Rehacer" shortcut="Ctrl+Y" onClick={redo} disabled={!redoStack.current.length}>
+                <IconButton size="sm" label={L("Rehacer")} shortcut="Ctrl+Y" onClick={redo} disabled={!redoStack.current.length}>
                   <Redo2 className="size-4" />
                 </IconButton>
               </>
@@ -872,55 +873,55 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           >
             {tab === "home" && (
               <>
-                <RGroup label="Portapapeles">
+                <RGroup label={L("Portapapeles")}>
                   <Menu>
                     <MenuTrigger asChild>
                       <button className="flex h-full min-w-[54px] flex-col items-center justify-center gap-1 rounded-md px-1.5 text-[11.5px] hover:bg-surface-2">
                         <ClipboardPaste className="size-[22px]" />
-                        <span className="flex items-center gap-0.5">Pegar <ChevronDown className="size-3" /></span>
+                        <span className="flex items-center gap-0.5">{L("Pegar")}{" "} <ChevronDown className="size-3" /></span>
                       </button>
                     </MenuTrigger>
                     <MenuContent>
-                      <MenuItem icon={<ClipboardPaste />} shortcut="Ctrl+V" onSelect={() => void ribbonPaste("all")}>Pegar</MenuItem>
-                      <MenuItem icon={<Hash />} onSelect={() => void ribbonPaste("values")}>Pegar solo valores</MenuItem>
-                      <MenuItem icon={<PaintBucket />} onSelect={() => void ribbonPaste("formats")}>Pegar solo formato</MenuItem>
+                      <MenuItem icon={<ClipboardPaste />} shortcut="Ctrl+V" onSelect={() => void ribbonPaste("all")}>{L("Pegar")}</MenuItem>
+                      <MenuItem icon={<Hash />} onSelect={() => void ribbonPaste("values")}>{L("Pegar solo valores")}</MenuItem>
+                      <MenuItem icon={<PaintBucket />} onSelect={() => void ribbonPaste("formats")}>{L("Pegar solo formato")}</MenuItem>
                     </MenuContent>
                   </Menu>
                   <div className="flex flex-col">
-                    <IconButton size="sm" label="Cortar" shortcut="Ctrl+X" onClick={() => void navigator.clipboard?.writeText(copy(true)).catch(() => {})}><Scissors className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Copiar" shortcut="Ctrl+C" onClick={() => void navigator.clipboard?.writeText(copy(false)).catch(() => {})}><Copy className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Cortar")} shortcut="Ctrl+X" onClick={() => void navigator.clipboard?.writeText(copy(true)).catch(() => {})}><Scissors className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Copiar")} shortcut="Ctrl+C" onClick={() => void navigator.clipboard?.writeText(copy(false)).catch(() => {})}><Copy className="size-4" /></IconButton>
                   </div>
                 </RGroup>
-                <RGroup label="Fuente" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Fuente")} className="flex-col items-start justify-center gap-1">
                   <div className="flex items-center gap-1">
-                    <FontPicker value={st.font ?? null} onChange={(css) => style({ font: css })} className="w-[150px]" placeholder="Predeterminada" />
+                    <FontPicker value={st.font ?? null} onChange={(css) => style({ font: css })} className="w-[150px]" placeholder={L("Predeterminada")} />
                     <FontSizePicker value={st.fs ?? 11} onChange={(pt) => style({ fs: pt === 11 ? undefined : pt })} />
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Negrita" shortcut="Ctrl+B" active={!!st.b} onClick={() => toggle("b")}><Bold className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Cursiva" shortcut="Ctrl+I" active={!!st.i} onClick={() => toggle("i")}><Italic className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Subrayado" shortcut="Ctrl+U" active={!!st.u} onClick={() => toggle("u")}><Underline className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Tachado" active={!!st.s} onClick={() => toggle("s")}><Strikethrough className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Negrita")} shortcut="Ctrl+B" active={!!st.b} onClick={() => toggle("b")}><Bold className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Cursiva")} shortcut="Ctrl+I" active={!!st.i} onClick={() => toggle("i")}><Italic className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Subrayado")} shortcut="Ctrl+U" active={!!st.u} onClick={() => toggle("u")}><Underline className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Tachado")} active={!!st.s} onClick={() => toggle("s")}><Strikethrough className="size-4" /></IconButton>
                     <BorderMenu onPick={(m) => commit((w) => ops.borderRange(w, w.active, n, m))} />
-                    <ColorButton label="Color de relleno" icon={<PaintBucket />} color={st.bg ?? "#fff2a8"} onApply={(c) => style({ bg: c })} onClear={() => style({ bg: undefined })} clearLabel="Sin relleno" />
-                    <ColorButton label="Color del texto" icon={<Type />} color={st.color ?? "#d93025"} onApply={(c) => style({ color: c })} onClear={() => style({ color: undefined })} />
+                    <ColorButton label={L("Color de relleno")} icon={<PaintBucket />} color={st.bg ?? "#fff2a8"} onApply={(c) => style({ bg: c })} onClear={() => style({ bg: undefined })} clearLabel={L("Sin relleno")} />
+                    <ColorButton label={L("Color del texto")} icon={<Type />} color={st.color ?? "#d93025"} onApply={(c) => style({ color: c })} onClear={() => style({ color: undefined })} />
                   </div>
                 </RGroup>
-                <RGroup label="Alineación" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Alineación")} className="flex-col items-start justify-center gap-1">
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Arriba" active={st.valign === "top"} onClick={() => style({ valign: st.valign === "top" ? undefined : "top" })}><ArrowUpToLine className="size-4" /></IconButton>
-                    <IconButton size="sm" label="En medio" active={st.valign === "middle"} onClick={() => style({ valign: st.valign === "middle" ? undefined : "middle" })}><FoldVertical className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Abajo" active={!st.valign || st.valign === "bottom"} onClick={() => style({ valign: undefined })}><ArrowDownToLine className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Ajustar texto" active={!!st.wrap} onClick={() => toggle("wrap")}><WrapText className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Arriba")} active={st.valign === "top"} onClick={() => style({ valign: st.valign === "top" ? undefined : "top" })}><ArrowUpToLine className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("En medio")} active={st.valign === "middle"} onClick={() => style({ valign: st.valign === "middle" ? undefined : "middle" })}><FoldVertical className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Abajo")} active={!st.valign || st.valign === "bottom"} onClick={() => style({ valign: undefined })}><ArrowDownToLine className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Ajustar texto")} active={!!st.wrap} onClick={() => toggle("wrap")}><WrapText className="size-4" /></IconButton>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Izquierda" active={st.align === "left"} onClick={() => style({ align: st.align === "left" ? undefined : "left" })}><AlignLeft className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Centrar" active={st.align === "center"} onClick={() => style({ align: st.align === "center" ? undefined : "center" })}><AlignCenter className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Derecha" active={st.align === "right"} onClick={() => style({ align: st.align === "right" ? undefined : "right" })}><AlignRight className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Combinar y centrar" onClick={() => commit((w) => ops.toggleMerge(w, w.active, n))}><Merge className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Izquierda")} active={st.align === "left"} onClick={() => style({ align: st.align === "left" ? undefined : "left" })}><AlignLeft className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Centrar")} active={st.align === "center"} onClick={() => style({ align: st.align === "center" ? undefined : "center" })}><AlignCenter className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Derecha")} active={st.align === "right"} onClick={() => style({ align: st.align === "right" ? undefined : "right" })}><AlignRight className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Combinar y centrar")} onClick={() => commit((w) => ops.toggleMerge(w, w.active, n))}><Merge className="size-4" /></IconButton>
                   </div>
                 </RGroup>
-                <RGroup label="Número" className="flex-col items-start justify-center gap-1">
+                <RGroup label={L("Número")} className="flex-col items-start justify-center gap-1">
                   <Menu>
                     <MenuTrigger asChild>
                       <button className="flex h-8 w-[150px] items-center justify-between rounded-md border border-border bg-surface px-2 text-[12.5px] hover:border-accent/50">
@@ -937,56 +938,56 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                     </MenuContent>
                   </Menu>
                   <div className="flex items-center gap-0.5">
-                    <IconButton size="sm" label="Moneda (€)" active={st.fmt === "currency"} onClick={() => style({ fmt: st.fmt === "currency" ? undefined : "currency" })}><Euro className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Porcentaje" active={st.fmt === "percent"} onClick={() => style({ fmt: st.fmt === "percent" ? undefined : "percent", dec: st.fmt === "percent" ? undefined : 0 })}><Percent className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Separador de miles" active={st.fmt === "thousands"} onClick={() => style({ fmt: st.fmt === "thousands" ? undefined : "thousands" })}><span className="text-[12px] font-semibold">000</span></IconButton>
-                    <IconButton size="sm" label="Más decimales" onClick={() => style((s) => ({ ...s, dec: Math.min(10, (s.dec ?? defaultDec(s.fmt)) + 1) }))}><span className="text-[11px] font-semibold">,0→</span></IconButton>
-                    <IconButton size="sm" label="Menos decimales" onClick={() => style((s) => ({ ...s, dec: Math.max(0, (s.dec ?? defaultDec(s.fmt)) - 1) }))}><span className="text-[11px] font-semibold">←,0</span></IconButton>
+                    <IconButton size="sm" label={L("Moneda (€)")} active={st.fmt === "currency"} onClick={() => style({ fmt: st.fmt === "currency" ? undefined : "currency" })}><Euro className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Porcentaje")} active={st.fmt === "percent"} onClick={() => style({ fmt: st.fmt === "percent" ? undefined : "percent", dec: st.fmt === "percent" ? undefined : 0 })}><Percent className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Separador de miles")} active={st.fmt === "thousands"} onClick={() => style({ fmt: st.fmt === "thousands" ? undefined : "thousands" })}><span className="text-[12px] font-semibold">000</span></IconButton>
+                    <IconButton size="sm" label={L("Más decimales")} onClick={() => style((s) => ({ ...s, dec: Math.min(10, (s.dec ?? defaultDec(s.fmt)) + 1) }))}><span className="text-[11px] font-semibold">,0→</span></IconButton>
+                    <IconButton size="sm" label={L("Menos decimales")} onClick={() => style((s) => ({ ...s, dec: Math.max(0, (s.dec ?? defaultDec(s.fmt)) - 1) }))}><span className="text-[11px] font-semibold">←,0</span></IconButton>
                   </div>
                 </RGroup>
-                <RGroup label="Formato">
-                  <RBig icon={<Settings2 />} label="Formato de celdas" onClick={() => setFmtDialog(true)} title="Número, alineación, fuente, bordes y relleno (Ctrl+1)" />
+                <RGroup label={L("Formato")}>
+                  <RBig icon={<Settings2 />} label={L("Formato de celdas")} onClick={() => setFmtDialog(true)} title={L("Número, alineación, fuente, bordes y relleno (Ctrl+1)")} />
                 </RGroup>
-                <RGroup label="Estilos">
+                <RGroup label={L("Estilos")}>
                   <Menu open={cfOpen} onOpenChange={setCfOpen}>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Palette />} label="Formato condicional" /></span>
+                      <span><RBig icon={<Palette />} label={L("Formato condicional")} /></span>
                     </MenuTrigger>
                     <MenuContent className="w-[260px]">
-                      <MenuLabel>Resaltar celdas</MenuLabel>
+                      <MenuLabel>{L("Resaltar celdas")}</MenuLabel>
                       {(["gt", "lt", "between", "eq", "text", "dup"] as CondType[]).map((t) => (
                         <MenuItem key={t} onSelect={() => setCondDialog(t)}>{condMenuLabel[t]}</MenuItem>
                       ))}
                       <MenuSeparator />
-                      <MenuLabel>Superiores e inferiores</MenuLabel>
+                      <MenuLabel>{L("Superiores e inferiores")}</MenuLabel>
                       {(["top", "bottom", "aboveAvg", "belowAvg"] as CondType[]).map((t) => (
                         <MenuItem key={t} onSelect={() => setCondDialog(t)}>{condMenuLabel[t]}</MenuItem>
                       ))}
                       <MenuSeparator />
-                      <MenuLabel>Barras de datos</MenuLabel>
+                      <MenuLabel>{L("Barras de datos")}</MenuLabel>
                       <div className="flex gap-1.5 px-2.5 pb-1.5">
                         {BAR_COLORS.map((c) => (
-                          <button key={c} onClick={() => { quickRule("bars", [c]); setCfOpen(false); }} title="Barras de datos" className="h-6 w-7 rounded-sm border border-border" style={{ background: `linear-gradient(90deg, ${c} 65%, transparent 65%)` }} />
+                          <button key={c} onClick={() => { quickRule("bars", [c]); setCfOpen(false); }} title={L("Barras de datos")} className="h-6 w-7 rounded-sm border border-border" style={{ background: `linear-gradient(90deg, ${c} 65%, transparent 65%)` }} />
                         ))}
                       </div>
-                      <MenuLabel>Escalas de color</MenuLabel>
+                      <MenuLabel>{L("Escalas de color")}</MenuLabel>
                       <div className="flex gap-1.5 px-2.5 pb-1.5">
                         {SCALE_PRESETS.map((p) => (
                           <button key={p.id} onClick={() => { quickRule("scale", p.colors); setCfOpen(false); }} title={p.label} className="h-6 w-10 rounded-sm border border-border" style={{ background: `linear-gradient(90deg, ${p.colors.join(",")})` }} />
                         ))}
                       </div>
                       <MenuSeparator />
-                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sel")}>Borrar reglas de la selección</MenuItem>
-                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sheet")}>Borrar reglas de toda la hoja</MenuItem>
-                      <MenuItem icon={<LayoutList />} onSelect={() => setCondManager(true)}>Administrar reglas…</MenuItem>
+                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sel")}>{L("Borrar reglas de la selección")}</MenuItem>
+                      <MenuItem icon={<Eraser />} onSelect={() => clearRules("sheet")}>{L("Borrar reglas de toda la hoja")}</MenuItem>
+                      <MenuItem icon={<LayoutList />} onSelect={() => setCondManager(true)}>{L("Administrar reglas…")}</MenuItem>
                     </MenuContent>
                   </Menu>
                   <Menu>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Table2 />} label="Dar formato como tabla" /></span>
+                      <span><RBig icon={<Table2 />} label={L("Dar formato como tabla")} /></span>
                     </MenuTrigger>
                     <MenuContent>
-                      <MenuLabel>Estilo de tabla (con filtro)</MenuLabel>
+                      <MenuLabel>{L("Estilo de tabla (con filtro)")}</MenuLabel>
                       {ops.TABLE_STYLES.map((t) => (
                         <MenuItem
                           key={t.id}
@@ -1002,49 +1003,49 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                     </MenuContent>
                   </Menu>
                 </RGroup>
-                <RGroup label="Celdas">
+                <RGroup label={L("Celdas")}>
                   <Menu>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Plus />} label="Insertar" /></span>
+                      <span><RBig icon={<Plus />} label={L("Insertar")} /></span>
                     </MenuTrigger>
                     <MenuContent>
-                      <MenuItem icon={<Rows3 />} onSelect={() => insertLines("row", "before")}>Insertar filas encima</MenuItem>
-                      <MenuItem icon={<Rows3 />} onSelect={() => insertLines("row", "after")}>Insertar filas debajo</MenuItem>
-                      <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "before")}>Insertar columnas a la izquierda</MenuItem>
-                      <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "after")}>Insertar columnas a la derecha</MenuItem>
-                      <MenuItem icon={<Columns3 />} onSelect={autofitCols}>Autoajustar ancho de columnas</MenuItem>
+                      <MenuItem icon={<Rows3 />} onSelect={() => insertLines("row", "before")}>{L("Insertar filas encima")}</MenuItem>
+                      <MenuItem icon={<Rows3 />} onSelect={() => insertLines("row", "after")}>{L("Insertar filas debajo")}</MenuItem>
+                      <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "before")}>{L("Insertar columnas a la izquierda")}</MenuItem>
+                      <MenuItem icon={<Columns3 />} onSelect={() => insertLines("col", "after")}>{L("Insertar columnas a la derecha")}</MenuItem>
+                      <MenuItem icon={<Columns3 />} onSelect={autofitCols}>{L("Autoajustar ancho de columnas")}</MenuItem>
                       <MenuSeparator />
-                      <MenuItem icon={<Plus />} onSelect={() => commit((w) => ops.addSheet(w))}>Insertar hoja</MenuItem>
+                      <MenuItem icon={<Plus />} onSelect={() => commit((w) => ops.addSheet(w))}>{L("Insertar hoja")}</MenuItem>
                     </MenuContent>
                   </Menu>
                   <Menu>
                     <MenuTrigger asChild>
-                      <span><RBig icon={<Minus />} label="Eliminar" /></span>
+                      <span><RBig icon={<Minus />} label={L("Eliminar")} /></span>
                     </MenuTrigger>
                     <MenuContent>
-                      <MenuItem icon={<Rows3 />} onSelect={() => deleteLines("row")}>Eliminar filas</MenuItem>
-                      <MenuItem icon={<Columns3 />} onSelect={() => deleteLines("col")}>Eliminar columnas</MenuItem>
+                      <MenuItem icon={<Rows3 />} onSelect={() => deleteLines("row")}>{L("Eliminar filas")}</MenuItem>
+                      <MenuItem icon={<Columns3 />} onSelect={() => deleteLines("col")}>{L("Eliminar columnas")}</MenuItem>
                     </MenuContent>
                   </Menu>
                 </RGroup>
-                <RGroup label="Edición">
+                <RGroup label={L("Edición")}>
                   <AutoSumMenu onPick={autoSum} big />
                   <div className="flex flex-col">
                     <Menu>
                       <MenuTrigger asChild>
-                        <span><IconButton size="sm" label="Borrar"><Eraser className="size-4" /></IconButton></span>
+                        <span><IconButton size="sm" label={L("Borrar")}><Eraser className="size-4" /></IconButton></span>
                       </MenuTrigger>
                       <MenuContent>
-                        <MenuItem icon={<Eraser />} onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "all"))}>Borrar todo</MenuItem>
-                        <MenuItem icon={<Type />} shortcut="Supr" onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>Borrar contenido</MenuItem>
-                        <MenuItem icon={<Highlighter />} onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "formats"))}>Borrar formato</MenuItem>
+                        <MenuItem icon={<Eraser />} onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "all"))}>{L("Borrar todo")}</MenuItem>
+                        <MenuItem icon={<Type />} shortcut={L("Supr")} onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>{L("Borrar contenido")}</MenuItem>
+                        <MenuItem icon={<Highlighter />} onSelect={() => commit((w) => ops.clearRange(w, w.active, n, "formats"))}>{L("Borrar formato")}</MenuItem>
                       </MenuContent>
                     </Menu>
-                    <IconButton size="sm" label="Buscar y reemplazar" shortcut="Ctrl+F" onClick={() => setFindOpen({ replace: false })}><Search className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Buscar y reemplazar")} shortcut="Ctrl+F" onClick={() => setFindOpen({ replace: false })}><Search className="size-4" /></IconButton>
                   </div>
                   <div className="flex flex-col">
-                    <IconButton size="sm" label="Ordenar de A a Z" onClick={() => sort(true)}><ArrowDownAZ className="size-4" /></IconButton>
-                    <IconButton size="sm" label="Ordenar de Z a A" onClick={() => sort(false)}><ArrowDownZA className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Ordenar de A a Z")} onClick={() => sort(true)}><ArrowDownAZ className="size-4" /></IconButton>
+                    <IconButton size="sm" label={L("Ordenar de Z a A")} onClick={() => sort(false)}><ArrowDownZA className="size-4" /></IconButton>
                   </div>
                 </RGroup>
               </>
@@ -1052,39 +1053,39 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
 
             {tab === "insert" && (
               <>
-                <RGroup label="Gráficos">
+                <RGroup label={L("Gráficos")}>
                   {CHART_TYPES.slice(0, 5).map((t) => (
-                    <RBig key={t.id} icon={<ChartIcon type={t.id} />} label={t.label} onClick={() => newChart(t.id)} title={`Gráfico de ${t.label.toLowerCase()} con los datos seleccionados`} />
+                    <RBig key={t.id} icon={<ChartIcon type={t.id} />} label={t.label} onClick={() => newChart(t.id)} title={L("Gráfico de {0} con los datos seleccionados", t.label.toLowerCase())} />
                   ))}
-                  <RBig icon={<BarChart3 />} label="Más…" onClick={() => newChart("doughnut")} />
+                  <RBig icon={<BarChart3 />} label={L("Más…")} onClick={() => newChart("doughnut")} />
                 </RGroup>
-                <RGroup label="Tablas">
-                  <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} title="Resume y agrupa los datos" />
+                <RGroup label={L("Tablas")}>
+                  <RBig icon={<Table2 />} label={L("Tabla dinámica")} onClick={() => setPivotDialog(true)} title={L("Resume y agrupa los datos")} />
                 </RGroup>
-                <RGroup label="Celdas">
-                  <RBig icon={<Rows3 />} label="Fila" onClick={() => insertLines("row", "before")} title="Insertar filas encima" />
-                  <RBig icon={<Columns3 />} label="Columna" onClick={() => insertLines("col", "before")} title="Insertar columnas a la izquierda" />
-                  <RBig icon={<Table2 />} label="Hoja" onClick={() => commit((w) => ops.addSheet(w))} />
+                <RGroup label={L("Celdas")}>
+                  <RBig icon={<Rows3 />} label={L("Fila")} onClick={() => insertLines("row", "before")} title={L("Insertar filas encima")} />
+                  <RBig icon={<Columns3 />} label={L("Columna")} onClick={() => insertLines("col", "before")} title={L("Insertar columnas a la izquierda")} />
+                  <RBig icon={<Table2 />} label={L("Hoja")} onClick={() => commit((w) => ops.addSheet(w))} />
                 </RGroup>
-                <RGroup label="Datos">
-                  <RBig icon={<SquareFunction />} label="Función" onClick={() => setFnDialog(true)} />
-                  <RBig icon={<MessageSquarePlus />} label="Comentario" onClick={() => setNoteDialog(true)} title="Añade una nota a la celda" />
-                  <RBig icon={<BarChart3 />} label="Minigráfico" onClick={() => setSparkDialog(true)} title="Un gráfico pequeño dentro de la celda" />
-                  <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} />
-                  <RBig icon={<Calendar />} label="Fecha de hoy" onClick={() => commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, "=HOY()"))} title="Inserta =HOY() en la celda" />
+                <RGroup label={L("Datos")}>
+                  <RBig icon={<SquareFunction />} label={L("Función")} onClick={() => setFnDialog(true)} />
+                  <RBig icon={<MessageSquarePlus />} label={L("Comentario")} onClick={() => setNoteDialog(true)} title={L("Añade una nota a la celda")} />
+                  <RBig icon={<BarChart3 />} label={L("Minigráfico")} onClick={() => setSparkDialog(true)} title={L("Un gráfico pequeño dentro de la celda")} />
+                  <RBig icon={<ListChecks />} label={L("Lista desplegable")} onClick={() => setValDialog(true)} />
+                  <RBig icon={<Calendar />} label={L("Fecha de hoy")} onClick={() => commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, "=HOY()"))} title="Inserta =HOY() en la celda" />
                 </RGroup>
               </>
             )}
 
             {tab === "formulas" && (
               <>
-                <RGroup label="Biblioteca de funciones">
-                  <RBig icon={<SquareFunction />} label="Insertar función" onClick={() => setFnDialog(true)} />
+                <RGroup label={L("Biblioteca de funciones")}>
+                  <RBig icon={<SquareFunction />} label={L("Insertar función")} onClick={() => setFnDialog(true)} />
                   <AutoSumMenu onPick={autoSum} big />
                   {(["Matemáticas", "Lógicas", "Texto", "Fecha y hora", "Búsqueda", "Financieras"] as const).map((cat) => (
                     <Menu key={cat}>
                       <MenuTrigger asChild>
-                        <span><RBig icon={<span className="text-[15px] font-bold">fx</span>} label={cat} /></span>
+                        <span><RBig icon={<span className="text-[15px] font-bold">{L("fx")}</span>} label={L(cat)} /></span>
                       </MenuTrigger>
                       <MenuContent className="max-h-[360px] w-[300px] overflow-y-auto">
                         {FN_INFO.filter((f) => f.cat === cat || (cat === "Matemáticas" && f.cat === "Estadística")).map((f) => (
@@ -1099,94 +1100,94 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                     </Menu>
                   ))}
                 </RGroup>
-                <RGroup label="Cálculo">
-                  <RBig icon={<Eye />} label="Mostrar fórmulas" active={showFormulas} onClick={() => setShowFormulas((v) => !v)} title="Ctrl+`" />
-                  <RBig icon={<RefreshCw />} label="Recalcular" onClick={() => setRecalc((x) => x + 1)} title="Vuelve a calcular HOY, AHORA y ALEATORIO" />
+                <RGroup label={L("Cálculo")}>
+                  <RBig icon={<Eye />} label={L("Mostrar fórmulas")} active={showFormulas} onClick={() => setShowFormulas((v) => !v)} title={L("Ctrl+`")} />
+                  <RBig icon={<RefreshCw />} label={L("Recalcular")} onClick={() => setRecalc((x) => x + 1)} title={L("Vuelve a calcular HOY, AHORA y ALEATORIO")} />
                 </RGroup>
               </>
             )}
 
             {tab === "data" && (
               <>
-                <RGroup label="Ordenar">
-                  <RBig icon={<ArrowDownAZ />} label="De A a Z" onClick={() => sort(true)} />
-                  <RBig icon={<ArrowDownZA />} label="De Z a A" onClick={() => sort(false)} />
+                <RGroup label={L("Ordenar")}>
+                  <RBig icon={<ArrowDownAZ />} label={L("De A a Z")} onClick={() => sort(true)} />
+                  <RBig icon={<ArrowDownZA />} label={L("De Z a A")} onClick={() => sort(false)} />
                 </RGroup>
-                <RGroup label="Filtro">
-                  <RBig icon={<ListFilter />} label="Filtro" active={!!sheet.filter} onClick={toggleFilter} title="Botones para filtrar y ordenar en la fila de encabezados" />
+                <RGroup label={L("Filtro")}>
+                  <RBig icon={<ListFilter />} label={L("Filtro")} active={!!sheet.filter} onClick={toggleFilter} title={L("Botones para filtrar y ordenar en la fila de encabezados")} />
                   <RBig
                     icon={<FilterX />}
-                    label="Borrar filtros"
+                    label={L("Borrar filtros")}
                     disabled={!sheet.filter || !Object.keys(sheet.filter.show).length}
                     onClick={() => commit((w) => ops.updateSheet(w, w.active, { filter: w.sheets[w.active].filter ? { ...w.sheets[w.active].filter!, show: {} } : null }))}
                   />
                 </RGroup>
-                <RGroup label="Herramientas">
-                  <RBig icon={<ListChecks />} label="Lista desplegable" onClick={() => setValDialog(true)} title="Validación de datos: las celdas solo aceptan valores de una lista" />
-                  <RBig icon={<Columns3 />} label="Texto en columnas" onClick={textToColumns} title="Separa «Nombre;Apellido;Ciudad» en varias columnas" />
-                  <RBig icon={<Columns3 />} label="Autoajustar columnas" onClick={autofitCols} title="Ancho justo para el contenido de las columnas seleccionadas" />
-                  <RBig icon={<CopyX />} label="Quitar duplicados" onClick={removeDuplicates} />
-                  <RBig icon={<Table2 />} label="Tabla dinámica" onClick={() => setPivotDialog(true)} />
+                <RGroup label={L("Herramientas")}>
+                  <RBig icon={<ListChecks />} label={L("Lista desplegable")} onClick={() => setValDialog(true)} title={L("Validación de datos: las celdas solo aceptan valores de una lista")} />
+                  <RBig icon={<Columns3 />} label={L("Texto en columnas")} onClick={textToColumns} title="Separa «Nombre;Apellido;Ciudad» en varias columnas" />
+                  <RBig icon={<Columns3 />} label={L("Autoajustar columnas")} onClick={autofitCols} title={L("Ancho justo para el contenido de las columnas seleccionadas")} />
+                  <RBig icon={<CopyX />} label={L("Quitar duplicados")} onClick={removeDuplicates} />
+                  <RBig icon={<Table2 />} label={L("Tabla dinámica")} onClick={() => setPivotDialog(true)} />
                 </RGroup>
-                <RGroup label="Proteger">
+                <RGroup label={L("Proteger")}>
                   <RBig
                     icon={<ShieldCheck />}
-                    label={sheet.protected ? "Desproteger hoja" : "Proteger hoja"}
+                    label={sheet.protected ? L("Desproteger hoja") : L("Proteger hoja")}
                     active={!!sheet.protected}
                     onClick={() => {
                       commit((w) => ops.updateSheet(w, w.active, { protected: !w.sheets[w.active].protected || undefined }));
-                      toast(sheet.protected ? "Hoja desprotegida" : "Hoja protegida: solo se pueden cambiar las celdas desbloqueadas", "success");
+                      toast(sheet.protected ? L("Hoja desprotegida") : L("Hoja protegida: solo se pueden cambiar las celdas desbloqueadas"), "success");
                     }}
-                    title="Evita cambios por error en las celdas bloqueadas"
+                    title={L("Evita cambios por error en las celdas bloqueadas")}
                   />
                   <RBig
                     icon={<LockOpen />}
-                    label="Desbloquear celdas"
+                    label={L("Desbloquear celdas")}
                     disabled={!!sheet.protected}
                     onClick={() => {
                       commit((w) => ops.styleRange(w, w.active, n, (st) => ({ ...st, unlocked: st.unlocked ? undefined : true })));
-                      toast("Las celdas seleccionadas se podrán cambiar con la hoja protegida", "success");
+                      toast(L("Las celdas seleccionadas se podrán cambiar con la hoja protegida"), "success");
                     }}
-                    title="Celdas que se podrán rellenar aunque la hoja esté protegida (por ejemplo, un formulario)"
+                    title={L("Celdas que se podrán rellenar aunque la hoja esté protegida (por ejemplo, un formulario)")}
                   />
                 </RGroup>
-                <RGroup label="Inmovilizar">
-                  <RBig icon={<Lock />} label="Fila superior" active={sheet.freezeR === 1 && !sheet.freezeC} onClick={() => freeze(1, 0)} />
-                  <RBig icon={<Lock />} label="Primera columna" active={sheet.freezeC === 1 && !sheet.freezeR} onClick={() => freeze(0, 1)} />
-                  <RBig icon={<Lock />} label="Hasta la selección" onClick={() => freeze(sel.ar, sel.ac)} title="Las filas de encima y las columnas de la izquierda de la celda activa" />
-                  <RBig icon={<X />} label="Movilizar" disabled={!sheet.freezeR && !sheet.freezeC} onClick={() => freeze(0, 0)} />
+                <RGroup label={L("Inmovilizar")}>
+                  <RBig icon={<Lock />} label={L("Fila superior")} active={sheet.freezeR === 1 && !sheet.freezeC} onClick={() => freeze(1, 0)} />
+                  <RBig icon={<Lock />} label={L("Primera columna")} active={sheet.freezeC === 1 && !sheet.freezeR} onClick={() => freeze(0, 1)} />
+                  <RBig icon={<Lock />} label={L("Hasta la selección")} onClick={() => freeze(sel.ar, sel.ac)} title={L("Las filas de encima y las columnas de la izquierda de la celda activa")} />
+                  <RBig icon={<X />} label={L("Movilizar")} disabled={!sheet.freezeR && !sheet.freezeC} onClick={() => freeze(0, 0)} />
                 </RGroup>
               </>
             )}
 
             {tab === "view" && (
               <>
-                <RGroup label="Mostrar">
-                  <RBig icon={<Grid3x3 />} label="Líneas de cuadrícula" active={sheet.showGrid !== false} onClick={() => commit((w) => ops.updateSheet(w, w.active, { showGrid: sheet.showGrid === false }))} />
-                  <RBig icon={<Eye />} label="Fórmulas" active={showFormulas} onClick={() => setShowFormulas((v) => !v)} />
+                <RGroup label={L("Mostrar")}>
+                  <RBig icon={<Grid3x3 />} label={L("Líneas de cuadrícula")} active={sheet.showGrid !== false} onClick={() => commit((w) => ops.updateSheet(w, w.active, { showGrid: sheet.showGrid === false }))} />
+                  <RBig icon={<Eye />} label={L("Fórmulas")} active={showFormulas} onClick={() => setShowFormulas((v) => !v)} />
                 </RGroup>
-                <RGroup label="Impresión">
-                  <RBig icon={<Settings2 />} label="Configurar página" onClick={() => setPrintDialog(true)} title="Orientación, márgenes, ajustar al ancho, títulos y área de impresión" />
-                  <RBig icon={<Printer />} label="Imprimir" onClick={() => void print()} />
-                  <RBig icon={<FileText />} label="Guardar como PDF" onClick={() => pdf()} />
+                <RGroup label={L("Impresión")}>
+                  <RBig icon={<Settings2 />} label={L("Configurar página")} onClick={() => setPrintDialog(true)} title={L("Orientación, márgenes, ajustar al ancho, títulos y área de impresión")} />
+                  <RBig icon={<Printer />} label={L("Imprimir")} onClick={() => void print()} />
+                  <RBig icon={<FileText />} label={L("Guardar como PDF")} onClick={() => pdf()} />
                 </RGroup>
-                <RGroup label="Zoom">
-                  <RBig icon={<Minus />} label="Alejar" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} />
+                <RGroup label={L("Zoom")}>
+                  <RBig icon={<Minus />} label={L("Alejar")} onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 10) / 10))} />
                   <RBig icon={<Square />} label="100 %" onClick={() => setZoom(1)} />
-                  <RBig icon={<Plus />} label="Acercar" onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))} />
+                  <RBig icon={<Plus />} label={L("Acercar")} onClick={() => setZoom((z) => Math.min(2, Math.round((z + 0.1) * 10) / 10))} />
                 </RGroup>
-                <RGroup label="Inmovilizar">
-                  <RBig icon={<Lock />} label="Fila superior" onClick={() => freeze(1, 0)} />
-                  <RBig icon={<X />} label="Movilizar" disabled={!sheet.freezeR && !sheet.freezeC} onClick={() => freeze(0, 0)} />
+                <RGroup label={L("Inmovilizar")}>
+                  <RBig icon={<Lock />} label={L("Fila superior")} onClick={() => freeze(1, 0)} />
+                  <RBig icon={<X />} label={L("Movilizar")} disabled={!sheet.freezeR && !sheet.freezeC} onClick={() => freeze(0, 0)} />
                 </RGroup>
               </>
             )}
 
             {tab === "ai" && (
-              <RGroup label="Asistente">
-                <RBig icon={<SquareFunction />} label="Fórmula con IA" onClick={() => setAiDialog("formula")} title="Describe lo que quieres calcular y la IA escribe la fórmula" />
-                <RBig icon={<BarChart3 />} label="Analizar datos" onClick={() => setAiDialog("analyze")} title="Resumen y conclusiones de los datos seleccionados" />
-                <RBig icon={<Table2 />} label="Generar tabla" onClick={() => setAiDialog("generate")} title="Crea una tabla de datos a partir de una descripción" />
+              <RGroup label={L("Asistente")}>
+                <RBig icon={<SquareFunction />} label={L("Fórmula con IA")} onClick={() => setAiDialog("formula")} title={L("Describe lo que quieres calcular y la IA escribe la fórmula")} />
+                <RBig icon={<BarChart3 />} label={L("Analizar datos")} onClick={() => setAiDialog("analyze")} title={L("Resumen y conclusiones de los datos seleccionados")} />
+                <RBig icon={<Table2 />} label={L("Generar tabla")} onClick={() => setAiDialog("generate")} title={L("Crea una tabla de datos a partir de una descripción")} />
               </RGroup>
             )}
           </div>
@@ -1204,11 +1205,11 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
               else if (e.key === "Escape") { setNameBox(null); focusGrid(); }
             }}
             className="h-7 w-[92px] rounded-md border border-border bg-surface px-2 text-center text-[12.5px] font-medium outline-none focus:border-accent"
-            aria-label="Cuadro de nombres"
+            aria-label={L("Cuadro de nombres")}
           />
-          <Tooltip label="Insertar función">
+          <Tooltip label={L("Insertar función")}>
             <button onClick={() => setFnDialog(true)} className="grid h-7 w-8 place-items-center rounded-md text-[13px] font-bold text-muted italic hover:bg-surface-2 hover:text-text">
-              fx
+              {L("fx")}
             </button>
           </Tooltip>
           <input
@@ -1222,8 +1223,8 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             onKeyDown={onKeyDown}
             spellCheck={false}
             className="h-7 min-w-0 flex-1 rounded-md border border-border bg-surface px-2 font-mono text-[13px] outline-none focus:border-accent"
-            aria-label="Barra de fórmulas"
-            placeholder="Escribe un valor o una fórmula que empiece por ="
+            aria-label={L("Barra de fórmulas")}
+            placeholder={L("Escribe un valor o una fórmula que empiece por =")}
           />
           {suggestions.length > 0 && (
             <div className="absolute top-9 left-[140px] z-30 w-[380px] animate-pop-in rounded-[var(--radius)] border border-border bg-surface p-1 shadow-soft">
@@ -1240,7 +1241,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   <span className="text-[11.5px] text-muted">{f.desc}</span>
                 </button>
               ))}
-              <div className="px-2.5 pt-1 pb-0.5 text-[10.5px] text-muted">Tab o Intro para elegir · los argumentos se separan con «;»</div>
+              <div className="px-2.5 pt-1 pb-0.5 text-[10.5px] text-muted">{L("Tab o Intro para elegir · los argumentos se separan con «;»")}</div>
             </div>
           )}
         </div>
@@ -1295,7 +1296,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
 
         {/* Pestañas de hojas y barra de estado */}
         <div className="no-print flex h-9 shrink-0 items-center gap-1 border-t border-border bg-surface px-2 text-[12.5px]">
-          <IconButton size="sm" label="Nueva hoja" onClick={() => commit((w) => ops.addSheet(w))}>
+          <IconButton size="sm" label={L("Nueva hoja")} onClick={() => commit((w) => ops.addSheet(w))}>
             <Plus className="size-4" />
           </IconButton>
           <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
@@ -1317,13 +1318,13 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           </div>
           {stats && (
             <div className="flex shrink-0 items-center gap-3 text-muted">
-              {stats.nums > 0 && <span>Promedio: <b className="font-medium text-text">{fmtStat(stats.avg)}</b></span>}
-              <span>Recuento: <b className="font-medium text-text">{stats.count}</b></span>
-              {stats.nums > 0 && <span>Suma: <b className="font-medium text-text">{fmtStat(stats.sum)}</b></span>}
+              {stats.nums > 0 && <span>{L("Promedio:")}{" "} <b className="font-medium text-text">{fmtStat(stats.avg)}</b></span>}
+              <span>{L("Recuento:")}{" "} <b className="font-medium text-text">{stats.count}</b></span>
+              {stats.nums > 0 && <span>{L("Suma:")}{" "} <b className="font-medium text-text">{fmtStat(stats.sum)}</b></span>}
             </div>
           )}
           <div className="ml-3 flex w-[150px] shrink-0 items-center gap-2">
-            <Slider value={zoom * 100} min={50} max={200} step={10} onChange={(v) => setZoom(v / 100)} label="Zoom" />
+            <Slider value={zoom * 100} min={50} max={200} step={10} onChange={(v) => setZoom(v / 100)} label={L("Zoom")} />
             <span className="w-10 text-right text-muted tabular-nums">{Math.round(zoom * 100)} %</span>
           </div>
         </div>
@@ -1333,72 +1334,72 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
         <FloatingMenu x={menu.x} y={menu.y} onClose={() => setMenu(null)}>
           {menu.kind === "tab" ? (
             <>
-              <FItem icon={<Copy />} onClick={() => commit((w) => ops.duplicateSheet(w, menu.tab!))}>Duplicar hoja</FItem>
-              <FItem icon={<ChevronDown className="rotate-90" />} onClick={() => commit((w) => ops.moveSheet(w, menu.tab!, menu.tab! - 1))}>Mover a la izquierda</FItem>
-              <FItem icon={<ChevronDown className="-rotate-90" />} onClick={() => commit((w) => ops.moveSheet(w, menu.tab!, menu.tab! + 1))}>Mover a la derecha</FItem>
+              <FItem icon={<Copy />} onClick={() => commit((w) => ops.duplicateSheet(w, menu.tab!))}>{L("Duplicar hoja")}</FItem>
+              <FItem icon={<ChevronDown className="rotate-90" />} onClick={() => commit((w) => ops.moveSheet(w, menu.tab!, menu.tab! - 1))}>{L("Mover a la izquierda")}</FItem>
+              <FItem icon={<ChevronDown className="-rotate-90" />} onClick={() => commit((w) => ops.moveSheet(w, menu.tab!, menu.tab! + 1))}>{L("Mover a la derecha")}</FItem>
               <FSep />
               <FItem
                 icon={<Trash2 />}
                 danger
                 disabled={wb.sheets.length <= 1}
                 onClick={() => {
-                  if (confirm(`¿Eliminar la hoja «${wb.sheets[menu.tab!].name}»? Se puede deshacer con Ctrl+Z.`)) commit((w) => ops.deleteSheet(w, menu.tab!));
+                  if (confirm(L("¿Eliminar la hoja «{0}»? Se puede deshacer con Ctrl+Z.", wb.sheets[menu.tab!].name))) commit((w) => ops.deleteSheet(w, menu.tab!));
                 }}
               >
-                Eliminar hoja
+                {L("Eliminar hoja")}
               </FItem>
             </>
           ) : (
             <>
-              <FItem icon={<Scissors />} shortcut="Ctrl+X" onClick={() => void navigator.clipboard?.writeText(copy(true)).catch(() => {})}>Cortar</FItem>
-              <FItem icon={<Copy />} shortcut="Ctrl+C" onClick={() => void navigator.clipboard?.writeText(copy(false)).catch(() => {})}>Copiar</FItem>
-              <FItem icon={<ClipboardPaste />} shortcut="Ctrl+V" onClick={() => void ribbonPaste("all")}>Pegar</FItem>
-              <FItem icon={<Hash />} onClick={() => void ribbonPaste("values")}>Pegar solo valores</FItem>
+              <FItem icon={<Scissors />} shortcut="Ctrl+X" onClick={() => void navigator.clipboard?.writeText(copy(true)).catch(() => {})}>{L("Cortar")}</FItem>
+              <FItem icon={<Copy />} shortcut="Ctrl+C" onClick={() => void navigator.clipboard?.writeText(copy(false)).catch(() => {})}>{L("Copiar")}</FItem>
+              <FItem icon={<ClipboardPaste />} shortcut="Ctrl+V" onClick={() => void ribbonPaste("all")}>{L("Pegar")}</FItem>
+              <FItem icon={<Hash />} onClick={() => void ribbonPaste("values")}>{L("Pegar solo valores")}</FItem>
               <FSep />
               {menu.kind !== "col" && (
                 <>
-                  <FItem icon={<Rows3 />} onClick={() => insertLines("row", "before")}>Insertar filas encima</FItem>
-                  <FItem icon={<Rows3 />} onClick={() => insertLines("row", "after")}>Insertar filas debajo</FItem>
-                  <FItem icon={<Trash2 />} onClick={() => deleteLines("row")}>Eliminar filas</FItem>
+                  <FItem icon={<Rows3 />} onClick={() => insertLines("row", "before")}>{L("Insertar filas encima")}</FItem>
+                  <FItem icon={<Rows3 />} onClick={() => insertLines("row", "after")}>{L("Insertar filas debajo")}</FItem>
+                  <FItem icon={<Trash2 />} onClick={() => deleteLines("row")}>{L("Eliminar filas")}</FItem>
                 </>
               )}
               {menu.kind !== "row" && (
                 <>
-                  <FItem icon={<Columns3 />} onClick={() => insertLines("col", "before")}>Insertar columnas a la izquierda</FItem>
-                  <FItem icon={<Columns3 />} onClick={() => insertLines("col", "after")}>Insertar columnas a la derecha</FItem>
-                  <FItem icon={<Trash2 />} onClick={() => deleteLines("col")}>Eliminar columnas</FItem>
+                  <FItem icon={<Columns3 />} onClick={() => insertLines("col", "before")}>{L("Insertar columnas a la izquierda")}</FItem>
+                  <FItem icon={<Columns3 />} onClick={() => insertLines("col", "after")}>{L("Insertar columnas a la derecha")}</FItem>
+                  <FItem icon={<Trash2 />} onClick={() => deleteLines("col")}>{L("Eliminar columnas")}</FItem>
                 </>
               )}
               <FSep />
               {menu.kind === "row" && (
                 <>
-                  <FItem icon={<EyeOff />} onClick={() => hideSel("row", true)}>Ocultar filas</FItem>
-                  <FItem icon={<Eye />} onClick={() => hideSel("row", false)}>Mostrar filas ocultas</FItem>
+                  <FItem icon={<EyeOff />} onClick={() => hideSel("row", true)}>{L("Ocultar filas")}</FItem>
+                  <FItem icon={<Eye />} onClick={() => hideSel("row", false)}>{L("Mostrar filas ocultas")}</FItem>
                   <FSep />
                 </>
               )}
               {menu.kind === "col" && (
                 <>
-                  <FItem icon={<EyeOff />} onClick={() => hideSel("col", true)}>Ocultar columnas</FItem>
-                  <FItem icon={<Eye />} onClick={() => hideSel("col", false)}>Mostrar columnas ocultas</FItem>
+                  <FItem icon={<EyeOff />} onClick={() => hideSel("col", true)}>{L("Ocultar columnas")}</FItem>
+                  <FItem icon={<Eye />} onClick={() => hideSel("col", false)}>{L("Mostrar columnas ocultas")}</FItem>
                   <FSep />
                 </>
               )}
               {menu.kind === "cell" && (
                 <>
-                  <FItem icon={<MessageSquarePlus />} onClick={() => setNoteDialog(true)}>{sheet.notes?.[key(sel.ar, sel.ac)] ? "Editar comentario" : "Insertar comentario"}</FItem>
+                  <FItem icon={<MessageSquarePlus />} onClick={() => setNoteDialog(true)}>{sheet.notes?.[key(sel.ar, sel.ac)] ? L("Editar comentario") : L("Insertar comentario")}</FItem>
                   {sheet.notes?.[key(sel.ar, sel.ac)] && (
-                    <FItem icon={<MessageSquareX />} onClick={() => commit((w) => ops.setNote(w, w.active, sel.ar, sel.ac, null))}>Eliminar comentario</FItem>
+                    <FItem icon={<MessageSquareX />} onClick={() => commit((w) => ops.setNote(w, w.active, sel.ar, sel.ac, null))}>{L("Eliminar comentario")}</FItem>
                   )}
-                  <FItem icon={<ListChecks />} onClick={() => setValDialog(true)}>Lista desplegable…</FItem>
+                  <FItem icon={<ListChecks />} onClick={() => setValDialog(true)}>{L("Lista desplegable…")}</FItem>
                   <FSep />
                 </>
               )}
-              <FItem icon={<Settings2 />} shortcut="Ctrl+1" onClick={() => setFmtDialog(true)}>Formato de celdas…</FItem>
-              <FItem icon={<Eraser />} onClick={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>Borrar contenido</FItem>
-              <FItem icon={<ArrowDownAZ />} onClick={() => sort(true)}>Ordenar de A a Z</FItem>
-              <FItem icon={<ArrowDownZA />} onClick={() => sort(false)}>Ordenar de Z a A</FItem>
-              <FItem icon={<BarChart3 />} onClick={() => newChart("column")}>Insertar gráfico</FItem>
+              <FItem icon={<Settings2 />} shortcut="Ctrl+1" onClick={() => setFmtDialog(true)}>{L("Formato de celdas…")}</FItem>
+              <FItem icon={<Eraser />} onClick={() => commit((w) => ops.clearRange(w, w.active, n, "contents"))}>{L("Borrar contenido")}</FItem>
+              <FItem icon={<ArrowDownAZ />} onClick={() => sort(true)}>{L("Ordenar de A a Z")}</FItem>
+              <FItem icon={<ArrowDownZA />} onClick={() => sort(false)}>{L("Ordenar de Z a A")}</FItem>
+              <FItem icon={<BarChart3 />} onClick={() => newChart("column")}>{L("Insertar gráfico")}</FItem>
             </>
           )}
         </FloatingMenu>
@@ -1471,7 +1472,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
                   {o}
                 </FItem>
               ))}
-              {!opts.length && <div className="px-3 py-2 text-[12.5px] text-muted">La lista está vacía</div>}
+              {!opts.length && <div className="px-3 py-2 text-[12.5px] text-muted">{L("La lista está vacía")}</div>}
             </div>
           </FloatingMenu>
         );
@@ -1567,7 +1568,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
             commit((w) => buildPivot(w, new Evaluator(w), spec));
             setPivotDialog(false);
             setSel({ ar: 0, ac: 0, r1: 0, c1: 0, r2: 0, c2: 0 });
-            toast("Tabla dinámica creada en una hoja nueva", "success");
+            toast(L("Tabla dinámica creada en una hoja nueva"), "success");
           }}
         />
       )}
@@ -1610,12 +1611,12 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
           onFormula={(f) => {
             commit((w) => ops.inputCell(w, w.active, sel.ar, sel.ac, f));
             setAiDialog(null);
-            toast(`Fórmula insertada en ${addr(sel.ar, sel.ac)}`, "success");
+            toast(L("Fórmula insertada en {0}", addr(sel.ar, sel.ac)), "success");
           }}
           onTable={(tsv) => {
             commit((w) => ops.pasteText(w, w.active, sel.ar, sel.ac, tsv));
             setAiDialog(null);
-            toast("Tabla insertada", "success");
+            toast(L("Tabla insertada"), "success");
           }}
         />
       )}
@@ -1623,7 +1624,7 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
         createPortal(
           <div className="sheet-print">
             <section style={{ zoom: printZoom }}>
-              <h2>{title || "Hoja de cálculo"} · {sheet.name}</h2>
+              <h2>{title || L("Hoja de cálculo")} · {sheet.name}</h2>
               <div dangerouslySetInnerHTML={{ __html: printHtml }} />
               {(sheet.charts ?? []).map((ch) => (
                 <div key={ch.id} className="sheet-print-chart">
@@ -1639,16 +1640,16 @@ function SheetEditor({ doc }: { doc: DocRecord }) {
 }
 
 const condMenuLabel: Partial<Record<CondType, string>> = {
-  gt: "Mayor que…",
-  lt: "Menor que…",
-  between: "Entre…",
-  eq: "Igual a…",
-  text: "Texto que contiene…",
-  dup: "Valores duplicados…",
-  top: "Los 10 valores más altos…",
-  bottom: "Los 10 valores más bajos…",
-  aboveAvg: "Por encima del promedio…",
-  belowAvg: "Por debajo del promedio…",
+  gt: L("Mayor que…"),
+  lt: L("Menor que…"),
+  between: L("Entre…"),
+  eq: L("Igual a…"),
+  text: L("Texto que contiene…"),
+  dup: L("Valores duplicados…"),
+  top: L("Los 10 valores más altos…"),
+  bottom: L("Los 10 valores más bajos…"),
+  aboveAvg: L("Por encima del promedio…"),
+  belowAvg: L("Por debajo del promedio…"),
 };
 
 const defaultDec = (fmt?: NumFmt) => (fmt === "number" || fmt === "thousands" || fmt === "currency" || fmt === "percent" ? 2 : 0);
@@ -1678,17 +1679,17 @@ function AutoSumMenu({ onPick, big }: { onPick: (f: "SUMA" | "PROMEDIO" | "CONTA
     <Menu>
       <MenuTrigger asChild>
         {big ? (
-          <span><RBig icon={<Sigma />} label="Autosuma" /></span>
+          <span><RBig icon={<Sigma />} label={L("Autosuma")} /></span>
         ) : (
-          <span><IconButton size="sm" label="Autosuma"><Sigma className="size-4" /></IconButton></span>
+          <span><IconButton size="sm" label={L("Autosuma")}><Sigma className="size-4" /></IconButton></span>
         )}
       </MenuTrigger>
       <MenuContent>
-        <MenuItem icon={<Sigma />} onSelect={() => onPick("SUMA")}>Suma</MenuItem>
-        <MenuItem onSelect={() => onPick("PROMEDIO")}>Promedio</MenuItem>
-        <MenuItem onSelect={() => onPick("CONTAR")}>Contar números</MenuItem>
-        <MenuItem onSelect={() => onPick("MAX")}>Máximo</MenuItem>
-        <MenuItem onSelect={() => onPick("MIN")}>Mínimo</MenuItem>
+        <MenuItem icon={<Sigma />} onSelect={() => onPick("SUMA")}>{L("Suma")}</MenuItem>
+        <MenuItem onSelect={() => onPick("PROMEDIO")}>{L("Promedio")}</MenuItem>
+        <MenuItem onSelect={() => onPick("CONTAR")}>{L("Contar números")}</MenuItem>
+        <MenuItem onSelect={() => onPick("MAX")}>{L("Máximo")}</MenuItem>
+        <MenuItem onSelect={() => onPick("MIN")}>{L("Mínimo")}</MenuItem>
       </MenuContent>
     </Menu>
   );
@@ -1698,16 +1699,16 @@ function BorderMenu({ onPick }: { onPick: (m: "all" | "outer" | "bottom" | "top"
   return (
     <Menu>
       <MenuTrigger asChild>
-        <span><IconButton size="sm" label="Bordes"><Grid3x3 className="size-4" /></IconButton></span>
+        <span><IconButton size="sm" label={L("Bordes")}><Grid3x3 className="size-4" /></IconButton></span>
       </MenuTrigger>
       <MenuContent>
-        <MenuLabel>Bordes</MenuLabel>
-        <MenuItem icon={<Grid3x3 />} onSelect={() => onPick("all")}>Todos los bordes</MenuItem>
-        <MenuItem icon={<Square />} onSelect={() => onPick("outer")}>Borde exterior</MenuItem>
-        <MenuItem icon={<ArrowDownToLine />} onSelect={() => onPick("bottom")}>Borde inferior</MenuItem>
-        <MenuItem icon={<ArrowUpToLine />} onSelect={() => onPick("top")}>Borde superior</MenuItem>
+        <MenuLabel>{L("Bordes")}</MenuLabel>
+        <MenuItem icon={<Grid3x3 />} onSelect={() => onPick("all")}>{L("Todos los bordes")}</MenuItem>
+        <MenuItem icon={<Square />} onSelect={() => onPick("outer")}>{L("Borde exterior")}</MenuItem>
+        <MenuItem icon={<ArrowDownToLine />} onSelect={() => onPick("bottom")}>{L("Borde inferior")}</MenuItem>
+        <MenuItem icon={<ArrowUpToLine />} onSelect={() => onPick("top")}>{L("Borde superior")}</MenuItem>
         <MenuSeparator />
-        <MenuItem icon={<X />} onSelect={() => onPick("none")}>Sin bordes</MenuItem>
+        <MenuItem icon={<X />} onSelect={() => onPick("none")}>{L("Sin bordes")}</MenuItem>
       </MenuContent>
     </Menu>
   );
@@ -1750,7 +1751,7 @@ function SheetTab({ name, active, onSelect, onRename, onMenu }: { name: string; 
         onSelect();
         onMenu(e.clientX, e.clientY);
       }}
-      title="Doble clic para cambiar el nombre"
+      title={L("Doble clic para cambiar el nombre")}
       className={cn(
         "h-7 shrink-0 rounded-md px-3 font-medium whitespace-nowrap transition-colors",
         active ? "bg-accent-soft text-accent shadow-[inset_0_-2px_0_var(--accent)]" : "text-muted hover:bg-surface-2 hover:text-text",
@@ -1847,20 +1848,20 @@ function FindPanel({
   return (
     <div className="absolute top-2 right-5 z-20 w-[340px] animate-pop-in rounded-[var(--radius)] border border-border bg-surface p-2.5 shadow-soft" onKeyDown={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-1.5">
-        <Input autoFocus value={q} onChange={(e) => { setQ(e.target.value); setIdx(0); }} onKeyDown={(e) => { if (e.key === "Enter") go(e.shiftKey ? -1 : 1); if (e.key === "Escape") onClose(); }} placeholder="Buscar en la hoja" className="h-8 flex-1" />
+        <Input autoFocus value={q} onChange={(e) => { setQ(e.target.value); setIdx(0); }} onKeyDown={(e) => { if (e.key === "Enter") go(e.shiftKey ? -1 : 1); if (e.key === "Escape") onClose(); }} placeholder={L("Buscar en la hoja")} className="h-8 flex-1" />
         <span className="w-12 text-center text-[11.5px] text-muted tabular-nums">{hits.length ? `${Math.min(idx, hits.length - 1) + 1}/${hits.length}` : "0/0"}</span>
-        <IconButton size="sm" label="Anterior" onClick={() => go(-1)}><ChevronDown className="size-4 rotate-180" /></IconButton>
-        <IconButton size="sm" label="Siguiente" onClick={() => go(1)}><ChevronDown className="size-4" /></IconButton>
-        <IconButton size="sm" label="Cerrar" onClick={onClose}><X className="size-4" /></IconButton>
+        <IconButton size="sm" label={L("Anterior")} onClick={() => go(-1)}><ChevronDown className="size-4 rotate-180" /></IconButton>
+        <IconButton size="sm" label={L("Siguiente")} onClick={() => go(1)}><ChevronDown className="size-4" /></IconButton>
+        <IconButton size="sm" label={L("Cerrar")} onClick={onClose}><X className="size-4" /></IconButton>
       </div>
       {showRep ? (
         <div className="mt-2 flex items-center gap-1.5">
-          <Input value={rep} onChange={(e) => setRep(e.target.value)} placeholder="Reemplazar por" className="h-8 flex-1" />
-          <Button size="sm" disabled={!hits.length} onClick={() => { const h = hits[Math.min(idx, hits.length - 1)]; if (h) onReplace([h], q, rep); }}>Reemplazar</Button>
-          <Button size="sm" variant="primary" disabled={!hits.length} onClick={() => onReplace(hits, q, rep)}>Todo</Button>
+          <Input value={rep} onChange={(e) => setRep(e.target.value)} placeholder={L("Reemplazar por")} className="h-8 flex-1" />
+          <Button size="sm" disabled={!hits.length} onClick={() => { const h = hits[Math.min(idx, hits.length - 1)]; if (h) onReplace([h], q, rep); }}>{L("Reemplazar")}</Button>
+          <Button size="sm" variant="primary" disabled={!hits.length} onClick={() => onReplace(hits, q, rep)}>{L("Todo")}</Button>
         </div>
       ) : (
-        <button onClick={() => setShowRep(true)} className="mt-1.5 text-[12px] text-accent hover:underline">Reemplazar…</button>
+        <button onClick={() => setShowRep(true)} className="mt-1.5 text-[12px] text-accent hover:underline">{L("Reemplazar…")}</button>
       )}
     </div>
   );
@@ -1894,14 +1895,14 @@ function ChartDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title={editing ? "Editar gráfico" : "Insertar gráfico"}
-      description="Elige el tipo y el rango de datos. La primera fila y la primera columna se usan como nombres."
+      title={editing ? L("Editar gráfico") : L("Insertar gráfico")}
+      description={L("Elige el tipo y el rango de datos. La primera fila y la primera columna se usan como nombres.")}
       className="w-[min(94vw,760px)]"
       footer={
         <>
-          {editing && <Button variant="ghost" className="mr-auto text-red-500" icon={<Trash2 className="size-4" />} onClick={onDelete}>Eliminar</Button>}
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" disabled={!valid} onClick={() => onSave(spec)}>{editing ? "Aplicar" : "Insertar"}</Button>
+          {editing && <Button variant="ghost" className="mr-auto text-red-500" icon={<Trash2 className="size-4" />} onClick={onDelete}>{L("Eliminar")}</Button>}
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+          <Button variant="primary" disabled={!valid} onClick={() => onSave(spec)}>{editing ? L("Aplicar") : L("Insertar")}</Button>
         </>
       }
     >
@@ -1920,19 +1921,19 @@ function ChartDialog({
             ))}
           </div>
           <label className="text-[12.5px] font-medium">
-            Título
-            <Input value={spec.title} onChange={(e) => setSpec({ ...spec, title: e.target.value })} placeholder="Sin título" className="mt-1 h-8" />
+            {L("Título")}
+            <Input value={spec.title} onChange={(e) => setSpec({ ...spec, title: e.target.value })} placeholder={L("Sin título")} className="mt-1 h-8" />
           </label>
           <label className="text-[12.5px] font-medium">
-            Datos
+            {L("Datos")}
             <Input value={spec.range} onChange={(e) => setSpec({ ...spec, range: e.target.value.toUpperCase() })} placeholder="A1:C10" className={cn("mt-1 h-8 font-mono", !parseRange(spec.range) && "border-red-400")} />
           </label>
           <label className="text-[12.5px] font-medium">
-            Nombres de las categorías <span className="font-normal text-muted">(opcional)</span>
-            <Input value={spec.labels ?? ""} onChange={(e) => setSpec({ ...spec, labels: e.target.value.toUpperCase() || undefined })} placeholder="Ej.: A2:A10" className="mt-1 h-8 font-mono" />
+            {L("Nombres de las categorías")}{" "} <span className="font-normal text-muted">{L("(opcional)")}</span>
+            <Input value={spec.labels ?? ""} onChange={(e) => setSpec({ ...spec, labels: e.target.value.toUpperCase() || undefined })} placeholder={L("Ej.: A2:A10")} className="mt-1 h-8 font-mono" />
           </label>
           <label className="flex items-center justify-between text-[12.5px] font-medium">
-            Mostrar leyenda
+            {L("Mostrar leyenda")}
             <Switch checked={spec.legend !== false} onChange={(v) => setSpec({ ...spec, legend: v })} />
           </label>
         </div>
@@ -1950,15 +1951,16 @@ function FunctionDialog({ onClose, onPick }: { onClose: () => void; onPick: (f: 
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<FnInfo["cat"] | "Todas">("Todas");
   const list = FN_INFO.filter((f) => (cat === "Todas" || f.cat === cat) && (!q || (f.name + " " + f.desc).toLowerCase().includes(q.toLowerCase())));
+  // i18n-ignore: las categorías son claves; se traducen al mostrarlas
   const cats: (FnInfo["cat"] | "Todas")[] = ["Todas", "Matemáticas", "Estadística", "Lógicas", "Texto", "Fecha y hora", "Búsqueda", "Financieras"];
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} title="Insertar función" description="Busca una función y elígela para empezar a escribirla en la celda." className="w-[min(94vw,640px)]">
+    <Dialog open onOpenChange={(o) => !o && onClose()} title={L("Insertar función")} description={L("Busca una función y elígela para empezar a escribirla en la celda.")} className="w-[min(94vw,640px)]">
       <div className="mb-3 flex gap-2">
-        <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar: suma, fecha, buscar…" className="h-9 flex-1" />
+        <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={L("Buscar: suma, fecha, buscar…")} className="h-9 flex-1" />
       </div>
       <div className="mb-3 flex flex-wrap gap-1">
         {cats.map((c) => (
-          <button key={c} onClick={() => setCat(c)} className={cn("rounded-full px-2.5 py-1 text-[12px]", cat === c ? "bg-accent text-accent-fg" : "bg-surface-2 text-muted hover:text-text")}>{c}</button>
+          <button key={c} onClick={() => setCat(c)} className={cn("rounded-full px-2.5 py-1 text-[12px]", cat === c ? "bg-accent text-accent-fg" : "bg-surface-2 text-muted hover:text-text")}>{L(c)}</button>
         ))}
       </div>
       <div className="max-h-[340px] overflow-y-auto rounded-[var(--radius)] border border-border">
@@ -1968,7 +1970,7 @@ function FunctionDialog({ onClose, onPick }: { onClose: () => void; onPick: (f: 
             <span className="text-[12px] text-muted">{f.desc}</span>
           </button>
         ))}
-        {!list.length && <div className="px-3 py-6 text-center text-[13px] text-muted">No hay funciones con ese nombre.</div>}
+        {!list.length && <div className="px-3 py-6 text-center text-[13px] text-muted">{L("No hay funciones con ese nombre.")}</div>}
       </div>
     </Dialog>
   );
@@ -2006,7 +2008,7 @@ function SheetAIDialog({
   const sheet = wb.sheets[si];
   /** Datos de la hoja como texto (para dar contexto a la IA). */
   const context = (rg: Range | null, maxRows = 60) => {
-    if (!rg) return "(hoja vacía)";
+    if (!rg) return L("(hoja vacía)");
     const lines: string[] = [];
     for (let r = rg.r1; r <= Math.min(rg.r2, rg.r1 + maxRows); r++) {
       const row: string[] = [];
@@ -2063,26 +2065,26 @@ function SheetAIDialog({
         .join("\n")
     : "";
 
-  const titles = { formula: "Fórmula con IA", analyze: "Analizar datos con IA", generate: "Generar una tabla con IA" };
+  const titles = { formula: L("Fórmula con IA"), analyze: L("Analizar datos con IA"), generate: L("Generar una tabla con IA") };
   const placeholders = {
-    formula: "Ej.: la suma de la columna D cuando la categoría sea «Comida»",
-    analyze: "Opcional: ¿en qué quieres que se fije? (tendencias, gastos más altos…)",
-    generate: "Ej.: 10 países europeos con su capital, población y superficie",
+    formula: L("Ej.: la suma de la columna D cuando la categoría sea «Comida»"),
+    analyze: L("Opcional: ¿en qué quieres que se fije? (tendencias, gastos más altos…)"),
+    generate: L("Ej.: 10 países europeos con su capital, población y superficie"),
   };
   return (
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
       title={titles[mode]}
-      description={mode === "formula" ? `La fórmula se escribirá en ${active}.` : mode === "generate" ? `La tabla se insertará a partir de ${active}.` : "Se analizan los datos seleccionados (o toda la hoja)."}
+      description={mode === "formula" ? L("La fórmula se escribirá en {0}.", active) : mode === "generate" ? L("La tabla se insertará a partir de {0}.", active) : L("Se analizan los datos seleccionados (o toda la hoja).")}
       className="w-[min(94vw,600px)]"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose}>Cerrar</Button>
-          {mode === "formula" && formula && !busy && <Button variant="primary" onClick={() => onFormula(formula)}>Insertar fórmula</Button>}
-          {mode === "generate" && tsv && !busy && <Button variant="primary" onClick={() => onTable(tsv)}>Insertar tabla</Button>}
+          <Button variant="ghost" onClick={onClose}>{L("Cerrar")}</Button>
+          {mode === "formula" && formula && !busy && <Button variant="primary" onClick={() => onFormula(formula)}>{L("Insertar fórmula")}</Button>}
+          {mode === "generate" && tsv && !busy && <Button variant="primary" onClick={() => onTable(tsv)}>{L("Insertar tabla")}</Button>}
           <Button variant={out ? "outline" : "primary"} icon={busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} disabled={busy || (mode !== "analyze" && !prompt.trim())} onClick={() => void run()}>
-            {out ? "Otra vez" : mode === "analyze" ? "Analizar" : "Generar"}
+            {out ? L("Otra vez") : mode === "analyze" ? L("Analizar") : L("Generar")}
           </Button>
         </>
       }
@@ -2105,7 +2107,7 @@ function SheetAIDialog({
       {error && <div className="mt-3 rounded-md bg-red-500/10 p-2.5 text-[12.5px] text-red-600">{error}</div>}
       {(out || busy) && (
         <div className="mt-3 max-h-[300px] overflow-auto rounded-[var(--radius)] border border-border bg-surface-2 p-3 text-[13px] whitespace-pre-wrap">
-          {mode === "formula" && formula ? <code className="font-mono text-[14px] font-semibold">{formula}</code> : out || "Pensando…"}
+          {mode === "formula" && formula ? <code className="font-mono text-[14px] font-semibold">{formula}</code> : out || L("Pensando…")}
         </div>
       )}
     </Dialog>

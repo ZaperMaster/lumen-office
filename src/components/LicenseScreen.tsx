@@ -7,6 +7,7 @@ import { useApp } from "@/store/app";
 import { Button, cn } from "@/components/ui";
 import { Logo } from "@/components/Logo";
 
+import { L } from "@/lib/i18n";
 /** Campo para escribir o pegar la clave y activarla. */
 export function LicenseKeyForm({ onDone }: { onDone?: () => void }) {
   const [key, setKey] = useState("");
@@ -19,7 +20,7 @@ export function LicenseKeyForm({ onDone }: { onDone?: () => void }) {
     const r = await activate(key);
     setBusy(false);
     if (!r.ok) return setError(r.error);
-    toast(`¡Gracias, ${r.info.name}! Lumen Office está activado.`, "success");
+    toast(L("¡Gracias, {0}! Lumen Office está activado.", r.info.name), "success");
     setKey("");
     onDone?.();
   };
@@ -40,7 +41,7 @@ export function LicenseKeyForm({ onDone }: { onDone?: () => void }) {
         }}
         rows={3}
         spellCheck={false}
-        placeholder="Pega aquí tu clave de licencia (empieza por LUMEN1-)"
+        placeholder={L("Pega aquí tu clave de licencia (empieza por LUMEN1-)")}
         className={cn(
           "w-full resize-none rounded-[var(--radius)] border bg-surface px-3 py-2 font-mono text-[12px] break-all outline-none focus:border-accent",
           error ? "border-red-400" : "border-border",
@@ -48,7 +49,7 @@ export function LicenseKeyForm({ onDone }: { onDone?: () => void }) {
       />
       {error && <p className="text-[12.5px] text-red-500">{error}</p>}
       <Button variant="primary" icon={busy ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />} disabled={!key.trim() || busy} onClick={() => void submit()}>
-        Activar
+        {L("Activar")}
       </Button>
     </div>
   );
@@ -67,26 +68,25 @@ export function LicenseScreen() {
         <div className="mb-5 flex items-center gap-3">
           <Logo className="size-11" />
           <div>
-            <h1 className="text-[20px] font-bold">La prueba gratuita ha terminado</h1>
-            <p className="text-[13px] text-muted">Has usado Lumen Office durante {TRIAL_DAYS} días.</p>
+            <h1 className="text-[20px] font-bold">{L("La prueba gratuita ha terminado")}</h1>
+            <p className="text-[13px] text-muted">{L("Has usado Lumen Office durante")}{" "} {TRIAL_DAYS} {" "}{L("días.")}</p>
           </div>
         </div>
         <p className="mb-5 text-[13.5px] leading-relaxed text-muted">
-          Para seguir creando y editando documentos, hojas de cálculo y presentaciones, activa tu licencia. Tus archivos siguen guardados en este equipo y no
-          se ha borrado nada.
+          {L("Para seguir creando y editando documentos, hojas de cálculo y presentaciones, activa tu licencia. Tus archivos siguen guardados en este equipo y no se ha borrado nada.")}
         </p>
         <LicenseKeyForm />
         <div className="my-5 flex items-center gap-3 text-[12px] text-muted">
           <span className="h-px flex-1 bg-border" />
-          ¿Aún no tienes licencia?
+          {L("¿Aún no tienes licencia?")}
           <span className="h-px flex-1 bg-border" />
         </div>
         <Button variant="outline" className="w-full" icon={<ShoppingCart className="size-4" />} onClick={buyLicense}>
-          {BUY_URL ? "Comprar una licencia" : "Cómo conseguir una licencia"}
+          {BUY_URL ? L("Comprar una licencia") : L("Cómo conseguir una licencia")}
           <ExternalLink className="size-3.5 opacity-60" />
         </Button>
         <button onClick={() => void exportBackup()} className="mx-auto mt-4 flex items-center gap-1.5 text-[12.5px] text-muted hover:text-text">
-          <Download className="size-3.5" /> Exportar todos mis documentos (copia de seguridad)
+          <Download className="size-3.5" /> {" "}{L("Exportar todos mis documentos (copia de seguridad)")}
         </button>
         {info && (
           <p className="mt-4 flex items-center gap-1.5 text-[12px] text-emerald-600">

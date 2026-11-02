@@ -1,3 +1,4 @@
+import { L } from "@/lib/i18n";
 export interface ThemeTokens {
   bg: string;
   surface: string;
@@ -23,7 +24,7 @@ export interface Theme {
 export const THEMES: Theme[] = [
   {
     id: "light",
-    name: "Claro",
+    name: L("Claro"),
     dark: false,
     tokens: {
       bg: "#f4f5f7", surface: "#ffffff", surface2: "#f0f1f4", surface3: "#e6e8ec",
@@ -34,7 +35,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "dark",
-    name: "Oscuro",
+    name: L("Oscuro"),
     dark: true,
     tokens: {
       bg: "#141518", surface: "#1c1d22", surface2: "#24262c", surface3: "#2e3038",
@@ -45,7 +46,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "midnight",
-    name: "Medianoche",
+    name: L("Medianoche"),
     dark: true,
     tokens: {
       bg: "#0d1321", surface: "#131b2e", surface2: "#1a2339", surface3: "#233050",
@@ -56,7 +57,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "graphite",
-    name: "Grafito",
+    name: L("Grafito"),
     dark: true,
     tokens: {
       bg: "#1a1a1a", surface: "#222222", surface2: "#2a2a2a", surface3: "#353535",
@@ -67,7 +68,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "sepia",
-    name: "Sepia",
+    name: L("Sepia"),
     dark: false,
     tokens: {
       bg: "#efe6d6", surface: "#f8f1e4", surface2: "#efe5d3", surface3: "#e4d7c0",
@@ -78,7 +79,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "forest",
-    name: "Bosque",
+    name: L("Bosque"),
     dark: false,
     tokens: {
       bg: "#eef3ee", surface: "#fbfdfb", surface2: "#e9f0e9", surface3: "#dbe6db",
@@ -89,7 +90,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "ocean",
-    name: "Océano",
+    name: L("Océano"),
     dark: false,
     tokens: {
       bg: "#eaf3f8", surface: "#fafdff", surface2: "#e5f0f6", surface3: "#d4e5ef",
@@ -100,7 +101,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "rose",
-    name: "Rosa",
+    name: L("Rosa"),
     dark: false,
     tokens: {
       bg: "#f9eef1", surface: "#fffafb", surface2: "#f6e7ec", surface3: "#eed6de",
@@ -111,7 +112,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "lavender",
-    name: "Lavanda",
+    name: L("Lavanda"),
     dark: false,
     tokens: {
       bg: "#f1effa", surface: "#fcfbff", surface2: "#ebe8f7", surface3: "#ddd8f0",
@@ -122,7 +123,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "contrast",
-    name: "Alto contraste",
+    name: L("Alto contraste"),
     dark: true,
     tokens: {
       bg: "#000000", surface: "#0a0a0a", surface2: "#141414", surface3: "#1f1f1f",

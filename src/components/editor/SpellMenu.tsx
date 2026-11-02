@@ -5,6 +5,7 @@ import { BookPlus, EyeOff, Loader2 } from "lucide-react";
 import { spellKey } from "@/components/editor/spellcheck";
 import { addToDictionary, ignoreWord, suggestions } from "@/lib/spell";
 
+import { L } from "@/lib/i18n";
 /** Menú con sugerencias al hacer clic derecho en una palabra subrayada en rojo. */
 export function SpellMenu({ editor }: { editor: Editor }) {
   const [menu, setMenu] = useState<null | { x: number; y: number; from: number; to: number; word: string; list: string[] | null }>(null);
@@ -55,7 +56,7 @@ export function SpellMenu({ editor }: { editor: Editor }) {
     >
       {menu.list === null ? (
         <div className="flex items-center gap-2 px-2.5 py-2 text-[12.5px] text-muted">
-          <Loader2 className="size-3.5 animate-spin" /> Buscando sugerencias…
+          <Loader2 className="size-3.5 animate-spin" /> {" "}{L("Buscando sugerencias…")}
         </div>
       ) : menu.list.length ? (
         menu.list.map((s) => (
@@ -64,7 +65,7 @@ export function SpellMenu({ editor }: { editor: Editor }) {
           </button>
         ))
       ) : (
-        <div className="px-2.5 py-2 text-[12.5px] text-muted">Sin sugerencias</div>
+        <div className="px-2.5 py-2 text-[12.5px] text-muted">{L("Sin sugerencias")}</div>
       )}
       <div className="my-1 h-px bg-border" />
       <button
@@ -74,7 +75,7 @@ export function SpellMenu({ editor }: { editor: Editor }) {
         }}
         className={item}
       >
-        <BookPlus className="size-4 text-muted" /> Añadir «{menu.word}» al diccionario
+        <BookPlus className="size-4 text-muted" /> {" "}{L("Añadir «")}{menu.word}{L("» al diccionario")}
       </button>
       <button
         onClick={() => {
@@ -83,7 +84,7 @@ export function SpellMenu({ editor }: { editor: Editor }) {
         }}
         className={item}
       >
-        <EyeOff className="size-4 text-muted" /> Ignorar
+        <EyeOff className="size-4 text-muted" /> {" "}{L("Ignorar")}
       </button>
     </div>,
     document.body,

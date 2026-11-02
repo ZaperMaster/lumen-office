@@ -7,6 +7,7 @@ import { autoRowHeights, looksEmpty, type CondStyle } from "@/lib/sheet/view";
 import { SparkSvg } from "@/components/sheet/Sparkline";
 import { cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /*
  * Cuadrícula de la hoja de cálculo. Solo se dibujan las celdas visibles; las
  * filas y columnas inmovilizadas se pintan aparte, fijas, sin desplazarse.
@@ -520,7 +521,7 @@ export function Grid({
               const b = (e.currentTarget as HTMLElement).getBoundingClientRect();
               api.openFilter(c, b.left, b.bottom + 4);
             }}
-            title={f.active.has(c) ? "Filtro aplicado: clic para cambiarlo" : "Filtrar u ordenar"}
+            title={f.active.has(c) ? L("Filtro aplicado: clic para cambiarlo") : L("Filtrar u ordenar")}
           >
             <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor">
               {f.active.has(c) ? <path d="M1 2h10L7 6.5V10L5 11V6.5z" /> : <path d="M2 4h8L6 8.5z" />}
@@ -588,7 +589,7 @@ export function Grid({
               e.preventDefault();
               dragMode.current = { kind: "fill", anchor: [n.r2, n.c2] };
             }}
-            title="Arrastra para rellenar"
+            title={L("Arrastra para rellenar")}
           />
         )}
         {fillPreview && <div className="sg-fill-preview" style={rectOf(fillPreview, ox, oy)} />}
@@ -602,7 +603,7 @@ export function Grid({
               const b = (e.currentTarget as HTMLElement).getBoundingClientRect();
               api.openDropdown(b.left - activeRect.width - 2, b.bottom + 2);
             }}
-            title="Elegir de la lista (Alt+↓)"
+            title={L("Elegir de la lista (Alt+↓)")}
           >
             <svg viewBox="0 0 12 12" width="10" height="10" fill="currentColor"><path d="M2 4h8L6 8.5z" /></svg>
           </button>
@@ -774,7 +775,7 @@ export function Grid({
               {frozenRows.map((r) => rowHeader(r))}
             </div>
           </div>
-          <div className="sg-corner" style={{ width: hw, height: hh }} title="Seleccionar todo" />
+          <div className="sg-corner" style={{ width: hw, height: hh }} title={L("Seleccionar todo")} />
 
           {editBox && (
             <textarea
@@ -863,7 +864,7 @@ function ChartBox({
         api.editChart(spec.id);
       }}
       onContextMenu={(e) => e.stopPropagation()}
-      title="Arrastra para mover · doble clic para editar"
+      title={L("Arrastra para mover · doble clic para editar")}
     >
       <div style={{ transform: `scale(${zoom})`, transformOrigin: "0 0", width: cur.w, height: cur.h }}>
         <ChartSvg type={spec.type} data={data} width={cur.w} height={cur.h} title={spec.title} legend={spec.legend !== false} />

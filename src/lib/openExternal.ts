@@ -1,3 +1,4 @@
+import { L } from "@/lib/i18n";
 /** Esquemas que se permite abrir desde un documento. */
 const SAFE = /^(https?:|mailto:|tel:)/i;
 
@@ -18,7 +19,7 @@ export function normalizeUrl(raw: string): string {
 export async function openExternal(raw: string): Promise<void> {
   const url = normalizeUrl(raw);
   // Nunca se abren esquemas peligrosos (javascript:, file:, etc.)
-  if (!SAFE.test(url)) throw new Error("Este vínculo no se puede abrir por seguridad.");
+  if (!SAFE.test(url)) throw new Error(L("Este vínculo no se puede abrir por seguridad."));
   if ("__TAURI_INTERNALS__" in window) {
     const { openUrl } = await import("@tauri-apps/plugin-opener");
     await openUrl(url);

@@ -14,6 +14,7 @@ import { Button, IconButton, Menu, MenuContent, MenuItem, MenuSeparator, MenuTri
 import { Logo } from "@/components/Logo";
 import type { OfficeFiles } from "@/components/office/useOfficeDoc";
 
+import { L } from "@/lib/i18n";
 /* Barra superior y menú Archivo comunes a las hojas de cálculo y las presentaciones. */
 
 export function OfficeHeader({
@@ -49,7 +50,7 @@ export function OfficeHeader({
       className="no-print flex h-11 shrink-0 items-center gap-2 border-b border-border bg-surface px-2"
       style={{ paddingRight: "calc(var(--wc) + 8px)" }}
     >
-      <IconButton label="Volver al inicio" onClick={() => navigate({ name: "home" })}>
+      <IconButton label={L("Volver al inicio")} onClick={() => navigate({ name: "home" })}>
         <ArrowLeft className="size-4" />
       </IconButton>
       <Logo className="size-6" />
@@ -58,28 +59,28 @@ export function OfficeHeader({
         onChange={(e) => onTitle(e.target.value)}
         placeholder={placeholder}
         className="h-8 min-w-0 flex-1 rounded-md bg-transparent px-2 text-[14px] font-semibold outline-none hover:bg-surface-2 focus:bg-surface-2"
-        aria-label="Título"
+        aria-label={L("Título")}
       />
       <SaveIndicator state={saveState} />
-      <IconButton label={doc.favorite ? "Quitar de favoritos" : "Añadir a favoritos"} onClick={() => updateDoc(doc.id, { favorite: doc.favorite ? 0 : 1 })}>
+      <IconButton label={doc.favorite ? L("Quitar de favoritos") : L("Añadir a favoritos")} onClick={() => updateDoc(doc.id, { favorite: doc.favorite ? 0 : 1 })}>
         <Star className={cn("size-4", doc.favorite === 1 && "fill-amber-400 text-amber-400")} />
       </IconButton>
-      <IconButton label={dark ? "Modo claro" : "Modo oscuro"} onClick={() => s.set("themeId", dark ? "light" : "dark")}>
+      <IconButton label={dark ? L("Modo claro") : L("Modo oscuro")} onClick={() => s.set("themeId", dark ? "light" : "dark")}>
         {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </IconButton>
-      <IconButton label="Configuración" onClick={() => openSettings()}>
+      <IconButton label={L("Configuración")} onClick={() => openSettings()}>
         <Settings className="size-4" />
       </IconButton>
       {doc.filePath && (
         <Tooltip
           label={
             diskState === "error"
-              ? `No se pudo guardar en ${doc.filePath}`
+              ? L("No se pudo guardar en {0}", doc.filePath)
               : unsavedFile
                 ? s.fileAutoSave
-                  ? `Guardando en ${doc.filePath}…`
-                  : `Cambios sin guardar en ${doc.filePath} (Ctrl+S)`
-                : `Guardado en ${doc.filePath} · clic para ver la carpeta`
+                  ? L("Guardando en {0}…", doc.filePath)
+                  : L("Cambios sin guardar en {0} (Ctrl+S)", doc.filePath)
+                : L("Guardado en {0} · clic para ver la carpeta", doc.filePath)
           }
         >
           <button
@@ -89,18 +90,18 @@ export function OfficeHeader({
             <span className="shrink-0 [&>svg]:size-3.5">{icon}</span>
             <span className="truncate">{fileName(doc.filePath)}</span>
             {diskState === "saving" ? (
-              <Loader2 className="size-3 shrink-0 animate-spin" aria-label="Guardando en el archivo" />
+              <Loader2 className="size-3 shrink-0 animate-spin" aria-label={L("Guardando en el archivo")} />
             ) : diskState === "error" ? (
-              <span className="size-1.5 shrink-0 rounded-full bg-red-500" aria-label="Error al guardar en el archivo" />
+              <span className="size-1.5 shrink-0 rounded-full bg-red-500" aria-label={L("Error al guardar en el archivo")} />
             ) : (
-              unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label="Cambios sin guardar en el archivo" />
+              unsavedFile && <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-label={L("Cambios sin guardar en el archivo")} />
             )}
           </button>
         </Tooltip>
       )}
-      <Tooltip label={doc.filePath ? "Guardar en el archivo (Ctrl+S)" : "Guardar en un archivo (Ctrl+S)"}>
+      <Tooltip label={doc.filePath ? L("Guardar en el archivo (Ctrl+S)") : L("Guardar en un archivo (Ctrl+S)")}>
         <Button size="sm" variant="outline" icon={<Save className="size-3.5" />} onClick={files.save}>
-          {isDesktop() ? "Guardar" : "Descargar"}
+          {isDesktop() ? L("Guardar") : L("Descargar")}
         </Button>
       </Tooltip>
       {children}
@@ -136,39 +137,39 @@ export function OfficeFileMenu({
       const d = await openFileFromDisk();
       if (d) openDoc(d);
     } catch (e) {
-      toast(e instanceof Error ? e.message : "No se pudo abrir el archivo", "error");
+      toast(e instanceof Error ? e.message : L("No se pudo abrir el archivo"), "error");
     }
   };
   return (
     <>
       <Menu>
         <MenuTrigger asChild>
-          <button className="mb-0.5 h-7 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:brightness-110">Archivo</button>
+          <button className="mb-0.5 h-7 rounded-md bg-accent px-3.5 text-[13px] font-semibold text-accent-fg hover:brightness-110">{L("Archivo")}</button>
         </MenuTrigger>
         <MenuContent className="w-[270px]">
-          <MenuItem icon={<House />} onSelect={() => navigate({ name: "home" })}>Inicio</MenuItem>
+          <MenuItem icon={<House />} onSelect={() => navigate({ name: "home" })}>{L("Inicio")}</MenuItem>
           <MenuSeparator />
-          <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>Nuevo documento</MenuItem>
-          <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>Nueva hoja de cálculo</MenuItem>
-          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>Nueva presentación</MenuItem>
-          <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>Nueva nota</MenuItem>
-          <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>Abrir archivo…</MenuItem>
-          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>Archivos recientes</MenuItem>
+          <MenuItem icon={<FilePlus2 />} onSelect={() => newDocument()}>{L("Nuevo documento")}</MenuItem>
+          <MenuItem icon={<Sheet />} onSelect={() => newSheet()}>{L("Nueva hoja de cálculo")}</MenuItem>
+          <MenuItem icon={<Presentation />} onSelect={() => newSlides()}>{L("Nueva presentación")}</MenuItem>
+          <MenuItem icon={<StickyNote />} onSelect={() => newNote()}>{L("Nueva nota")}</MenuItem>
+          <MenuItem icon={<FolderOpen />} shortcut="Ctrl+O" onSelect={openFile}>{L("Abrir archivo…")}</MenuItem>
+          <MenuItem icon={<BookOpen />} onSelect={() => navigate({ name: "home", section: "open" })}>{L("Archivos recientes")}</MenuItem>
           <MenuSeparator />
           <MenuItem icon={<Save />} shortcut="Ctrl+S" onSelect={files.save}>
-            {files.filePath ? "Guardar" : desktop ? "Guardar…" : `Descargar ${saveLabel}`}
+            {files.filePath ? L("Guardar") : desktop ? L("Guardar…") : L("Descargar {0}", saveLabel)}
           </MenuItem>
-          {desktop && <MenuItem icon={<SaveAll />} shortcut="F12" onSelect={files.saveAs}>Guardar como…</MenuItem>}
-          <SubMenu label="Exportar una copia" icon={<FileDown />}>
+          {desktop && <MenuItem icon={<SaveAll />} shortcut="F12" onSelect={files.saveAs}>{L("Guardar como…")}</MenuItem>}
+          <SubMenu label={L("Exportar una copia")} icon={<FileDown />}>
             {exports.map((x) => (
               <MenuItem key={x.label} icon={x.icon} onSelect={x.onSelect}>{x.label}</MenuItem>
             ))}
           </SubMenu>
-          <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={onPrint}>Imprimir…</MenuItem>
+          <MenuItem icon={<Printer />} shortcut="Ctrl+P" onSelect={onPrint}>{L("Imprimir…")}</MenuItem>
           {files.filePath && desktop && (
             <>
               <MenuSeparator />
-              <MenuItem icon={<FolderSearch />} onSelect={() => void revealInFolder(files.filePath!)}>Mostrar en la carpeta</MenuItem>
+              <MenuItem icon={<FolderSearch />} onSelect={() => void revealInFolder(files.filePath!)}>{L("Mostrar en la carpeta")}</MenuItem>
             </>
           )}
         </MenuContent>
@@ -186,7 +187,7 @@ export function OfficeFileMenu({
             const { importAnyFile } = await import("@/lib/officeImport");
             openDoc(await importAnyFile(f));
           } catch (err) {
-            toast(err instanceof Error ? err.message : "No se pudo abrir el archivo", "error");
+            toast(err instanceof Error ? err.message : L("No se pudo abrir el archivo"), "error");
           }
         }}
       />

@@ -1,5 +1,6 @@
 import type { ChatMsg } from "@/lib/localModels";
 
+import { L } from "@/lib/i18n";
 interface StreamArgs {
   system: string;
   messages: ChatMsg[];
@@ -34,13 +35,13 @@ async function readLines(res: Response, signal: AbortSignal | undefined, onLine:
 
 export async function listOllamaModels(baseUrl: string): Promise<string[]> {
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/tags`);
-  if (!res.ok) throw new Error(`Ollama respondió ${res.status}`);
+  if (!res.ok) throw new Error(L("Ollama respondió {0}", res.status));
   const data = (await res.json()) as { models?: { name: string }[] };
   return (data.models ?? []).map((m) => m.name);
 }
 
 export async function streamOllama(opts: StreamArgs & { baseUrl: string; model: string; keepAliveMinutes: number }): Promise<string> {
-  if (!opts.model) throw new Error("Elige un modelo de Ollama en Configuración → Inteligencia artificial.");
+  if (!opts.model) throw new Error(L("Elige un modelo de Ollama en Configuración → Inteligencia artificial."));
   let res: Response;
   try {
     res = await fetch(`${opts.baseUrl.replace(/\/$/, "")}/api/chat`, {
@@ -58,13 +59,13 @@ export async function streamOllama(opts: StreamArgs & { baseUrl: string; model: 
     });
   } catch (e) {
     if (opts.signal?.aborted) return "";
-    throw new Error("No se pudo conectar con Ollama. ¿Está abierto en este equipo?", { cause: e });
+    throw new Error(L("No se pudo conectar con Ollama. ¿Está abierto en este equipo?"), { cause: e });
   }
-  if (!res.ok || !res.body) throw new Error(`Ollama respondió con un error (${res.status}).`);
+  if (!res.ok || !res.body) throw new Error(L("Ollama respondió con un error ({0}).", res.status));
   let full = "";
   await readLines(res, opts.signal, (line) => {
     const data = JSON.parse(line) as { message?: { content?: string }; error?: string };
-    if (data.error) throw new Error(`Ollama: ${data.error}`);
+    if (data.error) throw new Error(L("Ollama: {0}", data.error));
     const delta = data.message?.content ?? "";
     if (delta) {
       full += delta;
@@ -86,15 +87,15 @@ function httpError(status: number, body: string): Error {
   } catch {
     detail = body.slice(0, 200);
   }
-  if (status === 401 || status === 403) return new Error("La clave de API no es válida o no tiene permiso. Revísala en Configuración.");
+  if (status === 401 || status === 403) return new Error(L("La clave de API no es válida o no tiene permiso. Revísala en Configuración."));
   if (status === 404) return new Error(`No se encontró el modelo o la dirección de la API. ${detail}`.trim());
-  if (status === 429) return new Error("Límite de uso de la API alcanzado. Inténtalo en unos segundos.");
+  if (status === 429) return new Error(L("Límite de uso de la API alcanzado. Inténtalo en unos segundos."));
   return new Error(`La API respondió con un error (${status}). ${detail}`.trim());
 }
 
 function connectionError(e: unknown): Error {
   return new Error(
-    "No se pudo conectar con la API. Comprueba la dirección y la conexión a internet (algunos servicios no permiten conexiones directas desde aplicaciones de escritorio).",
+    L("No se pudo conectar con la API. Comprueba la dirección y la conexión a internet (algunos servicios no permiten conexiones directas desde aplicaciones de escritorio)."),
     { cause: e },
   );
 }
@@ -112,7 +113,7 @@ export async function listOpenAIModels(baseUrl: string, apiKey: string): Promise
 }
 
 export async function streamOpenAI(opts: StreamArgs & { baseUrl: string; apiKey: string; model: string }): Promise<string> {
-  if (!opts.model) throw new Error("Indica el modelo de la API en Configuración → Inteligencia artificial.");
+  if (!opts.model) throw new Error(L("Indica el modelo de la API en Configuración → Inteligencia artificial."));
   let res: Response;
   try {
     res = await fetch(`${opts.baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -140,7 +141,7 @@ export async function streamOpenAI(opts: StreamArgs & { baseUrl: string; apiKey:
     const payload = line.slice(5).trim();
     if (payload === "[DONE]") return;
     const data = JSON.parse(payload) as { choices?: { delta?: { content?: string } }[]; error?: { message?: string } };
-    if (data.error) throw new Error(`API: ${data.error.message ?? "error desconocido"}`);
+    if (data.error) throw new Error(L("API: {0}", data.error.message ?? L("error desconocido")));
     const delta = data.choices?.[0]?.delta?.content ?? "";
     if (delta) {
       full += delta;
@@ -155,7 +156,7 @@ export async function streamOpenAI(opts: StreamArgs & { baseUrl: string; apiKey:
 /* ------------------------------------------------------------------ */
 
 export async function streamAnthropic(opts: StreamArgs & { apiKey: string; model: string; effort: "low" | "medium" }): Promise<string> {
-  if (!opts.apiKey) throw new Error("Añade tu clave de API de Anthropic en Configuración → Inteligencia artificial.");
+  if (!opts.apiKey) throw new Error(L("Añade tu clave de API de Anthropic en Configuración → Inteligencia artificial."));
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   // La clave la introduce el propio usuario y solo se guarda en este equipo.
   const client = new Anthropic({ apiKey: opts.apiKey, dangerouslyAllowBrowser: true });
@@ -181,16 +182,16 @@ export async function streamAnthropic(opts: StreamArgs & { apiKey: string; model
       }
     }
     const final = await stream.finalMessage();
-    if (final.stop_reason === "refusal") throw new Error("El modelo no puede ayudar con esta petición.");
+    if (final.stop_reason === "refusal") throw new Error(L("El modelo no puede ayudar con esta petición."));
     return full;
   } catch (e) {
     if (opts.signal?.aborted) return full;
-    if (e instanceof Anthropic.AuthenticationError) throw new Error("La clave de API de Anthropic no es válida. Revísala en Configuración.");
-    if (e instanceof Anthropic.PermissionDeniedError) throw new Error("Tu clave no tiene permiso para usar este modelo.");
-    if (e instanceof Anthropic.NotFoundError) throw new Error("Modelo de Anthropic no disponible. Elige otro en Configuración.");
-    if (e instanceof Anthropic.RateLimitError) throw new Error("Límite de uso alcanzado. Inténtalo en unos segundos.");
-    if (e instanceof Anthropic.APIConnectionError) throw new Error("No hay conexión con la API de Anthropic.");
-    if (e instanceof Anthropic.APIError) throw new Error(`Error de la API de Anthropic (${e.status ?? "?"}).`);
+    if (e instanceof Anthropic.AuthenticationError) throw new Error(L("La clave de API de Anthropic no es válida. Revísala en Configuración."));
+    if (e instanceof Anthropic.PermissionDeniedError) throw new Error(L("Tu clave no tiene permiso para usar este modelo."));
+    if (e instanceof Anthropic.NotFoundError) throw new Error(L("Modelo de Anthropic no disponible. Elige otro en Configuración."));
+    if (e instanceof Anthropic.RateLimitError) throw new Error(L("Límite de uso alcanzado. Inténtalo en unos segundos."));
+    if (e instanceof Anthropic.APIConnectionError) throw new Error(L("No hay conexión con la API de Anthropic."));
+    if (e instanceof Anthropic.APIError) throw new Error(L("Error de la API de Anthropic ({0}).", e.status ?? "?"));
     throw e;
   }
 }

@@ -3,6 +3,7 @@ import type { Evaluator } from "@/lib/sheet/formula";
 import { parseRange, type Sheet, type Spark } from "@/lib/sheet/model";
 import { Button, Dialog, Input, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /* Minigráficos: un gráfico pequeño de línea o columnas dentro de una celda. */
 
 /** Números del rango de un minigráfico. */
@@ -67,30 +68,30 @@ export function SparkDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title={`Minigráfico en ${cell}`}
-      description="Un gráfico pequeño dentro de la celda con los números de un rango (por ejemplo, las ventas de cada mes)."
+      title={L("Minigráfico en {0}", cell)}
+      description={L("Un gráfico pequeño dentro de la celda con los números de un rango (por ejemplo, las ventas de cada mes).")}
       footer={
         <>
-          <Button variant="ghost" className="mr-auto text-red-500" onClick={() => onSave(null)}>Quitar</Button>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" disabled={!ok} onClick={() => onSave({ ...sp, range: sp.range.toUpperCase() })}>Aplicar</Button>
+          <Button variant="ghost" className="mr-auto text-red-500" onClick={() => onSave(null)}>{L("Quitar")}</Button>
+          <Button variant="ghost" onClick={onClose}>{L("Cancelar")}</Button>
+          <Button variant="primary" disabled={!ok} onClick={() => onSave({ ...sp, range: sp.range.toUpperCase() })}>{L("Aplicar")}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-3">
         <label className="text-[12.5px] font-medium">
-          Datos
+          {L("Datos")}
           <Input autoFocus value={sp.range} onChange={(e) => setSp({ ...sp, range: e.target.value })} placeholder="B2:M2" className={cn("mt-1 h-9 font-mono", !ok && "border-red-400")} />
         </label>
         <div className="flex gap-2">
           {(["line", "column"] as const).map((t) => (
             <button key={t} onClick={() => setSp({ ...sp, type: t })} className={cn("flex-1 rounded-md border px-3 py-2 text-[12.5px]", sp.type === t ? "border-accent bg-accent-soft text-accent" : "border-border hover:bg-surface-2")}>
-              {t === "line" ? "Línea" : "Columnas"}
+              {t === "line" ? L("Línea") : L("Columnas")}
             </button>
           ))}
         </div>
         <label className="flex items-center gap-3 text-[12.5px] font-medium">
-          Color
+          {L("Color")}
           <input type="color" value={sp.color ?? "#4f7cff"} onChange={(e) => setSp({ ...sp, color: e.target.value })} className="h-8 w-12 cursor-pointer rounded border border-border" />
         </label>
       </div>

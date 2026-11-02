@@ -1,5 +1,6 @@
 import { esc, layoutEls, sid, type Deck, type LayoutId, type Slide } from "@/lib/slides/model";
 
+import { L } from "@/lib/i18n";
 /* Plantillas de presentaciones */
 
 export interface SlidesTemplate {
@@ -27,15 +28,15 @@ export function makeSlide(layout: LayoutId, title?: string, body?: string | stri
 export const SLIDES_TEMPLATES: SlidesTemplate[] = [
   {
     id: "blank",
-    name: "Presentación en blanco",
-    description: "Empieza desde cero",
+    name: L("Presentación en blanco"),
+    description: L("Empieza desde cero"),
     theme: "clean",
     build: () => ({ title: "", deck: { theme: "clean", slides: [makeSlide("title")] } }),
   },
   {
     id: "project",
-    name: "Presentación de proyecto",
-    description: "Objetivos, plan y próximos pasos",
+    name: L("Presentación de proyecto"),
+    description: L("Objetivos, plan y próximos pasos"),
     theme: "corporate",
     build: () => ({
       title: "Presentación de proyecto",
@@ -53,8 +54,8 @@ export const SLIDES_TEMPLATES: SlidesTemplate[] = [
   },
   {
     id: "lesson",
-    name: "Clase o charla",
-    description: "Temas, ejemplos y resumen",
+    name: L("Clase o charla"),
+    description: L("Temas, ejemplos y resumen"),
     theme: "forest",
     build: () => ({
       title: "Clase",
@@ -72,8 +73,8 @@ export const SLIDES_TEMPLATES: SlidesTemplate[] = [
   },
   {
     id: "pitch",
-    name: "Pitch de negocio",
-    description: "Problema, solución y mercado",
+    name: L("Pitch de negocio"),
+    description: L("Problema, solución y mercado"),
     theme: "dark",
     build: () => ({
       title: "Pitch",
@@ -94,8 +95,8 @@ export const SLIDES_TEMPLATES: SlidesTemplate[] = [
 SLIDES_TEMPLATES.push(
   {
     id: "results",
-    name: "Informe de resultados",
-    description: "Cifras clave y conclusiones",
+    name: L("Informe de resultados"),
+    description: L("Cifras clave y conclusiones"),
     theme: "ocean",
     build: () => ({
       title: "Informe de resultados",
@@ -113,8 +114,8 @@ SLIDES_TEMPLATES.push(
   },
   {
     id: "training",
-    name: "Formación",
-    description: "Módulos, ejercicios y evaluación",
+    name: L("Formación"),
+    description: L("Módulos, ejercicios y evaluación"),
     theme: "paper",
     build: () => ({
       title: "Formación",
@@ -133,8 +134,8 @@ SLIDES_TEMPLATES.push(
   },
   {
     id: "portfolio",
-    name: "Portfolio",
-    description: "Presenta tus proyectos",
+    name: L("Portfolio"),
+    description: L("Presenta tus proyectos"),
     theme: "violet",
     build: () => ({
       title: "Portfolio",
@@ -153,8 +154,8 @@ SLIDES_TEMPLATES.push(
   },
   {
     id: "event",
-    name: "Evento o celebración",
-    description: "Programa, lugar y detalles",
+    name: L("Evento o celebración"),
+    description: L("Programa, lugar y detalles"),
     theme: "sunset",
     build: () => ({
       title: "Evento",

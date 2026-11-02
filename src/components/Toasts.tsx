@@ -1,6 +1,7 @@
 import { CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useApp } from "@/store/app";
 
+import { L } from "@/lib/i18n";
 export function Toasts() {
   const { toasts, dismissToast } = useApp();
   return (
@@ -33,7 +34,7 @@ export function Toasts() {
               </button>
             )}
           </div>
-          <button onClick={() => dismissToast(t.id)} className="rounded p-0.5 text-muted hover:text-text" aria-label="Cerrar aviso">
+          <button onClick={() => dismissToast(t.id)} className="rounded p-0.5 text-muted hover:text-text" aria-label={L("Cerrar aviso")}>
             <X className="size-3.5" />
           </button>
         </div>

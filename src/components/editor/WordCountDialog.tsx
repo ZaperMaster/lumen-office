@@ -2,6 +2,7 @@ import type { Editor } from "@tiptap/react";
 import { countWords } from "@/lib/db";
 import { Button, Dialog } from "@/components/ui";
 
+import { L, uiLocale } from "@/lib/i18n";
 export function WordCountDialog({ editor, open, onOpenChange, pages }: { editor: Editor; open: boolean; onOpenChange: (o: boolean) => void; pages: number }) {
   if (!open) return null;
   const text = editor.getText({ blockSeparator: "\n" });
@@ -9,17 +10,17 @@ export function WordCountDialog({ editor, open, onOpenChange, pages }: { editor:
   const paragraphs = text.split("\n").filter((l) => l.trim()).length;
   const sentences = (text.match(/[^.!?…]+[.!?…]+/g) ?? []).length;
   const rows: [string, string | number][] = [
-    ["Páginas", pages],
-    ["Palabras", words.toLocaleString("es-ES")],
-    ["Caracteres (sin espacios)", text.replace(/\s/g, "").length.toLocaleString("es-ES")],
-    ["Caracteres (con espacios)", text.replace(/\n/g, "").length.toLocaleString("es-ES")],
-    ["Párrafos", paragraphs],
-    ["Oraciones", sentences],
-    ["Tiempo de lectura", `${Math.max(1, Math.round(words / 220))} min`],
-    ["Tiempo para leer en voz alta", `${Math.max(1, Math.round(words / 130))} min`],
+    [L("Páginas"), pages],
+    [L("Palabras"), words.toLocaleString(uiLocale())],
+    [L("Caracteres (sin espacios)"), text.replace(/\s/g, "").length.toLocaleString(uiLocale())],
+    [L("Caracteres (con espacios)"), text.replace(/\n/g, "").length.toLocaleString(uiLocale())],
+    [L("Párrafos"), paragraphs],
+    [L("Oraciones"), sentences],
+    [L("Tiempo de lectura"), `${Math.max(1, Math.round(words / 220))} min`],
+    [L("Tiempo para leer en voz alta"), `${Math.max(1, Math.round(words / 130))} min`],
   ];
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Contar palabras" footer={<Button variant="primary" onClick={() => onOpenChange(false)}>Cerrar</Button>}>
+    <Dialog open={open} onOpenChange={onOpenChange} title={L("Contar palabras")} footer={<Button variant="primary" onClick={() => onOpenChange(false)}>{L("Cerrar")}</Button>}>
       <table className="w-full text-[13.5px]">
         <tbody>
           {rows.map(([k, v]) => (

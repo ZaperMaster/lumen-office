@@ -8,6 +8,7 @@ import { AI_ACTIONS, LANGUAGES, TONES } from "@/lib/ai";
 import { useAI } from "@/components/ai/aiStore";
 import { MenuContent, MenuItem, MenuLabel, MenuSeparator, SubMenu } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 const ICONS: Record<string, ReactNode> = {
   improve: <Wand2 />,
   fix: <SpellCheck />,
@@ -37,31 +38,31 @@ export function AIActionsMenuContent({ editor, align = "start" }: { editor: Edit
   };
   return (
     <MenuContent align={align} className="w-[240px]">
-      <MenuLabel>Editar</MenuLabel>
+      <MenuLabel>{L("Editar")}</MenuLabel>
       {["improve", "fix", "shorter", "longer", "simplify"].map(item)}
       <MenuSeparator />
-      <MenuLabel>Transformar</MenuLabel>
-      <SubMenu label="Cambiar tono" icon={<MessageSquareText />}>
+      <MenuLabel>{L("Transformar")}</MenuLabel>
+      <SubMenu label={L("Cambiar tono")} icon={<MessageSquareText />}>
         {TONES.map((t) => (
           <MenuItem key={t} onSelect={() => run(editor, "tone", t)}>
-            {t[0].toUpperCase() + t.slice(1)}
+            {L(t)[0].toUpperCase() + L(t).slice(1)}
           </MenuItem>
         ))}
       </SubMenu>
-      <SubMenu label="Traducir" icon={<Languages />}>
+      <SubMenu label={L("Traducir")} icon={<Languages />}>
         {LANGUAGES.map((l) => (
           <MenuItem key={l} onSelect={() => run(editor, "translate", l)}>
-            {l[0].toUpperCase() + l.slice(1)}
+            {L(l)[0].toUpperCase() + L(l).slice(1)}
           </MenuItem>
         ))}
       </SubMenu>
       {["bullets", "table"].map(item)}
       <MenuSeparator />
-      <MenuLabel>Generar</MenuLabel>
+      <MenuLabel>{L("Generar")}</MenuLabel>
       {["summarize", "continue", "explain"].map(item)}
       <MenuSeparator />
       <MenuItem icon={<MessageSquareText />} onSelect={() => setPanelOpen(true)}>
-        Abrir chat con la IA
+        {L("Abrir chat con la IA")}
       </MenuItem>
     </MenuContent>
   );

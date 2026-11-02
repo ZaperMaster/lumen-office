@@ -3,6 +3,7 @@ import { Check, Trash2 } from "lucide-react";
 import { FIELDS, withDefaults, type HeaderFooter, type PageLayout, type Slot } from "@/lib/pageLayout";
 import { Switch, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /*
  * Edición del encabezado o del pie directamente en la página (como en Google
  * Docs): tres cuadros (izquierda, centro y derecha) en el margen y una barra
@@ -10,9 +11,9 @@ import { Switch, cn } from "@/components/ui";
  */
 
 const SLOTS: { slot: Slot; label: string }[] = [
-  { slot: "left", label: "Izquierda" },
-  { slot: "center", label: "Centro" },
-  { slot: "right", label: "Derecha" },
+  { slot: "left", label: L("Izquierda") },
+  { slot: "center", label: L("Centro") },
+  { slot: "right", label: L("Derecha") },
 ];
 
 export function HeaderFooterBar({
@@ -98,25 +99,25 @@ export function HeaderFooterBar({
       )}
       style={{ fontFamily: "var(--ui-font)", fontSize: 12.5 }}
     >
-      <span className="mr-1 font-semibold">{zone === "header" ? "Encabezado" : "Pie de página"}</span>
+      <span className="mr-1 font-semibold">{zone === "header" ? L("Encabezado") : L("Pie de página")}</span>
       {FIELDS.map((f) => (
         <button
           key={f.token}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => insert(f.token)}
           className="rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-medium text-accent hover:brightness-95"
-          title={`Insertar ${f.label.toLowerCase()}`}
+          title={L("Insertar {0}", f.label.toLowerCase())}
         >
           + {f.label}
         </button>
       ))}
       <span className="mx-1 h-5 w-px bg-border" />
       <label className="flex items-center gap-1.5 text-[12px]">
-        <Switch checked={draft.differentFirstPage} onChange={(v) => update({ ...draft, differentFirstPage: v })} label="Primera página diferente" />
-        Primera página diferente
+        <Switch checked={draft.differentFirstPage} onChange={(v) => update({ ...draft, differentFirstPage: v })} label={L("Primera página diferente")} />
+        {L("Primera página diferente")}
       </label>
       <label className="flex items-center gap-1 text-[12px]">
-        Empezar en
+        {L("Empezar en")}
         <input
           type="number"
           min={0}
@@ -129,12 +130,12 @@ export function HeaderFooterBar({
       <button
         onClick={() => update({ ...draft, [zone]: { left: "", center: "", right: "" } })}
         className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12px] text-muted hover:bg-surface-2 hover:text-red-500"
-        title="Vaciar"
+        title={L("Vaciar")}
       >
-        <Trash2 className="size-3.5" /> Quitar
+        <Trash2 className="size-3.5" /> {" "}{L("Quitar")}
       </button>
       <button onClick={close} className="flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-[12px] font-medium text-accent-fg hover:brightness-110">
-        <Check className="size-3.5" /> Listo
+        <Check className="size-3.5" /> {" "}{L("Listo")}
       </button>
     </div>
   );

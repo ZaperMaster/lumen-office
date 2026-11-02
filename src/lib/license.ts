@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { verifyAsync } from "@noble/ed25519";
 import { db } from "@/lib/db";
 
+import { L, uiLocale } from "@/lib/i18n";
 /*
  * Licencia y periodo de prueba.
  *
@@ -49,17 +50,17 @@ function b64uToBytes(s: string): Uint8Array {
 export async function checkKey(raw: string): Promise<{ info: LicenseInfo } | { error: string }> {
   const key = raw.replace(/\s+/g, "");
   const m = /^LUMEN1-([\w-]+)\.([\w-]+)$/.exec(key);
-  if (!m) return { error: "La clave no tiene el formato correcto. Debe empezar por «LUMEN1-»." };
+  if (!m) return { error: L("La clave no tiene el formato correcto. Debe empezar por «LUMEN1-».") };
   let ok = false;
   try {
     ok = await verifyAsync(b64uToBytes(m[2]), b64uToBytes(m[1]), hexToBytes(PUBLIC_KEY));
   } catch {
     ok = false;
   }
-  if (!ok) return { error: "La clave no es válida. Comprueba que la has copiado entera." };
+  if (!ok) return { error: L("La clave no es válida. Comprueba que la has copiado entera.") };
   const p = JSON.parse(new TextDecoder().decode(b64uToBytes(m[1]))) as { n: string; e: string; p: string; d: string; x?: string };
   const info: LicenseInfo = { name: p.n, email: p.e, plan: p.p, issued: p.d, expires: p.x };
-  if (info.expires && new Date(info.expires + "T23:59:59").getTime() < Date.now()) return { error: `Esta licencia caducó el ${new Date(info.expires).toLocaleDateString("es-ES")}.` };
+  if (info.expires && new Date(info.expires + "T23:59:59").getTime() < Date.now()) return { error: L("Esta licencia caducó el {0}.", new Date(info.expires).toLocaleDateString(uiLocale())) };
   return { info };
 }
 

@@ -10,6 +10,7 @@ import { useApp } from "@/store/app";
 import { useSettings } from "@/store/settings";
 import { Button, Switch, Tooltip, cn } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -17,17 +18,17 @@ export interface ChatMessage {
 }
 
 const DOC_SUGGESTIONS = [
-  "Resume este documento en 5 puntos",
-  "Sugiere un título atractivo",
-  "Revisa errores y propone mejoras",
-  "Crea un esquema para continuar",
+  L("Resume este documento en 5 puntos"),
+  L("Sugiere un título atractivo"),
+  L("Revisa errores y propone mejoras"),
+  L("Crea un esquema para continuar"),
 ];
 
 const FREE_SUGGESTIONS = [
-  "Escribe un correo para pedir un presupuesto",
-  "Dame ideas para un artículo sobre productividad",
-  "Redacta una carta de presentación para un empleo",
-  "Explícame cómo estructurar un informe",
+  L("Escribe un correo para pedir un presupuesto"),
+  L("Dame ideas para un artículo sobre productividad"),
+  L("Redacta una carta de presentación para un empleo"),
+  L("Explícame cómo estructurar un informe"),
 ];
 
 const STORAGE_KEY = "lumen.chat";
@@ -135,15 +136,15 @@ export function ChatPanel({
           <span className="grid size-6 place-items-center rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white">
             <Sparkles className="size-3.5" />
           </span>
-          <span className="text-[13.5px] font-semibold">Asistente IA</span>
+          <span className="text-[13.5px] font-semibold">{L("Asistente IA")}</span>
           <div className="ml-auto flex items-center gap-0.5">
-            <Tooltip label="Nueva conversación">
-              <button onClick={() => setMessages([])} className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label="Nueva conversación">
+            <Tooltip label={L("Nueva conversación")}>
+              <button onClick={() => setMessages([])} className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("Nueva conversación")}>
                 <Plus className="size-4" />
               </button>
             </Tooltip>
             {onClose && (
-              <button onClick={onClose} className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label="Cerrar panel">
+              <button onClick={onClose} className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label={L("Cerrar panel")}>
                 <X className="size-4" />
               </button>
             )}
@@ -159,9 +160,9 @@ export function ChatPanel({
               <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-lg">
                 <Sparkles className="size-6" />
               </div>
-              <h3 className={cn("font-semibold", variant === "full" ? "text-[22px]" : "text-[15px]")}>¿En qué te ayudo?</h3>
+              <h3 className={cn("font-semibold", variant === "full" ? "text-[22px]" : "text-[15px]")}>{L("¿En qué te ayudo?")}</h3>
               <p className="mt-1 mb-5 text-[13px] text-muted">
-                {editor ? "Pregunta sobre tu documento o pide que escriba algo nuevo." : "Escribe, resume, traduce o genera ideas."}
+                {editor ? L("Pregunta sobre tu documento o pide que escriba algo nuevo.") : L("Escribe, resume, traduce o genera ideas.")}
               </p>
               <div className={cn("grid w-full gap-2", variant === "full" ? "grid-cols-2" : "grid-cols-1")}>
                 {suggestions.map((s) => (
@@ -181,7 +182,7 @@ export function ChatPanel({
               key={i}
               msg={m}
               streaming={busy && i === messages.length - 1}
-              onInsert={editor ? () => { insertMarkdown(editor, m.content); toast("Insertado en el documento", "success"); } : undefined}
+              onInsert={editor ? () => { insertMarkdown(editor, m.content); toast(L("Insertado en el documento"), "success"); } : undefined}
               onCreateDocument={onCreateDocument ? () => onCreateDocument(m.content) : undefined}
             />
           ))}
@@ -201,20 +202,20 @@ export function ChatPanel({
               }
             }}
             rows={variant === "full" ? 3 : 2}
-            placeholder="Escribe un mensaje…"
+            placeholder={L("Escribe un mensaje…")}
             className="block w-full resize-none bg-transparent px-3 pt-2.5 text-[13.5px] outline-none placeholder:text-muted"
           />
           <div className="flex items-center gap-2 px-2 pb-2">
             {editor && (
               <label className="flex items-center gap-1.5 text-[11.5px] text-muted">
-                <Switch checked={useDoc} onChange={setUseDoc} label="Usar el documento como contexto" />
-                Usar documento
+                <Switch checked={useDoc} onChange={setUseDoc} label={L("Usar el documento como contexto")} />
+                {L("Usar documento")}
               </label>
             )}
             <span className="truncate text-[11px] text-muted">{modelName}</span>
             <div className="ml-auto">
               {busy ? (
-                <button onClick={() => controller?.abort()} className="grid size-8 place-items-center rounded-full bg-text text-bg" aria-label="Detener">
+                <button onClick={() => controller?.abort()} className="grid size-8 place-items-center rounded-full bg-text text-bg" aria-label={L("Detener")}>
                   <Square className="size-3" />
                 </button>
               ) : (
@@ -222,7 +223,7 @@ export function ChatPanel({
                   onClick={() => send(input)}
                   disabled={!input.trim()}
                   className="grid size-8 place-items-center rounded-full bg-accent text-accent-fg disabled:opacity-40"
-                  aria-label="Enviar"
+                  aria-label={L("Enviar")}
                 >
                   <ArrowUp className="size-4" />
                 </button>
@@ -233,7 +234,7 @@ export function ChatPanel({
         {variant === "full" && messages.length > 0 && (
           <div className="mt-2 flex justify-center">
             <Button size="sm" variant="ghost" icon={<Trash2 className="size-3.5" />} onClick={() => setMessages([])}>
-              Borrar conversación
+              {L("Borrar conversación")}
             </Button>
           </div>
         )}
@@ -289,12 +290,12 @@ function Message({
         <div className="mt-1.5 flex gap-1 opacity-70 transition-opacity group-hover:opacity-100">
           {onInsert && (
             <Button size="sm" variant="ghost" icon={<CornerDownLeft className="size-3.5" />} onClick={onInsert}>
-              Insertar
+              {L("Insertar")}
             </Button>
           )}
           {onCreateDocument && (
             <Button size="sm" variant="ghost" icon={<FilePlus2 className="size-3.5" />} onClick={onCreateDocument}>
-              Crear documento
+              {L("Crear documento")}
             </Button>
           )}
           <Button
@@ -303,10 +304,10 @@ function Message({
             icon={<Copy className="size-3.5" />}
             onClick={async () => {
               await navigator.clipboard.writeText(msg.content);
-              toast("Copiado", "success");
+              toast(L("Copiado"), "success");
             }}
           >
-            Copiar
+            {L("Copiar")}
           </Button>
         </div>
       )}

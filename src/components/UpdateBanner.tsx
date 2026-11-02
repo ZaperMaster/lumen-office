@@ -5,6 +5,7 @@ import { isDesktop } from "@/lib/files";
 import { useSettings } from "@/store/settings";
 import { Button } from "@/components/ui";
 
+import { L } from "@/lib/i18n";
 /** Comprueba al iniciar si hay versión nueva y muestra el aviso para instalarla. */
 export function UpdateBanner() {
   const { status, version, notes, progress, error, dismissed, check, install, dismiss } = useUpdater();
@@ -32,10 +33,10 @@ export function UpdateBanner() {
               <RefreshCw className="size-4" />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="font-semibold">Nueva versión disponible: {version}</div>
-              <div className="text-[12px] text-muted">Se instala en segundos y conserva tus documentos.</div>
+              <div className="font-semibold">{L("Nueva versión disponible:")}{" "} {version}</div>
+              <div className="text-[12px] text-muted">{L("Se instala en segundos y conserva tus documentos.")}</div>
             </div>
-            <button onClick={dismiss} className="rounded p-0.5 text-muted hover:text-text" aria-label="Cerrar aviso">
+            <button onClick={dismiss} className="rounded p-0.5 text-muted hover:text-text" aria-label={L("Cerrar aviso")}>
               <X className="size-4" />
             </button>
           </div>
@@ -43,7 +44,7 @@ export function UpdateBanner() {
           {notes && (
             <>
               <button onClick={() => setShowNotes((v) => !v)} className="mt-1 text-[12px] font-medium text-accent hover:underline">
-                {showNotes ? "Ocultar novedades" : "Ver novedades"}
+                {showNotes ? L("Ocultar novedades") : L("Ver novedades")}
               </button>
               {showNotes && (
                 <div className="mt-2 max-h-48 overflow-y-auto rounded-md bg-surface-2 p-2.5 text-[12px] leading-relaxed whitespace-pre-wrap text-muted">
@@ -54,10 +55,10 @@ export function UpdateBanner() {
           )}
           <div className="mt-3 flex justify-end gap-2">
             <Button size="sm" variant="ghost" onClick={dismiss}>
-              Más tarde
+              {L("Más tarde")}
             </Button>
             <Button size="sm" variant="primary" icon={<Download className="size-3.5" />} onClick={() => void install()}>
-              Actualizar ahora
+              {L("Actualizar ahora")}
             </Button>
           </div>
         </>
@@ -65,7 +66,7 @@ export function UpdateBanner() {
         <>
           <div className="mb-2 flex items-center gap-2 font-semibold">
             <Loader2 className="size-4 animate-spin text-accent" />
-            {status === "installing" ? "Instalando… la app se reiniciará" : `Descargando la versión ${version}…`}
+            {status === "installing" ? L("Instalando… la app se reiniciará") : L("Descargando la versión {0}…", version)}
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
             <div
@@ -75,7 +76,7 @@ export function UpdateBanner() {
           </div>
           {pct !== null && status === "downloading" && (
             <div className="mt-1 text-right text-[11.5px] text-muted tabular-nums">
-              {(progress.done / 1048576).toFixed(1)} / {(progress.total / 1048576).toFixed(1)} MB
+              {(progress.done / 1048576).toFixed(1)} / {(progress.total / 1048576).toFixed(1)} {" "}{L("MB")}
             </div>
           )}
         </>
