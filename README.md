@@ -132,18 +132,23 @@ src-tauri/                     app de escritorio (Rust)
 Documentos, notas y ajustes se guardan en tu equipo. La app solo puede escribir en las carpetas que elijas en la
 ventana de Windows. Desde **Configuración → General y datos** se puede exportar e importar una copia de seguridad.
 
-## Licencia
+## Activación
 
-[PolyForm Strict 1.0.0](LICENSE) © 2026 Alejandro Zapata. Todos los demás derechos reservados.
+Lumen Office es un **proyecto personal; no se vende**. Aun así, incluye un sistema de activación completo, como el de
+cualquier programa profesional, porque forma parte de la app:
 
-Puedes **leer el código** y **usar Lumen Office gratis para fines no comerciales** (uso personal, estudio,
-organizaciones sin ánimo de lucro…). **No está permitido modificarla, crear obras derivadas, redistribuirla
-ni venderla.** Para cualquier otro uso (incluido el comercial) hace falta una licencia escrita del autor.
+1. **Periodo de prueba de 14 días.** Empieza la primera vez que se abre la app y, durante ese tiempo, todo funciona.
+   La fecha de inicio se guarda en dos sitios del equipo, y si el reloj del sistema se atrasa para alargar la prueba,
+   la app lo detecta.
+2. **Clave de activación.** Pasados los 14 días, la app pide una clave (también se puede poner antes, en
+   Configuración → Licencia). Las claves empiezan por `LUMEN1-` y llevan el nombre de su titular.
+3. **Comprobación sin conexión.** Cada clave está **firmada digitalmente** (Ed25519) con la clave privada del autor.
+   La app solo contiene la clave pública, así que puede comprobar que una clave es auténtica sin conectarse a ningún
+   servidor, y nadie puede fabricar claves válidas.
+4. **Tus datos no se bloquean.** Sin clave, la app deja de editar, pero los documentos siguen en el equipo y desde la
+   pantalla de activación se puede sacar una copia de seguridad.
 
-### Prueba y clave de licencia
-
-La app se puede **probar gratis durante 14 días**. Después pide una **clave de licencia** (Configuración → Licencia).
-Las claves están firmadas digitalmente por el autor y la app las comprueba sin conexión.
+Las claves las da el autor; puedes pedirla abriendo un *issue* en este repositorio.
 
 Para el autor, las claves se crean con `scripts/license.mjs` (la clave privada de firma vive fuera del proyecto,
 en `%USERPROFILE%\.lumen\`, y nunca se sube al repositorio):
@@ -151,3 +156,12 @@ en `%USERPROFILE%\.lumen\`, y nunca se sube al repositorio):
 ```bash
 node scripts/license.mjs crear --nombre "Nombre del cliente" --email cliente@ejemplo.com
 ```
+
+## Licencia
+
+[PolyForm Strict 1.0.0](LICENSE) © 2026 Alejandro Zapata. Todos los demás derechos reservados.
+
+- **Sí se puede:** descargar y usar Lumen Office gratis para cualquier fin no comercial (uso personal, estudio,
+  organizaciones sin ánimo de lucro…) y leer su código.
+- **No se puede:** venderla ni usarla con fines comerciales, ni usar su código (copiarlo, modificarlo o reutilizarlo
+  en otros proyectos) ni redistribuirla.
