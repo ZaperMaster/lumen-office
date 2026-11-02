@@ -168,7 +168,10 @@ const P = "http://schemas.openxmlformats.org/presentationml/2006/main";
 const R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
 const parseXml = (s: string) => new DOMParser().parseFromString(s, "application/xml");
-const kids = (el: Element | Document, ns: string, name: string) => [...el.getElementsByTagNameNS(ns, name)];
+/** Descendientes con un nombre y espacio de nombres (sin getElementsByTagNameNS) */
+const kids = (el: Element | Document, ns: string, name: string) => [...el.getElementsByTagName("*")].filter((e) => e.namespaceURI === ns && e.localName === name);
+const rAttr = (el: Element | null | undefined, name: string) =>
+  el?.getAttributeNS(R, name) || el?.getAttribute(`r:${name}`) || [...(el?.attributes ?? [])].find((x) => x.name === `r:${name}` || (x.localName === name && x.namespaceURI === R))?.value || "";
 const child = (el: Element | null | undefined, ns: string, name: string) => (el ? ([...el.children].find((c) => c.namespaceURI === ns && c.localName === name) ?? null) : null);
 
 function solid(el: Element | null): string | undefined {
@@ -183,7 +186,7 @@ async function rels(zip: JSZip, path: string): Promise<Record<string, string>> {
   const xml = await zip.file(file)?.async("string");
   if (!xml) return {};
   const out: Record<string, string> = {};
-  for (const r of kids(parseXml(xml), "http://schemas.openxmlformats.org/package/2006/relationships", "Relationship")) {
+  for (const r of [...parseXml(xml).getElementsByTagName("Relationship")]) {
     const target = r.getAttribute("Target") ?? "";
     // Rutas relativas a la carpeta del archivo
     const parts = (target.startsWith("/") ? target.slice(1) : `${dir}/${target}`).split("/");
@@ -268,7 +271,7 @@ export async function readPptx(data: ArrayBuffer): Promise<Deck> {
   const k = SLIDE_W / cx;
   const ky = SLIDE_H / cy;
   const presRels = await rels(zip, "ppt/presentation.xml");
-  const ids = kids(presXml, P, "sldId").map((s) => s.getAttributeNS(R, "id") ?? "");
+  const ids = kids(presXml, P, "sldId").map((s) => rAttr(s, "id"));
   const slides: Slide[] = [];
 
   for (const rid of ids) {
@@ -305,7 +308,7 @@ export async function readPptx(data: ArrayBuffer): Promise<Deck> {
         }
         if (node.localName === "pic") {
           const blip = kids(node, A, "blip")[0];
-          const target = srels[blip?.getAttributeNS(R, "embed") ?? ""];
+          const target = srels[rAttr(blip, "embed")];
           const file = target && zip.file(target);
           const p = pos(node);
           if (!file || !p) continue;

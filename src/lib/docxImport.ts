@@ -19,8 +19,19 @@ const WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawi
 const xml = (s: string) => new DOMParser().parseFromString(s, "application/xml");
 const kid = (el: Element | null | undefined, name: string, ns = W) => (el ? ([...el.children].find((c) => c.namespaceURI === ns && c.localName === name) ?? null) : null);
 const kids = (el: Element | null | undefined, name: string, ns = W) => (el ? [...el.children].filter((c) => c.namespaceURI === ns && c.localName === name) : []);
-const val = (el: Element | null | undefined) => el?.getAttributeNS(W, "val") ?? el?.getAttribute("w:val") ?? null;
-const attr = (el: Element | null | undefined, name: string) => el?.getAttributeNS(W, name) ?? el?.getAttribute(`w:${name}`) ?? null;
+/**
+ * Descendientes con un nombre y espacio de nombres (sin getElementsByTagNameNS,
+ * que no todos los entornos implementan igual). Con «*», todos los de ese espacio.
+ */
+const byTag = (root: Element | Document, ns: string, name: string) =>
+  [...root.getElementsByTagName("*")].filter((e) => e.namespaceURI === ns && (name === "*" || e.localName === name));
+const nsAttr = (el: Element | null | undefined, ns: string, prefix: string, name: string) =>
+  el?.getAttributeNS(ns, name) ||
+  el?.getAttribute(`${prefix}:${name}`) ||
+  [...(el?.attributes ?? [])].find((x) => x.name === `${prefix}:${name}` || (x.localName === name && x.namespaceURI === ns))?.value ||
+  null;
+const val = (el: Element | null | undefined) => nsAttr(el, W, "w", "val");
+const attr = (el: Element | null | undefined, name: string) => nsAttr(el, W, "w", name);
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 /** Interruptor de Word: presente sin valor o con valor distinto de 0/false. */
 const on = (el: Element | null) => !!el && !["0", "false", "off", "none"].includes((val(el) ?? "true").toLowerCase());
@@ -129,8 +140,8 @@ function styleChain(ctx: Ctx, id: string | null): { name: string; rPr: Element[]
 }
 
 async function imageHtml(ctx: Ctx, drawing: Element): Promise<string> {
-  const blip = drawing.getElementsByTagNameNS(A, "blip")[0];
-  const rid = blip?.getAttributeNS(R, "embed");
+  const blip = byTag(drawing, A, "blip")[0];
+  const rid = nsAttr(blip, R, "r", "embed");
   const target = rid ? ctx.rels[rid] : undefined;
   const file = target ? ctx.zip.file(target) : null;
   if (!file) return "";
@@ -138,10 +149,11 @@ async function imageHtml(ctx: Ctx, drawing: Element): Promise<string> {
   const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "gif" ? "image/gif" : ext === "svg" ? "image/svg+xml" : ext === "bmp" ? "image/bmp" : "image/png";
   if (ext === "emf" || ext === "wmf") return "";
   const b64 = await file.async("base64");
-  const extent = drawing.getElementsByTagNameNS(WP, "extent")[0];
+  const extent = byTag(drawing, WP, "extent")[0];
   const width = extent ? Math.round(Number(extent.getAttribute("cx")) / 9525) : null;
-  const anchor = drawing.getElementsByTagNameNS(WP, "anchor")[0];
-  const posH = anchor?.getElementsByTagNameNS(WP, "positionH")[0]?.getElementsByTagNameNS(WP, "align")[0]?.textContent;
+  const anchor = byTag(drawing, WP, "anchor")[0];
+  const positionH = anchor ? byTag(anchor, WP, "positionH")[0] : undefined;
+  const posH = positionH ? byTag(positionH, WP, "align")[0]?.textContent : undefined;
   const float = posH === "left" || posH === "right" ? posH : null;
   return `<img src="data:${mime};base64,${b64}"${width ? ` width="${Math.min(width, 700)}"` : ""}${float ? ` data-align="${float}"` : ""}>`;
 }
@@ -156,8 +168,8 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
     for (const node of [...parent.children]) {
       if (node.namespaceURI !== W) continue;
       if (node.localName === "hyperlink") {
-        const rid = node.getAttributeNS(R, "id");
-        const anchor = node.getAttributeNS(W, "anchor");
+        const rid = nsAttr(node, R, "r", "id");
+        const anchor = nsAttr(node, W, "w", "anchor");
         await walk(node, rid ? ctx.rels[rid] : anchor ? `#${anchor}` : undefined);
         continue;
       }
@@ -171,7 +183,7 @@ async function inlineHtml(ctx: Ctx, p: Element, base: RunProps): Promise<{ html:
       for (const c of [...node.children]) {
         // Las imágenes nuevas suelen ir dentro de mc:AlternateContent
         if (c.localName === "AlternateContent") {
-          const d = c.getElementsByTagNameNS(W, "drawing")[0];
+          const d = byTag(c, W, "drawing")[0];
           const img = d ? await imageHtml(ctx, d) : "";
           if (img) images.push(img);
           continue;
@@ -350,15 +362,15 @@ async function headerFooter(zip: JSZip, path: string): Promise<HeaderFooter | nu
   if (!text) return null;
   const doc = xml(text);
   const out: HeaderFooter = { ...EMPTY_HF };
-  for (const p of [...doc.getElementsByTagNameNS(W, "p")]) {
+  for (const p of [...byTag(doc, W, "p")]) {
     let s = "";
     let instr = "";
     let inField = false;
     let skipResult = false;
     const fieldToken = (code: string) => (/\bNUMPAGES\b|\bSECTIONPAGES\b/i.test(code) ? "{paginas}" : /\bPAGE\b/i.test(code) ? "{pagina}" : /\bDATE\b|\bTIME\b/i.test(code) ? "{fecha}" : /\bTITLE\b/i.test(code) ? "{titulo}" : /\bAUTHOR\b/i.test(code) ? "{autor}" : null);
-    for (const el of [...p.getElementsByTagNameNS(W, "*")]) {
+    for (const el of [...byTag(p, W, "*")]) {
       if (el.localName === "fldSimple") {
-        const tok = fieldToken(el.getAttributeNS(W, "instr") ?? "");
+        const tok = fieldToken(nsAttr(el, W, "w", "instr") ?? "");
         if (tok) {
           s += tok;
           // Su texto de ejemplo no se copia
@@ -414,8 +426,8 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
   const styles = new Map<string, { name: string; rPr: Element | null; pPr: Element | null; basedOn: string | null }>();
   const stylesXml = await zip.file("word/styles.xml")?.async("string");
   if (stylesXml) {
-    for (const st of [...xml(stylesXml).getElementsByTagNameNS(W, "style")]) {
-      const id = st.getAttributeNS(W, "styleId") ?? st.getAttribute("w:styleId");
+    for (const st of [...byTag(xml(stylesXml), W, "style")]) {
+      const id = nsAttr(st, W, "w", "styleId");
       if (!id) continue;
       styles.set(id, { name: val(kid(st, "name")) ?? id, rPr: kid(st, "rPr"), pPr: kid(st, "pPr"), basedOn: val(kid(st, "basedOn")) });
     }
@@ -427,19 +439,19 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
   if (numXml) {
     const nd = xml(numXml);
     const abstract = new Map<string, Map<number, string>>();
-    for (const an of [...nd.getElementsByTagNameNS(W, "abstractNum")]) {
+    for (const an of [...byTag(nd, W, "abstractNum")]) {
       const levels = new Map<number, string>();
       for (const lvl of kids(an, "lvl")) levels.set(Number(attr(lvl, "ilvl") ?? 0), val(kid(lvl, "numFmt")) ?? "bullet");
       abstract.set(attr(an, "abstractNumId") ?? "", levels);
     }
-    for (const num of [...nd.getElementsByTagNameNS(W, "num")]) {
+    for (const num of [...byTag(nd, W, "num")]) {
       const aid = val(kid(num, "abstractNumId"));
       if (aid && abstract.has(aid)) numbering.set(attr(num, "numId") ?? "", abstract.get(aid)!);
     }
   }
 
   const ctx: Ctx = { zip, rels: await readRels(zip, docPath), styles, numbering, pendingBreak: false };
-  const body = doc.getElementsByTagNameNS(W, "body")[0];
+  const body = byTag(doc, W, "body")[0];
   const html = await blocksToHtml(ctx, body);
 
   // Encabezado y pie de la sección principal
@@ -449,7 +461,7 @@ export async function readDocx(data: ArrayBuffer): Promise<{ html: string; pageL
     const pick = async (tag: "headerReference" | "footerReference") => {
       const refs = kids(sect, tag);
       const ref = refs.find((r) => attr(r, "type") === "default") ?? refs[0];
-      const target = ref ? ctx.rels[ref.getAttributeNS(R, "id") ?? ""] : undefined;
+      const target = ref ? ctx.rels[nsAttr(ref, R, "r", "id") ?? ""] : undefined;
       return target ? headerFooter(zip, target) : null;
     };
     const header = await pick("headerReference");

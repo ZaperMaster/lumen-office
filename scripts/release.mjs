@@ -49,6 +49,14 @@ if (tauriConf.version !== version || cargoVersion !== version) {
   fail(`Las versiones no coinciden: package.json ${version}, tauri.conf.json ${tauriConf.version}, Cargo.toml ${cargoVersion}`);
 }
 
+// Pruebas automáticas: no se publica nada si alguna falla
+console.log("▶ Ejecutando las pruebas…");
+try {
+  execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["test"], { cwd: root, stdio: "inherit", shell: true });
+} catch {
+  fail("Alguna prueba ha fallado; no se publica la versión.");
+}
+
 // Clave de firma
 const env = { ...process.env };
 if (!env.TAURI_SIGNING_PRIVATE_KEY) {
