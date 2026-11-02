@@ -16,6 +16,7 @@ import { useDocEditor } from "@/components/editor/useDocEditor";
 import { useEditorFlags } from "@/components/editor/controls";
 import { LinkButton, readImageFile } from "@/components/editor/Ribbon";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
+import { SpellMenu } from "@/components/editor/SpellMenu";
 import { LinkBubble } from "@/components/editor/LinkBubble";
 import { SaveIndicator } from "@/components/editor/StatusBar";
 import { AIActionsMenuContent } from "@/components/ai/AIActionsMenu";
@@ -292,6 +293,7 @@ function NoteShell({ note, editor, saveState }: { note: DocRecord; editor: Edito
         </aside>
       )}
       <SelectionBubble editor={editor} />
+      <SpellMenu editor={editor} />
       <LinkBubble editor={editor} />
     </div>
   );

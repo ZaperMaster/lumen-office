@@ -8,6 +8,7 @@ import Highlight from "@tiptap/extension-highlight";
 import { TableKit } from "@tiptap/extension-table";
 import { ImageBlock } from "@/components/editor/image/ImageBlock";
 import { Pagination } from "@/components/editor/pagination";
+import { SpellCheck } from "@/components/editor/spellcheck";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
@@ -346,6 +347,7 @@ export function buildExtensions(opts: { placeholder: string; smartTyping: boolea
     ParagraphLineHeight,
     Search,
     Pagination,
+    SpellCheck,
   ];
   if (opts.smartTyping) exts.push(Typography.configure({ openDoubleQuote: "«", closeDoubleQuote: "»" }));
   return exts;

@@ -20,6 +20,7 @@ import { pageTexts, withDefaults, type HeaderFooter, type PageLayout } from "@/l
 import { FindBar } from "@/components/editor/FindBar";
 import { StatusBar, SaveIndicator } from "@/components/editor/StatusBar";
 import { SelectionBubble } from "@/components/editor/SelectionBubble";
+import { SpellMenu } from "@/components/editor/SpellMenu";
 import { LinkBubble } from "@/components/editor/LinkBubble";
 import { WordCountDialog } from "@/components/editor/WordCountDialog";
 import { useDocEditor } from "@/components/editor/useDocEditor";
@@ -540,6 +541,7 @@ function DocumentShell({ doc, editor, saveState, saveNow }: { doc: DocRecord; ed
       </div>
 
       <SelectionBubble editor={editor} />
+      <SpellMenu editor={editor} />
       <LinkBubble editor={editor} />
       {!focus && <StatusBar editor={editor} pages={pages} saveState={saveState} onWordCount={() => setWordCount(true)} />}
       <WordCountDialog editor={editor} open={wordCount} onOpenChange={setWordCount} pages={pages} />

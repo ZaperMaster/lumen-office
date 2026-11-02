@@ -12,7 +12,7 @@ import type { SaveState } from "@/components/editor/StatusBar";
  * en la base de datos local mientras se escribe.
  */
 export function useDocEditor(docId: string, initial: JSONContent, placeholder: string) {
-  const { spellcheck, smartTyping } = useSettings();
+  const { smartTyping } = useSettings();
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const latest = useRef<JSONContent>(initial);
   const dirty = useRef(false);
@@ -34,7 +34,8 @@ export function useDocEditor(docId: string, initial: JSONContent, placeholder: s
       extensions: buildExtensions({ placeholder, smartTyping }),
       content: latest.current,
       editorProps: {
-        attributes: { class: "lumen-editor", spellcheck: String(spellcheck) },
+        // La ortografía la revisa el corrector propio (el del sistema queda apagado para no subrayar dos veces)
+        attributes: { class: "lumen-editor", spellcheck: "false" },
         // Ctrl + clic (Cmd en Mac) abre el vínculo, como en Word
         handleClick: (_view, _pos, event) => {
           if (!(event.ctrlKey || event.metaKey)) return false;
@@ -86,8 +87,8 @@ export function useDocEditor(docId: string, initial: JSONContent, placeholder: s
   );
 
   useEffect(() => {
-    editor?.view.dom.setAttribute("spellcheck", String(spellcheck));
-  }, [editor, spellcheck]);
+    editor?.view.dom.setAttribute("spellcheck", "false");
+  }, [editor]);
 
   // Guarda lo pendiente al salir
   useEffect(() => {
