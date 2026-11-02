@@ -5,7 +5,7 @@ import DOMPurify from "dompurify";
 import {
   AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, ChevronDown, Circle, Copy, Diamond, FileText, Image as ImageIcon,
   Italic, List, ListOrdered, Loader2, Minus, MoveRight, Palette, Play, Plus, Presentation, Printer, Redo2, Square, Star, StickyNote,
-  Smile, Sparkles, Trash2, Triangle, SlidersHorizontal, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket,
+  Smile, Sparkles, Trash2, Triangle, SlidersHorizontal, Type, Underline, Undo2, X, AlignVerticalJustifyCenter, AlignHorizontalJustifyCenter, MonitorPlay, PaintBucket, Table2, ChartColumnBig, ScreenShare, Film,
 } from "lucide-react";
 import { db, type DocRecord, type FileFormat } from "@/lib/db";
 import {
@@ -23,6 +23,11 @@ import { OfficeFileMenu, OfficeHeader, RBig, RGroup, RibbonTabs } from "@/compon
 import { useOfficeDoc } from "@/components/office/useOfficeDoc";
 import { exportPdf, setPrintPage } from "@/lib/pdf";
 import { ColorButton, FontPicker, FontSizePicker } from "@/components/editor/controls";
+import { ChartDialog } from "@/components/editor/DocChartView";
+import { SAMPLE_CHART } from "@/components/editor/docBlocks";
+import { SAMPLE_TABLE, TableDialog } from "@/components/slides/TableDialog";
+import { PresenterConsole } from "@/components/slides/PresenterView";
+import { VideoDialog } from "@/components/slides/VideoDialog";
 import { Button, Dialog, IconButton, Input, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Popover, PopoverClose, PopoverContent, PopoverTrigger, Tooltip, cn } from "@/components/ui";
 
 /* ------------------------------------------------------------------ */
@@ -120,7 +125,13 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
   const [sel, setSel] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   const [presenting, setPresenting] = useState<number | null>(null);
+  // Vista del moderador (diapositiva inicial)
+  const [moderator, setModerator] = useState<number | null>(null);
+  const [videoOpen, setVideoOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  // Tabla o gráfico que se está creando («new») o editando (id del elemento)
+  const [tableEdit, setTableEdit] = useState<string | null>(null);
+  const [chartEdit, setChartEdit] = useState<string | null>(null);
   const [printing, setPrinting] = useState(false);
   const clip = useRef<SlideEl[] | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -577,11 +588,12 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
   /* ---------------- Teclado ---------------- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (presenting !== null || aiOpen) return;
+      if (presenting !== null || moderator !== null || aiOpen) return;
       const mod = e.ctrlKey || e.metaKey;
       const k = e.key.toLowerCase();
       if (mod && k === "s" && !e.shiftKey) { e.preventDefault(); finishEditing(); files.save(); return; }
       if (e.key === "F12") { e.preventDefault(); finishEditing(); files.saveAs(); return; }
+      if (e.key === "F5" && e.altKey) { e.preventDefault(); finishEditing(); setModerator(cur); return; }
       if (e.key === "F5") { e.preventDefault(); finishEditing(); setPresenting(e.shiftKey ? cur : 0); return; }
       if (mod && k === "p") { e.preventDefault(); finishEditing(); setPrinting(true); return; }
       if (mod && k === "o") {
@@ -742,6 +754,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 exports={[
                   { label: "PowerPoint (.pptx)", icon: <Presentation />, onSelect: () => files.exportAs("pptx") },
                   { label: "PDF (.pdf)", icon: <Printer />, onSelect: savePdf },
+                  { label: "Vídeo (.mp4)", icon: <Film />, onSelect: () => { finishEditing(); setVideoOpen(true); } },
                 ]}
               />
             }
@@ -874,6 +887,8 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                 <RGroup label="Elementos">
                   <RBig icon={<Type />} label="Cuadro de texto" onClick={addText} />
                   <RBig icon={<ImageIcon />} label="Imágenes" onClick={() => pickImage({ kind: "add" })} title="Puedes elegir varias a la vez, pegarlas con Ctrl+V o arrastrarlas" />
+                  <RBig icon={<Table2 />} label="Tabla" onClick={() => setTableEdit("new")} title="Tabla con encabezado (doble clic para editarla)" />
+                  <RBig icon={<ChartColumnBig />} label="Gráfico" onClick={() => setChartEdit("new")} title="Gráfico con tus datos (doble clic para editarlo)" />
                 </RGroup>
                 <RGroup label="Iconos">
                   <Popover>
@@ -1002,6 +1017,7 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
               <RGroup label="Iniciar presentación">
                 <RBig icon={<Play />} label="Desde el principio" onClick={() => { finishEditing(); setPresenting(0); }} title="F5" />
                 <RBig icon={<MonitorPlay />} label="Desde la actual" onClick={() => { finishEditing(); setPresenting(cur); }} title="Mayús+F5" />
+                <RBig icon={<ScreenShare />} label="Vista del moderador" onClick={() => { finishEditing(); setModerator(cur); }} title="En tu pantalla ves las notas, la siguiente diapositiva y el tiempo; en el proyector, solo la diapositiva (Alt+F5)" />
               </RGroup>
             )}
 
@@ -1110,6 +1126,8 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
                             setSel([el.id]);
                             setEditing(el.id);
                           } else if (el.type === "image") pickImage({ kind: "replace", id: el.id });
+                          else if (el.type === "table") setTableEdit(el.id);
+                          else if (el.type === "chart") setChartEdit(el.id);
                         }}
                       >
                         {isEditing ? (
@@ -1225,6 +1243,25 @@ function SlidesEditor({ doc }: { doc: DocRecord }) {
         />
       </div>
 
+      {tableEdit && (
+        <TableDialog
+          insert={tableEdit === "new"}
+          initial={slide.els.find((e) => e.id === tableEdit)?.table ?? SAMPLE_TABLE}
+          onClose={() => setTableEdit(null)}
+          onSave={(table) => (tableEdit === "new" ? addEl({ type: "table", x: 140, y: 190, w: 1000, h: 60 * table.rows.length, table, fontSize: 24 }) : editEls([tableEdit], { table }))}
+        />
+      )}
+      {chartEdit && (
+        <ChartDialog
+          hideWidth
+          insert={chartEdit === "new"}
+          initial={{ ...SAMPLE_CHART, ...slide.els.find((e) => e.id === chartEdit)?.chart }}
+          onClose={() => setChartEdit(null)}
+          onSave={({ width: _w, ...chart }) => (chartEdit === "new" ? addEl({ type: "chart", x: 190, y: 170, w: 900, h: 500, chart }) : editEls([chartEdit], { chart }))}
+        />
+      )}
+      {videoOpen && <VideoDialog deck={deck} title={title} onClose={() => setVideoOpen(false)} />}
+      {moderator !== null && <PresenterConsole deck={deck} docId={doc.id} start={moderator} onExit={(i) => { setModerator(null); setCur(i); }} />}
       {presenting !== null && <Presenter deck={deck} start={presenting} onExit={(i) => { setPresenting(null); setCur(i); }} />}
       {aiOpen && (
         <SlidesAIDialog

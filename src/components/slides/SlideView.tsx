@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { ChartSvg } from "@/components/sheet/Chart";
 import { SLIDE_H, SLIDE_W, animTimeline, htmlText, theme as getTheme, type AnimStep, type Slide, type SlideEl, type Theme } from "@/lib/slides/model";
 
 /* Dibujo de una diapositiva (miniaturas, editor, modo presentación e impresión). */
@@ -133,6 +134,25 @@ export function ElementView({ el, t, showPlaceholder }: { el: SlideEl; t: Theme;
     <>
       {el.type === "shape" && <ShapeSvg el={el} accent={t.accent} />}
       {el.type === "image" && el.src && <ImageView el={el} accent={t.accent} />}
+      {el.type === "table" && el.table && (
+        <table className="slide-table" style={{ fontSize: el.fontSize ?? 22, fontFamily: elFont(el, t), color: el.color ?? t.text, ["--slide-accent" as string]: t.accent }}>
+          <tbody>
+            {el.table.rows.map((r, ri) => (
+              <tr key={ri} className={ri === 0 && el.table!.header ? "slide-table-head" : undefined}>
+                {r.map((c, ci) => (
+                  <td key={ci}>{c}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {el.type === "chart" && el.chart && (
+        // Se dibuja más pequeño y se amplía: así el texto se lee bien en la pantalla
+        <div className="slide-chart absolute inset-0" style={{ color: el.color ?? t.text, fontFamily: elFont(el, t) }}>
+          <ChartSvg type={el.chart.type} data={el.chart} width={el.w / 1.9} height={el.h / 1.9} title={el.chart.title || undefined} legend={el.chart.legend} />
+        </div>
+      )}
       {el.type === "text" && (el.fill || el.strokeW) && (
         <div
           className="absolute inset-0"

@@ -1,3 +1,5 @@
+import type { ChartType } from "@/lib/sheet/model";
+
 /*
  * Modelo de las presentaciones. Las diapositivas miden 1280 × 720 unidades
  * (16:9); los elementos se colocan con coordenadas en esas unidades.
@@ -7,7 +9,22 @@ export const SLIDE_W = 1280;
 export const SLIDE_H = 720;
 
 export type ShapeKind = "rect" | "roundRect" | "ellipse" | "triangle" | "diamond" | "arrow" | "star" | "line";
-export type ElType = "text" | "shape" | "image";
+export type ElType = "text" | "shape" | "image" | "table" | "chart";
+
+/** Tabla de una diapositiva (texto de cada celda, fila a fila) */
+export interface SlideTable {
+  rows: string[][];
+  header: boolean;
+}
+
+/** Gráfico de una diapositiva */
+export interface SlideChart {
+  type: ChartType;
+  title: string;
+  categories: string[];
+  series: { name: string; values: number[] }[];
+  legend: boolean;
+}
 export type Anim =
   | "none" | "fade" | "fly" | "flyDown" | "flyLeft" | "flyRight" | "zoom" | "grow" | "bounce" | "spin" | "flip"
   | "wipe" | "blur" | "pop" | "swing" | "typewriter" | "pulse" | "shake";
@@ -146,6 +163,8 @@ export interface SlideEl {
   crop?: { t: number; r: number; b: number; l: number };
   /** Marco blanco alrededor (px) */
   frame?: number;
+  table?: SlideTable;
+  chart?: SlideChart;
 }
 
 export interface Slide {

@@ -88,6 +88,21 @@ describe("Word (.docx)", () => {
 });
 
 describe("PowerPoint (.pptx)", () => {
+  it("exporta tablas y gráficos y vuelve a abrir las tablas", async () => {
+    const deck = newDeck();
+    deck.slides[0].els = [
+      { id: "t", type: "table", x: 100, y: 100, w: 800, h: 200, fontSize: 24, table: { header: true, rows: [["Plan", "Precio"], ["Pro", "19 €"]] } },
+      { id: "c", type: "chart", x: 100, y: 350, w: 600, h: 300, chart: { type: "column", title: "Ventas", legend: true, categories: ["T1", "T2"], series: [{ name: "2026", values: [3, 5] }] } },
+    ];
+    const bytes = await buildPptx(deck, "Prueba");
+    const back = await readPptx(bytes.buffer as ArrayBuffer);
+    const table = back.slides[0].els.find((e) => e.type === "table");
+    expect(table?.table).toEqual({ header: true, rows: [["Plan", "Precio"], ["Pro", "19 €"]] });
+    expect(Math.round(table!.x)).toBe(100);
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(bytes);
+    expect(Object.keys(zip.files).some((f) => /ppt\/charts\/chart\d+\.xml$/.test(f))).toBe(true);
+  });
   it("exporta y vuelve a abrir textos, formas, imágenes y notas", async () => {
     const { deck } = slidesTemplate("project").build();
     deck.slides[1].notes = "Notas de prueba";

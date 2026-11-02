@@ -569,3 +569,10 @@ img.doc-chart { display: block; margin: 0.8em auto; max-width: 100%; }
 .footnote-pop > div { margin-bottom: 4px; font-weight: 600; color: var(--muted); }
 .footnote-pop textarea { width: 100%; min-height: 64px; resize: vertical; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2, transparent); padding: 6px; font-size: 13px; outline: none; }
 @media print { .ProseMirror .doc-columns { outline: none; } }
+
+/* ---------- Tablas de las diapositivas ---------- */
+.slide-table { position: absolute; inset: 0; width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; line-height: 1.25; }
+.slide-table td { padding: 0.3em 0.55em; border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent); vertical-align: middle; overflow: hidden; overflow-wrap: anywhere; }
+.slide-table tr:nth-child(even):not(.slide-table-head) td { background: color-mix(in srgb, var(--slide-accent) 8%, transparent); }
+.slide-table-head td { background: var(--slide-accent); color: #fff; font-weight: 700; border-bottom: none; }
+.slide-chart svg { width: 100%; height: 100%; }

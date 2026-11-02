@@ -25,7 +25,7 @@ export function DocChartView({ node, updateAttributes, selected, editor }: NodeV
 }
 
 /** Tabla de datos del gráfico: la primera columna son las categorías y cada columna siguiente, una serie. */
-export function ChartDialog({ initial, onClose, onSave, insert }: { initial: DocChart; onClose: () => void; onSave: (c: DocChart) => void; insert?: boolean }) {
+export function ChartDialog({ initial, onClose, onSave, insert, hideWidth }: { initial: DocChart; onClose: () => void; onSave: (c: DocChart) => void; insert?: boolean; hideWidth?: boolean }) {
   const [c, setC] = useState<DocChart>(() => structuredClone(initial));
   const set = (patch: Partial<DocChart>) => setC((p) => ({ ...p, ...patch }));
   const num = (v: string) => {
@@ -125,7 +125,7 @@ export function ChartDialog({ initial, onClose, onSave, insert }: { initial: Doc
           <label className="mt-3 flex items-center gap-2 text-[12.5px]">
             <input type="checkbox" checked={c.legend} onChange={(e) => set({ legend: e.target.checked })} /> Mostrar leyenda
           </label>
-          <label className="mt-2 block text-[12.5px]">
+          <label className={cn("mt-2 block text-[12.5px]", hideWidth && "hidden")}>
             Ancho: {c.width} px
             <input type="range" min={280} max={640} step={10} value={c.width} onChange={(e) => set({ width: Number(e.target.value) })} className="w-full" />
           </label>

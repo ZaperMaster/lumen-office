@@ -1,5 +1,6 @@
 import PptxGenJS from "pptxgenjs";
 import JSZip from "jszip";
+import { CHART_COLORS } from "@/components/sheet/Chart";
 import { SLIDE_H, SLIDE_W, esc, sid, theme as getTheme, type Deck, type ShapeKind, type Slide, type SlideEl } from "@/lib/slides/model";
 
 /*
@@ -97,6 +98,42 @@ export async function buildPptx(deck: Deck, title: string): Promise<Uint8Array> 
     for (const el of s.els) {
       const pos = { x: inch(el.x), y: inch(el.y), w: inch(el.w), h: inch(el.h), rotate: el.rot || undefined };
       const shadow = el.shadow ? ({ type: "outer", blur: 8, offset: 4, angle: 90, color: "000000", opacity: 0.3 } as PptxGenJS.ShadowProps) : undefined;
+      if (el.type === "table" && el.table) {
+        const tb = el.table;
+        const rows = tb.rows.map((r, ri) =>
+          r.map((text) => ({ text, options: ri === 0 && tb.header ? { bold: true, color: "FFFFFF", fill: { color: hex(t.accent) ?? "4F7CFF" } } : {} })),
+        );
+        slide.addTable(rows, {
+          x: pos.x, y: pos.y, w: pos.w,
+          fontSize: Math.round((el.fontSize ?? 22) * 0.75),
+          fontFace: firstFont(el.font ?? t.bodyFont),
+          color: hex(el.color ?? t.text),
+          border: { type: "solid", pt: 0.75, color: "BFC3CC" },
+          valign: "middle",
+          margin: 0.06,
+        });
+        continue;
+      }
+      if (el.type === "chart" && el.chart) {
+        const c = el.chart;
+        const kind = c.type === "column" ? "bar" : c.type;
+        const textColor = hex(el.color ?? t.text);
+        slide.addChart(kind as PptxGenJS.CHART_NAME, c.series.map((s) => ({ name: s.name, labels: c.categories, values: s.values })), {
+          ...pos,
+          barDir: c.type === "bar" ? "bar" : "col",
+          chartColors: CHART_COLORS.map((x) => x.slice(1)),
+          showLegend: c.legend,
+          legendPos: "b",
+          legendColor: textColor,
+          showTitle: !!c.title,
+          title: c.title || undefined,
+          titleColor: hex(t.title),
+          catAxisLabelColor: textColor,
+          valAxisLabelColor: textColor,
+          showPercent: c.type === "pie" || c.type === "doughnut",
+        });
+        continue;
+      }
       if (el.type === "image" && el.src) {
         // Con recorte, la imagen entera mide más que el trozo visible
         const fullW = el.crop ? pos.w / Math.max(0.05, 1 - (el.crop.l + el.crop.r) / 100) : pos.w;
@@ -316,6 +353,32 @@ export async function readPptx(data: ArrayBuffer): Promise<Deck> {
           const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "gif" ? "image/gif" : ext === "svg" ? "image/svg+xml" : "image/png";
           const b64 = await file.async("base64");
           slide.els.push({ id: sid(), type: "image", src: `data:${mime};base64,${b64}`, ...p });
+          continue;
+        }
+        // Tablas
+        const tbl = node.localName === "graphicFrame" ? kids(node, A, "tbl")[0] : null;
+        if (tbl) {
+          const xf = kids(node, P, "xfrm")[0];
+          const off = child(xf, A, "off");
+          const ext = child(xf, A, "ext");
+          const trs = kids(tbl, A, "tr");
+          const filled = (tr: Element) => kids(tr, A, "tcPr").some((p) => !!child(p, A, "solidFill"));
+          const rows = trs.map((tr) => kids(tr, A, "tc").map((tc) => kids(tc, A, "p").map((p) => kids(p, A, "t").map((x) => x.textContent).join("")).join("\n")));
+          const first = kids(tbl, A, "tblPr")[0];
+          const sz = kids(tbl, A, "rPr").map((r) => Number(r.getAttribute("sz"))).find((n) => n > 0);
+          if (off && ext && rows.length) {
+            slide.els.push({
+              id: sid(),
+              type: "table",
+              x: Number(off.getAttribute("x")) * k,
+              y: Number(off.getAttribute("y")) * ky,
+              w: Math.max(40, Number(ext.getAttribute("cx")) * k),
+              h: Math.max(40, Number(ext.getAttribute("cy")) * ky),
+              // Encabezado: marcado como tal o con la primera fila rellena de color
+              table: { rows, header: first?.getAttribute("firstRow") === "1" || (trs.length > 1 && filled(trs[0]) && !filled(trs[1])) },
+              fontSize: sz ? Math.round((sz / 100) * (4 / 3)) : 22,
+            });
+          }
           continue;
         }
         if (node.localName !== "sp" && node.localName !== "cxnSp") continue;
