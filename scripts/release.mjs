@@ -3,7 +3,7 @@
  * Publica una versión nueva de Lumen Office en GitHub:
  *   1. Compila los instaladores firmados para las actualizaciones automáticas.
  *   2. Genera latest.json, que es lo que consultan las apps instaladas.
- *   3. Crea la Release con los instaladores y latest.json.
+ *   3. Crea la Release con los instaladores, latest.json y sus sumas SHA-256 (también en las notas).
  *
  * Uso:
  *   npm run release -- --notes notas.md            publica la versión de package.json
@@ -14,9 +14,10 @@
  * La clave NUNCA debe subirse al repositorio.
  */
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 const REPO = "ZaperMaster/lumen-office";
 const args = process.argv.slice(2);
@@ -112,10 +113,22 @@ if (dryRun) {
   process.exit(0);
 }
 
+// Sumas SHA-256 para que cualquiera pueda comprobar que la descarga no se ha modificado
+const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex").toUpperCase();
+const sums = [setup, msi].map((f) => ({ name: basename(f).replaceAll(" ", "."), hash: sha256(f) }));
+const sumsPath = join(bundle, "SHA256SUMS.txt");
+writeFileSync(sumsPath, sums.map((s) => `${s.hash}  ${s.name}`).join("\n") + "\n");
+const releaseNotes = join(tmpdir(), `lumen-notas-${version}.md`);
+writeFileSync(
+  releaseNotes,
+  `${notes.trimEnd()}\n\n### Verificar la descarga\n\n| Archivo | SHA-256 |\n|---|---|\n${sums.map((s) => `| \`${s.name}\` | \`${s.hash}\` |`).join("\n")}\n\n` +
+    "En PowerShell: `Get-FileHash .\\nombre-del-archivo` debe mostrar el mismo valor.\n",
+);
+
 console.log(`▶ Publicando la Release ${tag}…`);
 execFileSync(
   "gh",
-  ["release", "create", tag, setup, msi, latestPath, "--repo", REPO, "--target", "main", "--title", `Lumen Office ${tag}`, "--latest", "--notes-file", notesFile],
+  ["release", "create", tag, setup, msi, latestPath, sumsPath, "--repo", REPO, "--target", "main", "--title", `Lumen Office ${tag}`, "--latest", "--notes-file", releaseNotes],
   { stdio: "inherit" },
 );
 console.log(`✔ Publicada: https://github.com/${REPO}/releases/tag/${tag}`);

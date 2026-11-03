@@ -11,7 +11,7 @@ Suite ofimática de escritorio para Windows con **Documentos** (procesador de te
 Hecha con **TypeScript + React + Tiptap** y empaquetada como app de escritorio con **Tauri 2**.
 
 **Descargar:** [última versión](https://github.com/ZaperMaster/lumen-office/releases/latest) → `Lumen.Office_x.y.z_x64-setup.exe`.
-Una vez instalada, la app se actualiza sola. Web del proyecto: **[zapermaster.github.io/lumen-office](https://zapermaster.github.io/lumen-office/)**.
+Una vez instalada, la app se actualiza sola. Novedades de cada versión: [CHANGELOG.md](CHANGELOG.md). Web del proyecto: **[zapermaster.github.io/lumen-office](https://zapermaster.github.io/lumen-office/)**.
 
 ## Capturas
 
