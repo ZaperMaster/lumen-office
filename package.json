@@ -83,7 +83,7 @@
     "@types/react-dom": "^19.3.0",
     "@types/turndown": "^5.0.6",
     "@vitejs/plugin-react": "^6.1.2",
-    "happy-dom": "^21.0.3",
+    "happy-dom": "^21.0.4",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
@@ -91,5 +91,9 @@
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
-  "license": "PolyForm-Strict-1.0.0"
+  "license": "PolyForm-Strict-1.0.0",
+  "overrides": {
+    "image-size": "^2.0.3",
+    "uuid": "^11.1.1"
+  }
 }
