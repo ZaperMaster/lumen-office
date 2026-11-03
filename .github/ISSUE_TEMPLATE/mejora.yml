@@ -1,0 +1,28 @@
+name: Proponer una mejora
+description: Una idea o función nueva para Lumen Office.
+labels: ["mejora"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: ¿Qué te gustaría?
+      description: Describe la mejora o la función nueva.
+    validations:
+      required: true
+  - type: textarea
+    id: para-que
+    attributes:
+      label: ¿Para qué lo usarías?
+      description: Cuéntanos el caso en el que te ayudaría.
+  - type: dropdown
+    id: herramienta
+    attributes:
+      label: ¿En qué parte de la app?
+      options:
+        - Documentos
+        - Hojas de cálculo
+        - Presentaciones
+        - Notas
+        - Asistente de IA
+        - Toda la app
+        - Otra

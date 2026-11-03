@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Informar de un fallo de seguridad
+    url: https://github.com/ZaperMaster/lumen-office/security/advisories/new
+    about: Los fallos de seguridad se informan en privado, no en una issue pública.
+  - name: Web de Lumen Office
+    url: https://zapermaster.github.io/lumen-office/
+    about: Descarga, capturas y preguntas frecuentes.

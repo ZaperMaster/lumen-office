@@ -1,0 +1,38 @@
+# Dependabot: avisa y abre PRs cuando hay versiones nuevas o vulnerabilidades en las dependencias.
+# Las actualizaciones se agrupan en un único PR al mes por ecosistema para no llenar el repo de PRs.
+version: 2
+updates:
+  # Librerías de la interfaz (package.json)
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      interfaz:
+        patterns: ["*"]
+
+  # Parte de escritorio en Rust (src-tauri/Cargo.toml)
+  - package-ecosystem: cargo
+    directory: "/src-tauri"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps"
+    groups:
+      escritorio:
+        patterns: ["*"]
+
+  # Acciones usadas en los flujos de GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+    groups:
+      acciones:
+        patterns: ["*"]

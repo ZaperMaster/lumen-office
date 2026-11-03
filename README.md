@@ -1,5 +1,11 @@
 # Lumen Office
 
+[![Tests](https://github.com/ZaperMaster/lumen-office/actions/workflows/tests.yml/badge.svg)](https://github.com/ZaperMaster/lumen-office/actions/workflows/tests.yml)
+[![Versión](https://img.shields.io/github/v/release/ZaperMaster/lumen-office?label=versi%C3%B3n&color=6d4aff)](https://github.com/ZaperMaster/lumen-office/releases/latest)
+![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows&logoColor=white)
+[![Licencia: PolyForm Strict](https://img.shields.io/badge/licencia-PolyForm%20Strict-lightgrey)](LICENSE)
+[![Web](https://img.shields.io/badge/web-zapermaster.github.io-6d4aff)](https://zapermaster.github.io/lumen-office/)
+
 Suite ofimática de escritorio para Windows con **Documentos** (procesador de textos tipo Word), **Hojas de cálculo**
 (tipo Excel), **Presentaciones** (tipo PowerPoint), **Notas** y un **Asistente de IA** que puede funcionar por completo en tu equipo.
 Hecha con **TypeScript + React + Tiptap** y empaquetada como app de escritorio con **Tauri 2**.
