@@ -58,7 +58,8 @@ turndown.addRule("table", {
   filter: "table",
   replacement: (_c, node) => {
     const rows = [...(node as HTMLTableElement).rows].map((r) =>
-      [...r.cells].map((cell) => (cell.textContent ?? "").replace(/\|/g, "\\|").replace(/\n+/g, " ").trim()),
+      // Primero las barras invertidas y luego «|», para que una celda que acaba en «\» no rompa la tabla
+      [...r.cells].map((cell) => (cell.textContent ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\n+/g, " ").trim()),
     );
     if (!rows.length) return "";
     const head = `| ${rows[0].join(" | ")} |`;
@@ -103,8 +104,7 @@ export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, 
   } else if (ext === "md" || ext === "markdown") {
     html = markdownToHtml(await file.text());
   } else if (ext === "html" || ext === "htm") {
-    const doc = new DOMParser().parseFromString(await file.text(), "text/html");
-    html = doc.body.innerHTML;
+    html = DOMPurify.sanitize(await file.text());
   } else if (ext === "txt") {
     const text = await file.text();
     html = text

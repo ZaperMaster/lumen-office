@@ -1,7 +1,7 @@
 import PptxGenJS from "pptxgenjs";
 import JSZip from "jszip";
 import { CHART_COLORS } from "@/components/sheet/Chart";
-import { SLIDE_H, SLIDE_W, esc, sid, theme as getTheme, type Deck, type ShapeKind, type Slide, type SlideEl } from "@/lib/slides/model";
+import { SLIDE_H, SLIDE_W, esc, htmlText, sid, theme as getTheme, type Deck, type ShapeKind, type Slide, type SlideEl } from "@/lib/slides/model";
 
 /*
  * PowerPoint (.pptx). Exportar usa pptxgenjs; importar lee el XML de las
@@ -400,7 +400,7 @@ export async function readPptx(data: ArrayBuffer): Promise<Deck> {
         const bodyPr = kids(node, A, "bodyPr")[0];
         const anchor = bodyPr?.getAttribute("anchor");
         const isShape = !!(fill || stroke || (prst && prst !== "rect")) && !role;
-        if (!isShape && !text.html.replace(/<[^>]+>/g, "").trim()) continue;
+        if (!isShape && !htmlText(text.html)) continue;
         slide.els.push({
           id: sid(),
           type: isShape ? "shape" : "text",

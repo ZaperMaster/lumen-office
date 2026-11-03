@@ -280,7 +280,8 @@ export async function readSheetCharts(data: ArrayBuffer, sheetIndex: number, s: 
       id: uid(),
       type,
       range: `${addr(range.r1, range.c1)}:${addr(range.r2, range.c2)}`,
-      title: title.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"'),
+      // «&amp;» al final para no descodificar dos veces («&amp;lt;» es «&lt;», no «<»)
+      title: title.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&"),
       x,
       y,
       w: Math.max(200, x2 - x),

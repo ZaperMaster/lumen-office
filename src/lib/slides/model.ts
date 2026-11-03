@@ -288,16 +288,34 @@ export function newDeck(themeId = "clean"): Deck {
   return { theme: themeId, slides: [newSlide("title")] };
 }
 
+/** Quita las etiquetas HTML hasta que no quede ninguna (una sola pasada puede dejar «<scr<b>ipt>» a medias). */
+export function stripTags(html: string): string {
+  let out = html;
+  let prev;
+  do {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, "");
+  } while (out !== prev);
+  // Un «<» o «>» suelto es un resto de etiqueta (en el texto de verdad llegan como &lt; y &gt;)
+  return out.replace(/[<>]/g, "");
+}
+
+/** Convierte las entidades HTML en caracteres. «&amp;» va al final para no descodificar dos veces. */
+export function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
 /** Texto plano de un HTML de diapositiva. */
 export function htmlText(html?: string): string {
   if (!html) return "";
-  return html
-    .replace(/<(br|\/p|\/li|\/div)[^>]*>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+  const lines = html.replace(/<(br|\/p|\/li|\/div)[^>]*>/gi, "\n");
+  return decodeEntities(stripTags(lines))
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
