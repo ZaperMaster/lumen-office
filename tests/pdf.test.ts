@@ -50,6 +50,44 @@ describe("PDF a documento", () => {
     const h = layoutToHtml([page([t("Era una mañana fría de invierno y nadie quería salir de", 100, 700), t("casa, salvo el cartero, que llegó puntual como siempre.", 72, 686)])]);
     expect(h).toBe("<p>Era una mañana fría de invierno y nadie quería salir de casa, salvo el cartero, que llegó puntual como siempre.</p>");
   });
+  it("rehace las tablas: columnas, encabezado, números alineados a la derecha y celdas de varias líneas", () => {
+    const h = layoutToHtml([
+      page([
+        t("Ventas por zona", 72, 760, 11),
+        t("Zona", 72, 730, 11, true),
+        t("Responsable", 200, 730, 11, true),
+        t("Ventas", 420, 730, 11, true),
+        t("Norte", 72, 712),
+        t("Ana García", 200, 712),
+        t("92.400 €", 440, 712),
+        t("Centro", 72, 694),
+        t("Luis Pérez y", 200, 694),
+        t("71.800 €", 440, 694),
+        t("Marta Ruiz", 200, 680),
+        t("Sur", 72, 662),
+        t("Eva Gil", 200, 662),
+        t("9.100 €", 446, 662),
+        t("Texto normal después de la tabla.", 72, 620),
+      ]),
+    ]);
+    expect(h).toContain(
+      "<table><tbody><tr><th><p>Zona</p></th><th><p>Responsable</p></th><th><p>Ventas</p></th></tr>" +
+        "<tr><td><p>Norte</p></td><td><p>Ana García</p></td><td><p>92.400 €</p></td></tr>" +
+        "<tr><td><p>Centro</p></td><td><p>Luis Pérez y Marta Ruiz</p></td><td><p>71.800 €</p></td></tr>" +
+        "<tr><td><p>Sur</p></td><td><p>Eva Gil</p></td><td><p>9.100 €</p></td></tr></tbody></table>",
+    );
+    expect(h).toContain("<p>Texto normal después de la tabla.</p>");
+  });
+  it("marca la cursiva", () => {
+    const h = layoutToHtml([page([t("Una palabra ", 72, 700), { ...t("importante", 132, 700), italic: true }, t(" aquí.", 186, 700)])]);
+    expect(h).toContain("<em>importante</em>");
+  });
+  it("coloca las imágenes en su sitio, entre el texto", () => {
+    const h = layoutToHtml([
+      { ...page([t("Antes de la imagen.", 72, 760), t("Después de la imagen.", 72, 500)]), images: [{ x: 72, y: 540, w: 300, h: 200, src: "data:image/png;base64,AAAA" }] },
+    ]);
+    expect(h).toBe('<p>Antes de la imagen.</p><img src="data:image/png;base64,AAAA" width="400" data-align="center"><p>Después de la imagen.</p>');
+  });
   it("un PDF sin texto (escaneado) no da contenido", () => {
     expect(layoutToHtml([page([])])).toBe("");
   });

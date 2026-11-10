@@ -3,6 +3,11 @@
 Todas las versiones de Lumen Office, de la más reciente a la más antigua. Solo la última versión se puede descargar
 en [Releases](https://github.com/ZaperMaster/lumen-office/releases/latest); la app se actualiza sola.
 
+## Sin publicar
+
+- **PDF:** las tablas se rehacen como tablas (columnas, fila de encabezado, celdas de varias líneas y números
+  alineados a la derecha), las imágenes se recuperan en su sitio y se conserva la cursiva.
+
 ## 1.0.1 · 10 de noviembre de 2026
 
 - **Abrir PDF:** los PDF se convierten en un documento editable, con sus títulos, párrafos, listas, negrita y texto
