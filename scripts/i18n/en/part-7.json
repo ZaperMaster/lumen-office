@@ -1,0 +1,8 @@
+{
+"«{0}» convertido en documento": "“{0}” converted to a document",
+"«{0}» está protegido con contraseña.": "“{0}” is password-protected.",
+"«{0}» no tiene texto que se pueda leer (parece un documento escaneado).": "“{0}” has no readable text (it looks like a scanned document).",
+"No se pudo leer «{0}». ¿Es un PDF válido?": "Couldn't read “{0}”. Is it a valid PDF?",
+"Revisa el formato: los PDF no guardan la estructura original del documento.": "Check the formatting: PDFs don't keep the document's original structure.",
+"o": "or"
+}

@@ -247,10 +247,11 @@ export async function openFileFromDisk(): Promise<DocRecord | null> {
     multiple: false,
     directory: false,
     filters: [
-      { name: "Archivos compatibles", extensions: ["docx", "lumen", "md", "markdown", "html", "htm", "txt", "xlsx", "csv", "pptx"] },
+      { name: "Archivos compatibles", extensions: ["docx", "pdf", "lumen", "md", "markdown", "html", "htm", "txt", "xlsx", "csv", "pptx"] },
       { name: "Documento de Word", extensions: ["docx"] },
       { name: "Libro de Excel", extensions: ["xlsx", "csv"] },
       { name: "Presentación de PowerPoint", extensions: ["pptx"] },
+      { name: "PDF (se convierte en documento)", extensions: ["pdf"] },
       { name: "Documento de Lumen", extensions: ["lumen"] },
       { name: "Todos los archivos", extensions: ["*"] },
     ],

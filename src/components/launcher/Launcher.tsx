@@ -11,7 +11,7 @@ import { theme as slideTheme } from "@/lib/slides/model";
 import { TEMPLATES, type Template } from "@/lib/templates";
 import { createFromTemplate, newDocument, newNote, newSheet, newSlides, openDoc } from "@/lib/actions";
 // El módulo de importación (editor, docx, Excel) se carga solo al importar
-const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
+const ACCEPTED_IMPORTS = ".docx,.pdf,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
 import { greeting, relativeTime } from "@/lib/format";
 import { useApp, type Route } from "@/store/app";
 import { useSettings } from "@/store/settings";
@@ -612,7 +612,7 @@ function OpenSection() {
         className="mb-8 grid place-items-center rounded-[calc(var(--radius)+4px)] border-2 border-dashed border-border px-6 py-8 text-center text-muted"
       >
         <Upload className="mb-2 size-6" />
-        <p className="text-[13.5px]">{L("Arrastra aquí un archivo")}{" "} <b>{L(".docx")}</b>, <b>{L(".xlsx")}</b>, <b>{L(".csv")}</b>, <b>{L(".pptx")}</b>, <b>{L(".lumen")}</b>, <b>{L(".md")}</b>, <b>{L(".html")}</b> o <b>{L(".txt")}</b> {" "}{L("para abrirlo")}</p>
+        <p className="text-[13.5px]">{L("Arrastra aquí un archivo")}{" "} <b>{L(".docx")}</b>, <b>.pdf</b>, <b>{L(".xlsx")}</b>, <b>{L(".csv")}</b>, <b>{L(".pptx")}</b>, <b>{L(".lumen")}</b>, <b>{L(".md")}</b>, <b>{L(".html")}</b> {L("o")} <b>{L(".txt")}</b> {" "}{L("para abrirlo")}</p>
       </div>
       <RecentList title={L("Todos los archivos")} />
     </>

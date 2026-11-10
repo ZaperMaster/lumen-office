@@ -3,6 +3,12 @@
 Todas las versiones de Lumen Office, de la más reciente a la más antigua. Solo la última versión se puede descargar
 en [Releases](https://github.com/ZaperMaster/lumen-office/releases/latest); la app se actualiza sola.
 
+## 1.0.1 · 10 de noviembre de 2026
+
+- **Abrir PDF:** los PDF se convierten en un documento editable, con sus títulos, párrafos, listas, negrita y texto
+  centrado. Se quitan los números de página y los encabezados o pies repetidos.
+- Los PDF escaneados (solo imágenes) o protegidos con contraseña muestran un aviso claro.
+
 ## 1.0.0 · 3 de noviembre de 2026
 
 Primera versión estable: documentos, hojas de cálculo, presentaciones, notas y asistente de IA, con

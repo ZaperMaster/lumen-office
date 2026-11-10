@@ -69,7 +69,7 @@ Una vez instalada, la app se actualiza sola. Novedades de cada versión: [CHANGE
 **Archivos, como en Word**
 - **Guardar** (Ctrl+S) reemplaza el archivo vinculado; **Guardar como** (F12) elige carpeta, nombre y formato.
 - **Exportar una copia** a Word (.docx), Lumen (.lumen, sin pérdidas), Markdown, HTML, texto o **PDF de un clic**.
-- **Abrir archivo** (Ctrl+O): .docx, .xlsx, .csv, .pptx, .lumen, .md, .html y .txt.
+- **Abrir archivo** (Ctrl+O): .docx, .xlsx, .csv, .pptx, .lumen, .md, .html y .txt. Los **PDF** se convierten en un documento editable.
 - **Autoguardado en el archivo** y aviso **Guardar / No guardar / Cancelar** al salir o cerrar con cambios pendientes.
 
 **Notas**

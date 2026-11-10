@@ -78,7 +78,7 @@ export function htmlToMarkdown(html: string): string {
 /*  Importar                                                           */
 /* ------------------------------------------------------------------ */
 
-export const ACCEPTED_IMPORTS = ".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
+export const ACCEPTED_IMPORTS = ".docx,.pdf,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx";
 
 export async function importFromFile(file: File, extra: Partial<Pick<DocRecord, "filePath" | "fileFormat">> = {}): Promise<DocRecord> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";

@@ -177,7 +177,7 @@ export function OfficeFileMenu({
       <input
         ref={fileRef}
         type="file"
-        accept=".docx,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx"
+        accept=".docx,.pdf,.lumen,.md,.markdown,.html,.htm,.txt,.xlsx,.csv,.pptx"
         hidden
         onChange={async (e) => {
           const f = e.target.files?.[0];
