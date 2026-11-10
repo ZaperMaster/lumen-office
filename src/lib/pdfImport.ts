@@ -22,6 +22,8 @@ export interface PdfText {
   size: number;
   bold: boolean;
   italic?: boolean;
+  /** Letra de ancho fijo (código, comandos) */
+  mono?: boolean;
 }
 
 /** Una imagen del PDF ya convertida en data URL; (x, y) es la esquina inferior izquierda */
@@ -33,14 +35,25 @@ export interface PdfImage {
   src: string;
 }
 
+/** Un rectángulo relleno del PDF (por ejemplo, el fondo de una celda); (x, y) es la esquina inferior izquierda */
+export interface PdfRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** Color de relleno («#rrggbb») */
+  fill: string;
+}
+
 export interface PdfPage {
   width: number;
   height: number;
   items: PdfText[];
   images?: PdfImage[];
+  rects?: PdfRect[];
 }
 
-type Seg = { text: string; bold: boolean; italic: boolean };
+type Seg = { text: string; bold: boolean; italic: boolean; mono?: boolean };
 
 interface Cell {
   x: number;
@@ -62,15 +75,16 @@ interface Line {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const segsText = (segs: Seg[]) => segs.map((s) => s.text).join("");
 const lineText = (l: Line) => segsText(l.segs);
-const BULLET = /^\s*([•●▪◦‣∙·*–-])\s+/;
+// Incluye las viñetas de las fuentes de símbolos (Symbol, Wingdings, OpenSymbol), que usan U+F000–U+F0FF
+const BULLET = /^\s*([•●▪◦‣∙·*–\--])\s*(?=\S)/;
 const NUMBERED = /^\s*(\d{1,3}|[a-z])[.)]\s+/i;
 const PAGE_NUMBER = /^\s*(p[áa]g(ina)?\.?\s*)?\d{1,4}(\s*(de|of|\/)\s*\d{1,4})?\s*$/i;
 
 /** Añade un trozo a una lista de segmentos, uniendo los del mismo estilo */
-function pushSeg(segs: Seg[], text: string, bold: boolean, italic: boolean) {
+function pushSeg(segs: Seg[], text: string, bold: boolean, italic: boolean, mono = false) {
   const prev = segs[segs.length - 1];
-  if (prev && prev.bold === bold && prev.italic === italic) prev.text += text;
-  else segs.push({ text, bold, italic });
+  if (prev && prev.bold === bold && prev.italic === italic && !!prev.mono === mono) prev.text += text;
+  else segs.push({ text, bold, italic, mono });
 }
 
 /** Junta los trozos de texto de una página en líneas (y cada línea en posibles celdas). */
@@ -102,8 +116,8 @@ function pageLines(page: PdfPage, pageIndex: number): Line[] {
       const prevText = segs.length ? segs[segs.length - 1].text : "";
       // Espacio entre trozos separados que no lo traen
       if (segs.length && gap > l.size * 0.18 && !/\s$/.test(prevText) && !/^\s/.test(text)) text = ` ${text}`;
-      pushSeg(segs, text, it.bold, italic);
-      pushSeg(cell.segs, cell.segs.length ? text : it.str, it.bold, italic);
+      pushSeg(segs, text, it.bold, italic, !!it.mono);
+      pushSeg(cell.segs, cell.segs.length ? text : it.str, it.bold, italic, !!it.mono);
       cell.xEnd = Math.max(cell.xEnd, it.x + it.w);
       end = Math.max(end, it.x + it.w);
     }
@@ -145,22 +159,33 @@ type Block =
   | { kind: "h"; level: 1 | 2 | 3; text: string; center: boolean }
   | { kind: "p"; html: string; plain: string; center: boolean; last: Line; joinPrev: boolean }
   | { kind: "li"; ordered: boolean; html: string; last: Line; soft?: boolean }
-  | { kind: "table"; rows: string[][]; header: boolean }
+  | { kind: "table"; rows: TableCell[][]; header: boolean }
   | { kind: "img"; src: string; width: number };
+
+interface TableCell {
+  html: string;
+  /** Color de fondo («#rrggbb») */
+  bg?: string;
+  colspan?: number;
+}
 
 /** HTML de unos segmentos; los espacios de los extremos quedan fuera de la negrita y la cursiva */
 const segsHtml = (segs: Seg[]) => {
   const out = segs
     .map((s) => {
-      if ((!s.bold && !s.italic) || !s.text.trim()) return esc(s.text);
+      if ((!s.bold && !s.italic && !s.mono) || !s.text.trim()) return esc(s.text);
       const [, lead, core, trail] = /^(\s*)([\s\S]*?)(\s*)$/.exec(s.text)!;
       let inner = esc(core);
+      if (s.mono) inner = `<code>${inner}</code>`;
       if (s.italic) inner = `<em>${inner}</em>`;
       if (s.bold) inner = `<strong>${inner}</strong>`;
       return `${lead}${inner}${trail}`;
     })
     .join("");
-  return out.replace(/<\/strong>(\s*)<strong>/g, "$1").replace(/<\/em>(\s*)<em>/g, "$1");
+  return out
+    .replace(/<\/strong>(\s*)<strong>/g, "$1")
+    .replace(/<\/em>(\s*)<em>/g, "$1")
+    .replace(/<\/code>(\s*)<code>/g, "$1");
 };
 
 /**
@@ -222,7 +247,7 @@ function readTable(lines: Line[], start: number, body: number): { block: Extract
     for (const c of l.cells) {
       const k = col(c);
       if (cells[k].length) pushSeg(cells[k], " ", false, false);
-      for (const s of c.segs) pushSeg(cells[k], s.text, s.bold, s.italic);
+      for (const s of c.segs) pushSeg(cells[k], s.text, s.bold, s.italic, !!s.mono);
     }
     const startsRow = cells[0].length > 0;
     const prevRow = rows[rows.length - 1];
@@ -231,7 +256,7 @@ function readTable(lines: Line[], start: number, body: number): { block: Extract
       cells.forEach((segs, k) => {
         if (!segs.length) return;
         if (prevRow.cells[k].length) pushSeg(prevRow.cells[k], " ", false, false);
-        for (const s of segs) pushSeg(prevRow.cells[k], s.text, s.bold, s.italic);
+        for (const s of segs) pushSeg(prevRow.cells[k], s.text, s.bold, s.italic, !!s.mono);
       });
     } else {
       rows.push({ cells, bold: l.cells.every((c) => c.segs.every((s) => s.bold || !s.text.trim())) });
@@ -239,19 +264,112 @@ function readTable(lines: Line[], start: number, body: number): { block: Extract
   }
   const header = rows.length > 1 && rows[0].bold && !rows.slice(1).every((r) => r.bold);
   return {
-    block: { kind: "table", header, rows: rows.map((r, i) => r.cells.map((segs) => (header && i === 0 ? esc(segsText(segs).trim()) : segsHtml(segs).trim()))) },
+    block: { kind: "table", header, rows: rows.map((r, i) => r.cells.map((segs) => ({ html: header && i === 0 ? esc(segsText(segs).trim()) : segsHtml(segs).trim() }))) },
     used: run.length,
   };
 }
 
+/** ¿Es oscuro un color? (para poner el texto en blanco encima) */
+function isDark(hex: string): boolean {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return 0.299 * r + 0.587 * g + 0.114 * b < 140;
+}
+
+/**
+ * Tablas dibujadas con rectángulos (cada celda es un rectángulo relleno, como hacen
+ * Word y LibreOffice): se rehacen celda a celda, con sus colores. Devuelve las tablas
+ * y los trozos de texto que han quedado dentro de ellas.
+ */
+function boxTables(page: PdfPage, pageIndex: number): { tables: { top: number; block: Extract<Block, { kind: "table" }> }[]; used: Set<PdfText> } {
+  const used = new Set<PdfText>();
+  const tables: { top: number; block: Extract<Block, { kind: "table" }> }[] = [];
+  const all = (page.rects ?? []).filter((r) => r.w >= 12 && r.h >= 8 && !(r.w > page.width * 0.9 && r.h > page.height * 0.9));
+  // Sin repetidos
+  const rects = all.filter((r, i) => all.findIndex((o) => Math.abs(o.x - r.x) < 0.5 && Math.abs(o.y - r.y) < 0.5 && Math.abs(o.w - r.w) < 0.5 && Math.abs(o.h - r.h) < 0.5) === i);
+  if (rects.length < 2) return { tables, used };
+
+  // Grupos de rectángulos que se tocan: cada grupo es una tabla
+  const parent = rects.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  const touch = (a: PdfRect, b: PdfRect) => a.x <= b.x + b.w + 1.5 && b.x <= a.x + a.w + 1.5 && a.y <= b.y + b.h + 1.5 && b.y <= a.y + a.h + 1.5;
+  for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) if (touch(rects[i], rects[j])) parent[find(i)] = find(j);
+  const groups = new Map<number, PdfRect[]>();
+  rects.forEach((r, i) => groups.set(find(i), [...(groups.get(find(i)) ?? []), r]));
+
+  const inside = (r: PdfRect, x: number, y: number) => x >= r.x - 1 && x <= r.x + r.w + 1 && y >= r.y - 1 && y <= r.y + r.h + 1;
+  for (const group of groups.values()) {
+    // Solo las celdas: fuera los rectángulos que contienen a otros (fondos de toda la tabla)
+    const cells = group.filter((r) => !group.some((o) => o !== r && o.x >= r.x - 0.5 && o.y >= r.y - 0.5 && o.x + o.w <= r.x + r.w + 0.5 && o.y + o.h <= r.y + r.h + 0.5 && (o.w < r.w - 1 || o.h < r.h - 1)));
+    if (cells.length < 2) continue;
+    const content = new Map<PdfRect, PdfText[]>();
+    for (const it of page.items) {
+      if (used.has(it) || !it.str.trim()) continue;
+      const cx = it.x + it.w / 2;
+      const cy = it.y + it.size * 0.35;
+      const cell = cells.find((c) => inside(c, cx, cy));
+      if (cell) content.set(cell, [...(content.get(cell) ?? []), it]);
+    }
+    // Una tabla de verdad tiene texto en al menos dos celdas
+    if (content.size < 2) continue;
+    for (const items of content.values()) for (const it of items) used.add(it);
+
+    // Filas: celdas con el mismo borde superior; columnas: bordes izquierdos distintos
+    const rows: PdfRect[][] = [];
+    for (const c of [...cells].sort((a, b) => b.y + b.h - (a.y + a.h) || a.x - b.x)) {
+      const row = rows.find((r) => Math.abs(r[0].y + r[0].h - (c.y + c.h)) < 2);
+      if (row) row.push(c);
+      else rows.push([c]);
+    }
+    const starts = [...new Set(cells.map((c) => Math.round(c.x)))].sort((a, b) => a - b).filter((x, i, xs) => i === 0 || x - xs[i - 1] > 2);
+    const html = rows.map((row) =>
+      row
+        .sort((a, b) => a.x - b.x)
+        .map((c): TableCell => {
+          const lines = pageLines({ width: page.width, height: page.height, items: content.get(c) ?? [] }, pageIndex);
+          let text = "";
+          let prevLine: Line | null = null;
+          for (const l of lines) {
+            const part = segsHtml(l.segs).trim();
+            if (!part) continue;
+            // Una línea que no llega al final de la celda es un salto de línea a propósito (p. ej. una orden por línea)
+            const brk = prevLine && prevLine.xEnd < c.x + c.w - l.size * 3;
+            if (!text) text = part;
+            else if (/[a-záéíóúñü]-$/i.test(text) && /^[a-záéíóúñü]/.test(part)) text = text.slice(0, -1) + part;
+            else text = `${text}${brk ? "<br>" : " "}${part}`;
+            prevLine = l;
+          }
+          const bg = c.fill.toLowerCase() !== "#ffffff" ? c.fill.toLowerCase() : undefined;
+          const colspan = starts.filter((s) => s >= c.x - 2 && s < c.x + c.w - 2).length;
+          return { html: bg && isDark(bg) && text ? `<span style="color:#ffffff">${text}</span>` : text, bg, colspan: colspan > 1 ? colspan : undefined };
+        }),
+    );
+    const firstDark = rows[0].every((c) => c.fill.toLowerCase() !== "#ffffff" && isDark(c.fill));
+    const firstBold = rows[0].every((c) => (content.get(c) ?? []).every((it) => it.bold));
+    tables.push({ top: Math.max(...cells.map((c) => c.y + c.h)), block: { kind: "table", rows: html, header: rows.length > 1 && (firstDark || firstBold) } });
+  }
+  return { tables, used };
+}
+
 /** Convierte las páginas leídas en el HTML del documento. */
 export function layoutToHtml(pages: PdfPage[]): string {
-  const all = pages.map(pageLines);
+  // Primero las tablas dibujadas con rectángulos; su texto ya no se trata como líneas sueltas
+  const boxed = pages.map((p, i) => boxTables(p, i));
+  const all = pages.map((p, i) => pageLines({ ...p, items: p.items.filter((it) => !boxed[i].used.has(it)) }, i));
   const drop = chrome(pages, all);
   const lines = all.flat().filter((l) => !drop.has(l) && lineText(l).trim());
-  const images = pages.flatMap((p, page) => (p.images ?? []).map((img) => ({ ...img, page })));
+  // Lo que va «flotando» entre el texto según su altura en la página: imágenes y tablas
+  const images: { page: number; top: number; block: Block }[] = [
+    ...pages.flatMap((p, page) =>
+      (p.images ?? []).map((img) => ({ page, top: img.y + img.h, block: { kind: "img", src: img.src, width: Math.min(640, Math.round(img.w * (96 / 72))) } as Block })),
+    ),
+    ...boxed.flatMap((b, page) => b.tables.map((t) => ({ page, top: t.top, block: t.block as Block }))),
+  ];
   if (!lines.length && !images.length) return "";
   const body = lines.length ? bodySize(lines) : 12;
+  // Niveles de título según el tamaño: el más grande es Título 1, el siguiente Título 2…
+  const headingSizes = [...new Set(lines.filter((l) => l.size / body >= 1.15).map((l) => Math.round(l.size)))].sort((a, b) => b - a);
+  const headingLevel = (size: number): 1 | 2 | 3 => Math.min(3, headingSizes.indexOf(Math.round(size)) + 1 || 3) as 1 | 2 | 3;
   // Margen izquierdo más habitual y dónde acaban las líneas llenas, por página
   const counts = new Map<number, number>();
   for (const l of lines) counts.set(Math.round(l.x), (counts.get(Math.round(l.x)) ?? 0) + 1);
@@ -260,13 +378,11 @@ export function layoutToHtml(pages: PdfPage[]): string {
   const full = (l: Line) => l.xEnd > right[l.page] - l.size * 2.5;
   const blocks: Block[] = [];
   let prev: Line | null = null;
-  // Las imágenes se colocan antes de la primera línea que queda por debajo de ellas
-  const pending = [...images].sort((a, b) => a.page - b.page || b.y + b.h - (a.y + a.h));
+  // Imágenes y tablas se colocan antes de la primera línea que queda por debajo de ellas
+  const pending = [...images].sort((a, b) => a.page - b.page || b.top - a.top);
   const flushImages = (before?: Line) => {
-    while (pending.length && (!before || pending[0].page < before.page || (pending[0].page === before.page && pending[0].y + pending[0].h > before.y))) {
-      const img = pending.shift()!;
-      // Puntos de PDF a píxeles, sin pasar del ancho de la página del editor
-      blocks.push({ kind: "img", src: img.src, width: Math.min(640, Math.round(img.w * (96 / 72))) });
+    while (pending.length && (!before || pending[0].page < before.page || (pending[0].page === before.page && pending[0].top > before.y))) {
+      blocks.push(pending.shift()!.block);
       prev = null;
     }
   };
@@ -295,9 +411,10 @@ export function layoutToHtml(pages: PdfPage[]): string {
     }
 
     // Títulos: letra más grande, o una línea corta en negrita separada del resto
-    const isHeading = ratio >= 1.15 || (allBold && text.length < 90 && !close && !/[.,;:]$/.test(text) && lines.length > 1);
+    // (una etiqueta en negrita más pequeña que el texto normal no es un título)
+    const isHeading = ratio >= 1.15 || (allBold && ratio >= 0.95 && text.length < 90 && !close && !/[.,;:]$/.test(text) && lines.length > 1);
     if (isHeading) {
-      const level: 1 | 2 | 3 = ratio >= 1.6 ? 1 : ratio >= 1.3 ? 2 : 3;
+      const level = ratio >= 1.15 ? headingLevel(l.size) : 3;
       if (last?.kind === "h" && last.level === level && close && prev && Math.abs(prev.size - l.size) < 0.6) last.text += ` ${text}`;
       else blocks.push({ kind: "h", level, text, center });
       prev = l;
@@ -310,15 +427,15 @@ export function layoutToHtml(pages: PdfPage[]): string {
     if (bullet || numbered) {
       const m = (bullet || numbered)!;
       const segs = [...l.segs];
-      // Quita la viñeta o el número del principio
-      let cut = m[0].length;
+      // Quita la viñeta o el número del principio (se cuentan solo los caracteres visibles, sin los espacios)
+      let cut = m[0].replace(/\s/g, "").length;
       while (cut > 0 && segs.length) {
         const s = segs[0].text.replace(/^\s+/, "");
         if (s.length <= cut) {
           cut -= s.length;
           segs.shift();
         } else {
-          segs[0] = { ...segs[0], text: s.slice(cut) };
+          segs[0] = { ...segs[0], text: s.slice(cut).replace(/^\s+/, "") };
           cut = 0;
         }
       }
@@ -351,8 +468,12 @@ export function layoutToHtml(pages: PdfPage[]): string {
     }
 
     // Párrafos: se unen las líneas seguidas del mismo tamaño
+    // Las líneas para escribir («_____») van cada una en su párrafo
+    const writingLine = (s: string) => /^[_.\s]{8,}$/.test(s);
     const continues =
       last?.kind === "p" &&
+      !writingLine(text) &&
+      !writingLine(last.plain) &&
       sameSize &&
       (close ||
         // Un párrafo que sigue en la página siguiente
@@ -376,6 +497,12 @@ export function layoutToHtml(pages: PdfPage[]): string {
     prev = l;
   }
   flushImages();
+
+  // Un «título» de varias frases largas es en realidad un párrafo con la letra algo mayor
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (b.kind === "h" && b.text.length > 160) blocks[i] = { kind: "p", html: esc(b.text), plain: b.text, center: b.center, last: lines[0], joinPrev: false };
+  }
 
   // Una sola línea sangrada no es una lista: es la primera línea de un párrafo
   const isSoft = (b?: Block) => b?.kind === "li" && !!b.soft;
@@ -411,7 +538,12 @@ export function layoutToHtml(pages: PdfPage[]): string {
       html += "<table><tbody>";
       b.rows.forEach((r, i) => {
         const tag = b.header && i === 0 ? "th" : "td";
-        html += `<tr>${r.map((c) => `<${tag}><p>${c}</p></${tag}>`).join("")}</tr>`;
+        const cell = (c: TableCell) => {
+          const span = c.colspan ? ` colspan="${c.colspan}"` : "";
+          const bg = c.bg ? ` style="background-color:${c.bg}"` : "";
+          return `<${tag}${span}${bg}><p>${c.html}</p></${tag}>`;
+        };
+        html += `<tr>${r.map(cell).join("")}</tr>`;
       });
       html += "</tbody></table>";
       continue;
@@ -520,20 +652,40 @@ export async function readPdf(data: ArrayBuffer): Promise<{ html: string; pages:
           size: Math.hypot(c, d) || it.height || 12,
           bold: /bold|black|heavy|semibold|demi/i.test(font),
           italic: /italic|oblique/i.test(font),
+          mono: /mono|courier|consolas|menlo|code|typewriter/i.test(font),
         });
       }
 
       // Imágenes: posición (según la matriz de transformación) y contenido
       const images: PdfImage[] = [];
+      const rects: PdfRect[] = [];
+      const FILLS = new Set([OPS.fill, OPS.eoFill, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke]);
       if (ops) {
         let ctm: Matrix = [1, 0, 0, 1, 0, 0];
-        const stack: Matrix[] = [];
+        let fill = "#000000";
+        const stack: { ctm: Matrix; fill: string }[] = [];
         for (let k = 0; k < ops.fnArray.length; k++) {
           const fn = ops.fnArray[k];
           const args = ops.argsArray[k];
-          if (fn === OPS.save) stack.push(ctm);
-          else if (fn === OPS.restore) ctm = stack.pop() ?? ctm;
+          if (fn === OPS.save) stack.push({ ctm, fill });
+          else if (fn === OPS.restore) ({ ctm, fill } = stack.pop() ?? { ctm, fill });
           else if (fn === OPS.transform) ctm = multiply(ctm, args as Matrix);
+          else if (fn === OPS.setFillRGBColor && typeof args?.[0] === "string") fill = args[0];
+          else if (fn === OPS.constructPath && FILLS.has(args?.[0]) && args?.[2]) {
+            // Trazado relleno: se guarda su caja (los fondos de las celdas son rectángulos)
+            const [x1, y1, x2, y2] = Array.from(args[2] as ArrayLike<number>);
+            const pts = [
+              [x1, y1],
+              [x2, y1],
+              [x1, y2],
+              [x2, y2],
+            ].map(([x, y]) => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]);
+            const xs = pts.map((p) => p[0]);
+            const ys = pts.map((p) => p[1]);
+            const x = Math.min(...xs);
+            const y = Math.min(...ys);
+            rects.push({ x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y, fill });
+          }
           else if (fn === OPS.paintImageXObject || fn === OPS.paintInlineImageXObject) {
             const w = Math.hypot(ctm[0], ctm[1]);
             const h = Math.hypot(ctm[2], ctm[3]);
@@ -562,7 +714,7 @@ export async function readPdf(data: ArrayBuffer): Promise<{ html: string; pages:
           }
         }
       }
-      pages.push({ width: view.width, height: view.height, items, images });
+      pages.push({ width: view.width, height: view.height, items, images, rects });
       page.cleanup();
     }
   } finally {

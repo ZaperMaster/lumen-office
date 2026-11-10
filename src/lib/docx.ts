@@ -300,7 +300,12 @@ async function blockToDocx(node: JSONContent, ctx: Ctx, extra: Partial<IParagrap
                 children: children.length ? children : [new Paragraph("")],
                 columnSpan: (cell.attrs?.colspan ?? 1) > 1 ? cell.attrs?.colspan : undefined,
                 rowSpan: (cell.attrs?.rowspan ?? 1) > 1 ? cell.attrs?.rowspan : undefined,
-                shading: cell.type === "tableHeader" ? { type: ShadingType.CLEAR, color: "auto", fill: "F1F1F4" } : undefined,
+                // Color de la celda (p. ej. de un PDF o un Word); si no tiene, el encabezado va en gris claro
+                shading: hex(cell.attrs?.backgroundColor)
+                  ? { type: ShadingType.CLEAR, color: "auto", fill: hex(cell.attrs?.backgroundColor)! }
+                  : cell.type === "tableHeader"
+                    ? { type: ShadingType.CLEAR, color: "auto", fill: "F1F1F4" }
+                    : undefined,
               });
             }),
           );

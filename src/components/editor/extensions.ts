@@ -126,6 +126,40 @@ export const Indent = Extension.create({
 });
 
 /* ------------------------------------------------------------------ */
+/*  Color de fondo de las celdas de tabla                              */
+/* ------------------------------------------------------------------ */
+
+/** «rgb(23, 59, 86)» o «#173B56» → «#173b56» */
+function cssColorToHex(value: string): string | null {
+  const v = value.trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(v)) return v;
+  if (/^#[0-9a-f]{3}$/.test(v)) return `#${[...v.slice(1)].map((c) => c + c).join("")}`;
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+  return m ? `#${m.slice(1, 4).map((n) => Number(n).toString(16).padStart(2, "0")).join("")}` : null;
+}
+
+export const CellBackground = Extension.create({
+  name: "cellBackground",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["tableCell", "tableHeader"],
+        attributes: {
+          backgroundColor: {
+            default: null,
+            parseHTML: (el) => {
+              const c = cssColorToHex((el as HTMLElement).style.backgroundColor || el.getAttribute("data-bg") || "");
+              return c && c !== "#ffffff" ? c : null;
+            },
+            renderHTML: (attrs) => (attrs.backgroundColor ? { style: `background-color: ${attrs.backgroundColor}` } : {}),
+          },
+        },
+      },
+    ];
+  },
+});
+
+/* ------------------------------------------------------------------ */
 /*  Interlineado por párrafo                                           */
 /* ------------------------------------------------------------------ */
 
@@ -337,6 +371,7 @@ export function buildExtensions(opts: { placeholder: string; smartTyping: boolea
     TextAlign.configure({ types: ["heading", "paragraph"], alignments: ["left", "center", "right", "justify"] }),
     Highlight.configure({ multicolor: true }),
     TableKit.configure({ table: { resizable: true, cellMinWidth: 60 } }),
+    CellBackground,
     ImageBlock,
     TaskList,
     TaskItem.configure({ nested: true }),

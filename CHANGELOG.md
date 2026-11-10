@@ -5,6 +5,12 @@ en [Releases](https://github.com/ZaperMaster/lumen-office/releases/latest); la a
 
 ## 1.0.2 · 10 de noviembre de 2026
 
+- **PDF con tablas de colores:** las tablas dibujadas con celdas (Word, LibreOffice) se rehacen celda a celda con sus
+  colores de fondo, el texto blanco sobre fondo oscuro y las celdas de varias líneas.
+- Las celdas de las tablas pueden tener color de fondo, también al abrir y guardar Word.
+- Viñetas de fuentes de símbolos, líneas para escribir, saltos de línea dentro de las celdas y código en letra de
+  ancho fijo.
+
 - **PDF:** las tablas se rehacen como tablas (columnas, fila de encabezado, celdas de varias líneas y números
   alineados a la derecha), las imágenes se recuperan en su sitio y se conserva la cursiva.
 

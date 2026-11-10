@@ -78,6 +78,37 @@ describe("PDF a documento", () => {
     );
     expect(h).toContain("<p>Texto normal después de la tabla.</p>");
   });
+  it("las viñetas de las fuentes de símbolos no se comen la primera letra", () => {
+    const h = layoutToHtml([page([t("", 72, 700), t("No escribáis contraseñas.", 86, 700), t("", 72, 684), t("No escaneéis otros equipos.", 86, 684)])]);
+    expect(h).toBe("<ul><li><p>No escribáis contraseñas.</p></li><li><p>No escaneéis otros equipos.</p></li></ul>");
+  });
+  it("rehace las tablas dibujadas con rectángulos, con sus colores", () => {
+    const rects = [
+      { x: 72, y: 700, w: 150, h: 20, fill: "#173b56" },
+      { x: 222, y: 700, w: 150, h: 20, fill: "#173b56" },
+      { x: 72, y: 670, w: 150, h: 30, fill: "#ffffff" },
+      { x: 222, y: 670, w: 150, h: 30, fill: "#ffffff" },
+      { x: 72, y: 640, w: 150, h: 30, fill: "#eaf3f6" },
+      { x: 222, y: 640, w: 150, h: 30, fill: "#eaf3f6" },
+    ];
+    const items = [
+      t("Fase", 80, 706, 9, true),
+      t("Trabajo", 230, 706, 9, true),
+      t("1", 80, 682, 9),
+      // Celda de dos líneas junto a otra centrada en vertical
+      t("Revisar la línea base de la cuenta y", 230, 688, 9),
+      t("el expediente", 230, 677, 9),
+      t("2", 80, 652, 9),
+      t("Clasificar evidencias", 230, 652, 9),
+    ];
+    const h = layoutToHtml([{ width: 595, height: 842, items, rects }]);
+    expect(h).toBe(
+      '<table><tbody><tr><th style="background-color:#173b56"><p><span style="color:#ffffff"><strong>Fase</strong></span></p></th>' +
+        '<th style="background-color:#173b56"><p><span style="color:#ffffff"><strong>Trabajo</strong></span></p></th></tr>' +
+        "<tr><td><p>1</p></td><td><p>Revisar la línea base de la cuenta y el expediente</p></td></tr>" +
+        '<tr><td style="background-color:#eaf3f6"><p>2</p></td><td style="background-color:#eaf3f6"><p>Clasificar evidencias</p></td></tr></tbody></table>',
+    );
+  });
   it("marca la cursiva", () => {
     const h = layoutToHtml([page([t("Una palabra ", 72, 700), { ...t("importante", 132, 700), italic: true }, t(" aquí.", 186, 700)])]);
     expect(h).toContain("<em>importante</em>");
