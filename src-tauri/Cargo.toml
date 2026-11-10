@@ -1,6 +1,6 @@
 [package]
 name = "lumen-office"
-version = "1.0.1"
+version = "1.0.2"
 description = "Lumen Office: documentos, notas e IA local"
 authors = ["Alejandro"]
 license = "PolyForm-Strict-1.0.0"
